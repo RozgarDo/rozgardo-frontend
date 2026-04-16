@@ -156,13 +156,15 @@ const Landing = ({ user }) => {
                              </div>
                               <div className="job-card-actions pt-4 border-t border-slate-100 flex gap-2" onClick={(e) => e.stopPropagation()}>
                                 <Link to={`/jobs/${job.id}`} className="flex-1 block">
-                                  <div className="w-full py-2.5 text-center bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg text-sm transition-colors">
+                                  <div className="w-full py-2.5 text-center bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 font-semibold rounded-lg text-sm transition-colors">
                                     View Details
                                   </div>
                                 </Link>
-                                <button onClick={() => navigate(`/jobs/${job.id}`)} className="flex-1 py-2.5 text-center bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg text-sm transition-colors w-full block">
-                                  Apply Job
-                                </button>
+                                <Link to={`/jobs/${job.id}`} className="flex-1 block">
+                                  <div className="w-full py-2.5 text-center bg-gradient-to-r from-indigo-600 to-indigo-600 text-white font-semibold rounded-lg text-sm transition-colors" style={{ background: 'linear-gradient(to right, #4F46E5, #6366F1)' }}>
+                                    Apply Job
+                                  </div>
+                                </Link>
                               </div>
                           </div>
                         </div>
