@@ -38,6 +38,7 @@ function AppContent({ user, handleLogin, handleLogout }) {
           <Route path="/employer" element={<EmployerDashboard user={user} />} />
           <Route path="/employer/post-job" element={<PostJob user={user} />} />
           <Route path="/admin" element={<AdminDashboard user={user} />} />
+          <Route path="*" element={<Onboarding />} />
         </Routes>
       </main>
     </div>
