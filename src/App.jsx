@@ -18,14 +18,6 @@ import ScrollToTop from './components/ScrollToTop';
 
 function AppContent({ user, handleLogin, handleLogout }) {
   const location = useLocation();
-
-  useEffect(() => {
-    const isProduction = window.location.hostname.includes('vercel.app');
-    if (isProduction && location.pathname !== "/onboarding") {
-      window.location.replace("/onboarding");
-    }
-  }, [location]);
-
   const isOnboarding = location.pathname === '/onboarding';
 
   return (
