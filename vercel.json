@@ -1,5 +1,17 @@
 {
   "rewrites": [
-    { "source": "/(.*)", "destination": "/" }
+    { "source": "/onboarding", "destination": "/" }
+  ],
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "/onboarding",
+      "permanent": false
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/onboarding",
+      "permanent": false
+    }
   ]
 }
