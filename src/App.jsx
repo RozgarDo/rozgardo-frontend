@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Login from './pages/Login';
 import EmployeeHome from './pages/employee/Home';
@@ -17,23 +17,15 @@ import Onboarding from './pages/onboarding/Onboarding';
 import ScrollToTop from './components/ScrollToTop';
 
 function AppContent({ user, handleLogin, handleLogout }) {
-  const [currentPath, setCurrentPath] = useState(window.location.pathname);
-
-  useEffect(() => {
-    const handlePathChange = () => setCurrentPath(window.location.pathname);
-    window.addEventListener('popstate', handlePathChange);
-    return () => window.removeEventListener('popstate', handlePathChange);
-  }, []);
-
-  if (currentPath === '/onboarding') {
-    return <Onboarding />;
-  }
+  const location = useLocation();
+  const isOnboarding = location.pathname === '/onboarding';
 
   return (
     <div className="flex flex-col min-h-screen">
-      <Navbar user={user} onLogout={handleLogout} />
-      <main className="main-content">
+      {!isOnboarding && <Navbar user={user} onLogout={handleLogout} />}
+      <main className={isOnboarding ? "" : "main-content"}>
         <Routes>
+          <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/login" element={user ? <Navigate to="/" /> : <Login onLogin={handleLogin} />} />
           <Route path="/home" element={<Landing user={user} />} />
           <Route path="/" element={user?.role === 'admin' ? <Navigate to="/admin" /> : <Landing user={user} />} />
@@ -46,6 +38,7 @@ function AppContent({ user, handleLogin, handleLogout }) {
           <Route path="/employer" element={<EmployerDashboard user={user} />} />
           <Route path="/employer/post-job" element={<PostJob user={user} />} />
           <Route path="/admin" element={<AdminDashboard user={user} />} />
+          <Route path="*" element={<Onboarding />} />
         </Routes>
       </main>
     </div>
