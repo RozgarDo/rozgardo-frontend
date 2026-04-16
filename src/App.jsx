@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Login from './pages/Login';
 import EmployeeHome from './pages/employee/Home';
@@ -17,15 +17,9 @@ import Onboarding from './pages/onboarding/Onboarding';
 import ScrollToTop from './components/ScrollToTop';
 
 function AppContent({ user, handleLogin, handleLogout }) {
-  const [currentPath, setCurrentPath] = useState(window.location.pathname);
+  const location = useLocation();
 
-  useEffect(() => {
-    const handlePathChange = () => setCurrentPath(window.location.pathname);
-    window.addEventListener('popstate', handlePathChange);
-    return () => window.removeEventListener('popstate', handlePathChange);
-  }, []);
-
-  if (currentPath === '/onboarding') {
+  if (location.pathname === '/onboarding') {
     return <Onboarding />;
   }
 
