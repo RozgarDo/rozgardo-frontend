@@ -98,12 +98,12 @@ const Navbar = ({ user, onLogout }) => {
       }}>
 
         {/* Logo */}
-        <div style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'default' }}>
+        <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <Briefcase color="#4F46E5" size={26} />
           <span style={{ fontWeight: 800, fontSize: '1.25rem', letterSpacing: '-0.02em', color: '#0F172A' }}>
             Rozgar<span style={{ color: '#4F46E5' }}>Do</span>
           </span>
-        </div>
+        </Link>
 
         {/* Right side */}
         {user ? (
