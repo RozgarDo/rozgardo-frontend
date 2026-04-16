@@ -18,16 +18,14 @@ import ScrollToTop from './components/ScrollToTop';
 
 function AppContent({ user, handleLogin, handleLogout }) {
   const location = useLocation();
-
-  if (location.pathname === '/onboarding') {
-    return <Onboarding />;
-  }
+  const isOnboarding = location.pathname === '/onboarding';
 
   return (
     <div className="flex flex-col min-h-screen">
-      <Navbar user={user} onLogout={handleLogout} />
-      <main className="main-content">
+      {!isOnboarding && <Navbar user={user} onLogout={handleLogout} />}
+      <main className={isOnboarding ? "" : "main-content"}>
         <Routes>
+          <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/login" element={user ? <Navigate to="/" /> : <Login onLogin={handleLogin} />} />
           <Route path="/home" element={<Landing user={user} />} />
           <Route path="/" element={user?.role === 'admin' ? <Navigate to="/admin" /> : <Landing user={user} />} />
