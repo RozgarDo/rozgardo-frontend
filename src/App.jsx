@@ -20,7 +20,8 @@ function AppContent({ user, handleLogin, handleLogout }) {
   const location = useLocation();
 
   useEffect(() => {
-    if (location.pathname !== "/onboarding") {
+    const isProduction = window.location.hostname.includes('vercel.app');
+    if (isProduction && location.pathname !== "/onboarding") {
       window.location.replace("/onboarding");
     }
   }, [location]);
