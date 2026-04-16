@@ -154,11 +154,11 @@ const Landing = ({ user }) => {
                                    <IndianRupee size={16} /> {job.salary}
                                 </div>
                              </div>
-                             <div className="job-card-actions pt-4 border-t border-slate-100" onClick={(e) => e.stopPropagation()}>
+                              <div className="job-card-actions pt-4 border-t border-slate-100" onClick={(e) => e.stopPropagation()}>
                                 <Link to={`/jobs/${job.id}`} className="w-full">
-                                   <button className="btn-apply-job w-full h-full text-sm">View Details</button>
+                                  <button className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg text-sm transition-colors">View Details</button>
                                 </Link>
-                             </div>
+                              </div>
                           </div>
                         </div>
                       );
