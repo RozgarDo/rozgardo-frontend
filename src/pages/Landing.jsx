@@ -155,8 +155,8 @@ const Landing = ({ user }) => {
                                 </div>
                              </div>
                               <div className="job-card-actions pt-4 border-t border-slate-100" onClick={(e) => e.stopPropagation()}>
-                                <Link to={`/jobs/${job.id}`} className="w-full">
-                                  <button className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg text-sm transition-colors">View Details</button>
+                                <Link to={`/jobs/${job.id}`} className="w-full" style={{ textDecoration: 'none' }}>
+                                  <span className="btn-apply-job" style={{ display: 'block', width: '100%', padding: '0.7rem 0', textAlign: 'center', background: 'linear-gradient(to right, #4F46E5, #6366F1)', color: 'white', borderRadius: '0.5rem', fontWeight: 700, fontSize: '0.95rem', cursor: 'pointer' }}>View Details</span>
                                 </Link>
                               </div>
                           </div>
