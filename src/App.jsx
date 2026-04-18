@@ -27,6 +27,7 @@ function AppContent({ user, handleLogin, handleLogout }) {
     }
   }, [location]);
 
+  
   const isOnboarding = location.pathname === '/onboarding';
 
   return (
