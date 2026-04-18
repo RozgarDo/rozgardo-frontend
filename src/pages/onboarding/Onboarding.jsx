@@ -106,7 +106,7 @@ const Onboarding = () => {
             gap: 12
           }}>
             <span>🚀</span>
-            <span>Coming Soon</span>
+            <span>Launching Soon</span>
           </h1>
 
           {/* Subheading */}
