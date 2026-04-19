@@ -43,7 +43,6 @@ const Navbar = ({ user, onLogout }) => {
     } else if (user.role === 'employer') {
       return [
         { to: '/employer', label: 'Dashboard' },
-        { to: '/employer/post-job', label: 'Post Job' },
       ];
     } else if (user.role === 'admin') {
       return [{ to: '/admin', label: 'Dashboard' }];
