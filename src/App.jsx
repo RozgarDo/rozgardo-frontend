@@ -14,6 +14,7 @@ import Landing from './pages/Landing';
 import TestPage from './pages/TestPage';
 import Settings from './pages/Settings';
 import Onboarding from './pages/onboarding/Onboarding';
+import Registration from './pages/registration/Registration';  // <-- new import
 import ScrollToTop from './components/ScrollToTop';
 
 function AppContent({ user, handleLogin, handleLogout }) {
@@ -27,15 +28,15 @@ function AppContent({ user, handleLogin, handleLogout }) {
     }
   }, [location]);
 
-  
-  const isOnboarding = location.pathname === '/onboarding';
-
+  // Navbar is shown on all routes except login (if you want)
+  const hideNavbar = location.pathname === '/login';
   return (
     <div className="flex flex-col min-h-screen">
-      {!isOnboarding && <Navbar user={user} onLogout={handleLogout} />}
-      <main className={isOnboarding ? "" : "main-content"}>
+      {!hideNavbar && <Navbar user={user} onLogout={handleLogout} />}
+      <main className="main-content">
         <Routes>
           <Route path="/onboarding" element={<Onboarding />} />
+          <Route path="/register" element={<Registration />} />   {/* new route */}
           <Route path="/login" element={user ? <Navigate to="/" /> : <Login onLogin={handleLogin} />} />
           <Route path="/home" element={<Landing user={user} />} />
           <Route path="/" element={user?.role === 'admin' ? <Navigate to="/admin" /> : <Landing user={user} />} />
