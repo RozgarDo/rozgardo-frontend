@@ -31,7 +31,7 @@ function AppContent({ user, handleLogin, handleLogout }) {
           <Route path="/register" element={<Registration />} />   {/* new route */}
           <Route path="/login" element={user ? <Navigate to="/" /> : <Login onLogin={handleLogin} />} />
           <Route path="/home" element={<Landing user={user} />} />
-          <Route path="/" element={user?.role === 'admin' ? <Navigate to="/admin" /> : <Landing user={user} />} />
+          <Route path="/" element={<Navigate to="/onboarding" replace />} />
           <Route path="/profile" element={<Profile user={user} setUser={handleLogin} />} />
           <Route path="/profile-setup" element={<Profile user={user} setUser={handleLogin} />} />
           <Route path="/settings" element={<Settings user={user} />} />
