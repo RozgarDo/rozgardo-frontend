@@ -101,10 +101,10 @@ const Navbar = ({ user, onLogout }) => {
       }}>
 
         {/* Logo with more left spacing */}
-        <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <img 
-            src={logo} 
-            alt="RozgarDo Logo" 
+        <Link to="/onboarding" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <img
+            src={logo}
+            alt="RozgarDo Logo"
             style={{ height: '56px', width: 'auto', objectFit: 'contain' }}
           />
         </Link>
@@ -287,11 +287,11 @@ const Navbar = ({ user, onLogout }) => {
             )}
           </>
         ) : (
-          location.pathname !== '/login' && 
-          location.pathname !== '/home' && 
-          location.pathname !== '/test' && 
-          location.pathname !== '/onboarding' && 
-          location.pathname !== '/register' ? (
+          location.pathname !== '/login' &&
+            location.pathname !== '/home' &&
+            location.pathname !== '/test' &&
+            location.pathname !== '/onboarding' &&
+            location.pathname !== '/register' ? (
             <Link to="/login" style={{ textDecoration: 'none', fontWeight: 600, color: '#4F46E5', fontSize: '0.9rem' }}>
               Sign In
             </Link>
