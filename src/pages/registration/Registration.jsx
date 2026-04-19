@@ -8,6 +8,8 @@ import {
 } from 'lucide-react';
 import Footer from '../../components/Footer';  // <-- FIXED: two levels up
 
+const API_BASE_URL = 'http://localhost:5001';
+
 const Registration = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('employee');
@@ -206,29 +208,76 @@ const Registration = () => {
     return Object.keys(errors).length === 0;
   };
 
-  const handleEmployeeSubmit = (e) => {
-    e.preventDefault();
-    if (validateEmployeeForm()) {
-      const submissionData = {
-        ...employeeForm,
-        highestQualification: employeeForm.highestQualification === 'Others' 
-          ? employeeForm.customQualification 
-          : employeeForm.highestQualification
-      };
-      console.log('Employee Registration:', submissionData);
-      setEmployeeSuccess(true);
-      setTimeout(() => setEmployeeSuccess(false), 3000);
-    }
+const handleEmployeeSubmit = async (e) => {
+  e.preventDefault();
+  if (!validateEmployeeForm()) return;
+
+  const submissionData = {
+    fullName: employeeForm.fullName,
+    phone: employeeForm.phone,
+    email: employeeForm.email,
+    currentLocation: employeeForm.currentLocation,
+    highestQualification: employeeForm.highestQualification === 'Others' 
+      ? employeeForm.customQualification 
+      : employeeForm.highestQualification,
+    selectedJobTypes: employeeForm.selectedJobTypes,
+    preferredLanguages: employeeForm.preferredLanguages
   };
 
-  const handleHrSubmit = (e) => {
-    e.preventDefault();
-    if (validateHrForm()) {
-      console.log('HR Registration:', hrForm);
+  try {
+    const response = await fetch(`${API_BASE_URL}/onboarding/employee-profile`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(submissionData)
+    });
+    const data = await response.json();
+    if (response.ok) {
+      setEmployeeSuccess(true);
+      setTimeout(() => setEmployeeSuccess(false), 3000);
+    } else {
+      alert(`Error: ${data.error || 'Submission failed'}`);
+    }
+  } catch (err) {
+    console.error(err);
+    alert('Network error. Please check your connection.');
+  }
+};
+
+const handleHrSubmit = async (e) => {
+  e.preventDefault();
+  if (!validateHrForm()) return;
+
+  const submissionData = {
+    companyName: hrForm.companyName,
+    officeLocation: hrForm.officeLocation,
+    hrFirstName: hrForm.hrFirstName,
+    hrLastName: hrForm.hrLastName,
+    hrEmail: hrForm.hrEmail,
+    hrPhone: hrForm.hrPhone,
+    linkedinProfile: hrForm.linkedinProfile,
+    totalCandidatesRequired: hrForm.totalCandidatesRequired,
+    jobLocation: hrForm.jobLocation,
+    selectedJobCategories: hrForm.selectedJobCategories
+  };
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/onboarding/employer-profile`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(submissionData)
+    });
+    const data = await response.json();
+    if (response.ok) {
       setHrSuccess(true);
       setTimeout(() => setHrSuccess(false), 3000);
+    } else {
+      alert(`Error: ${data.error || 'Submission failed'}`);
     }
-  };
+  } catch (err) {
+    console.error(err);
+    alert('Network error. Please check your connection.');
+  }
+};
 
   // Particles
   const particles = Array.from({ length: 20 }, (_, i) => ({
