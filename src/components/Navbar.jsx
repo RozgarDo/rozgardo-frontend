@@ -43,7 +43,6 @@ const Navbar = ({ user, onLogout }) => {
     } else if (user.role === 'employer') {
       return [
         { to: '/employer', label: 'Dashboard' },
-        { to: '/employer/post-job', label: 'Post Job' },
       ];
     } else if (user.role === 'admin') {
       return [{ to: '/admin', label: 'Dashboard' }];
@@ -101,10 +100,10 @@ const Navbar = ({ user, onLogout }) => {
       }}>
 
         {/* Logo with more left spacing */}
-        <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <img 
-            src={logo} 
-            alt="RozgarDo Logo" 
+        <Link to="/onboarding" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <img
+            src={logo}
+            alt="RozgarDo Logo"
             style={{ height: '56px', width: 'auto', objectFit: 'contain' }}
           />
         </Link>
@@ -287,11 +286,11 @@ const Navbar = ({ user, onLogout }) => {
             )}
           </>
         ) : (
-          location.pathname !== '/login' && 
-          location.pathname !== '/home' && 
-          location.pathname !== '/test' && 
-          location.pathname !== '/onboarding' && 
-          location.pathname !== '/register' ? (
+          location.pathname !== '/login' &&
+            location.pathname !== '/home' &&
+            location.pathname !== '/test' &&
+            location.pathname !== '/onboarding' &&
+            location.pathname !== '/register' ? (
             <Link to="/login" style={{ textDecoration: 'none', fontWeight: 600, color: '#4F46E5', fontSize: '0.9rem' }}>
               Sign In
             </Link>

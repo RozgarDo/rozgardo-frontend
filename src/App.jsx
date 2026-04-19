@@ -20,14 +20,6 @@ import ScrollToTop from './components/ScrollToTop';
 function AppContent({ user, handleLogin, handleLogout }) {
   const location = useLocation();
 
-  useEffect(() => {
-    const hostname = window.location.hostname;
-    const isProduction = hostname.includes('vercel.app') || hostname.includes('rozgardo.com');
-    if (isProduction && location.pathname !== "/onboarding") {
-      window.location.replace("/onboarding");
-    }
-  }, [location]);
-
   // Navbar is shown on all routes except login (if you want)
   const hideNavbar = location.pathname === '/login';
   return (
@@ -39,7 +31,7 @@ function AppContent({ user, handleLogin, handleLogout }) {
           <Route path="/register" element={<Registration />} />   {/* new route */}
           <Route path="/login" element={user ? <Navigate to="/" /> : <Login onLogin={handleLogin} />} />
           <Route path="/home" element={<Landing user={user} />} />
-          <Route path="/" element={user?.role === 'admin' ? <Navigate to="/admin" /> : <Landing user={user} />} />
+          <Route path="/" element={<Navigate to="/onboarding" replace />} />
           <Route path="/profile" element={<Profile user={user} setUser={handleLogin} />} />
           <Route path="/profile-setup" element={<Profile user={user} setUser={handleLogin} />} />
           <Route path="/settings" element={<Settings user={user} />} />
