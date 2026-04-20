@@ -7,6 +7,7 @@ import {
   ChevronDown, Check, Clock, UserCheck, 
   XCircle, AlertCircle, Loader2
 } from 'lucide-react';
+import { API_BASE_URL } from '../../config';
 
 const Dashboard = ({ user }) => {
   const [jobs, setJobs] = useState([]);
@@ -32,7 +33,7 @@ const Dashboard = ({ user }) => {
 
   const fetchEmployerJobs = async () => {
     try {
-      const res = await fetch(`http://localhost:5001/api/jobs?employer_id=${user.id}`);
+      const res = await fetch(`${API_BASE_URL}/api/jobs?employer_id=${user.id}`);
       if (res.ok) {
         const data = await res.json();
         setJobs(data);
@@ -59,8 +60,8 @@ const Dashboard = ({ user }) => {
     setApplicantsLoading(true);
     setApplicants([]);
     
-    try {
-      const res = await fetch(`http://localhost:5001/api/applications/job/${job.id}`);
+     try {
+       const res = await fetch(`${API_BASE_URL}/api/applications/job/${job.id}`);
       if (res.ok) {
         const data = await res.json();
         setApplicants(data);
@@ -85,7 +86,7 @@ const Dashboard = ({ user }) => {
     setUpdatingAppId(appId);
 
     try {
-      const res = await fetch(`http://localhost:5001/api/applications/${appId}/status`, {
+      const res = await fetch(`${API_BASE_URL}/api/applications/${appId}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: newStatus })

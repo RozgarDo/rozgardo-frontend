@@ -4,6 +4,7 @@ import Card from '../../components/Card';
 import Button from '../../components/Button';
 import { Zap, CheckCircle2, ShieldCheck, MapPin, IndianRupee, Briefcase, ChevronRight, UserPlus, FileText, CheckCircle } from 'lucide-react';
 import './HomeLanding.css';
+import { API_BASE_URL } from '../../config';
 
 const Home = ({ user }) => {
   const [jobs, setJobs] = useState([]);
@@ -16,7 +17,7 @@ const Home = ({ user }) => {
 
   const fetchJobs = async () => {
     try {
-      const res = await fetch('http://localhost:5001/api/jobs?status=approved');
+      const res = await fetch(`${API_BASE_URL}/api/jobs?status=approved`);
       if (res.ok) {
         const data = await res.json();
         setJobs(data);
