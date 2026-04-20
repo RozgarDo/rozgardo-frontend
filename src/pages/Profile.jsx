@@ -4,7 +4,8 @@ import {
   UserCircle, Pencil, X, MapPin, Phone, Mail, Briefcase,
   FileText, Star, ChevronDown, Loader2, Check, Camera, Trash2, Plus
 } from 'lucide-react';
-import { API_BASE_URL } from '../config';
+// import { API_BASE_URL } from '../config';
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const SECTION = { NONE: '', PERSONAL: 'personal', SKILLS: 'skills', EXPERIENCE: 'experience', PREFERENCES: 'preferences' };
 

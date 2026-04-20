@@ -8,7 +8,8 @@ import {
   AlertCircle, LayoutGrid, Award, GraduationCap,
   Users, TrendingUp, DollarSign
 } from 'lucide-react';
-import { API_BASE_URL } from '../../config';
+// import { API_BASE_URL } from '../../config';
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const JobDetails = ({ user }) => {
   const { id } = useParams();

@@ -2,7 +2,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import Card from '../../components/Card';
 import { IndianRupee, MapPin, X, Briefcase, Calendar, Clock, AlertCircle } from 'lucide-react';
-import { API_BASE_URL } from '../../config';
+// import { API_BASE_URL } from '../../config';
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const Applications = ({ user }) => {
   const [apps, setApps] = useState([]);

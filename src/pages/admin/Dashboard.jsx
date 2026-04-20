@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
 import { ShieldAlert, CheckCircle, XCircle, Users, Briefcase, TrendingUp, DollarSign, Calendar, Building, Download } from 'lucide-react';
-import { API_BASE_URL } from '../../config';
+// import { API_BASE_URL } from '../../config';
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const AdminDashboard = ({ user }) => {
   const [activeTab, setActiveTab] = useState('jobs');
