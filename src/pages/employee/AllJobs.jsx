@@ -2,7 +2,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Button from '../../components/Button';
 import { MapPin, IndianRupee, Briefcase, Search, X, ArrowLeft } from 'lucide-react';
-import { API_BASE_URL } from '../../config';
+// import { API_BASE_URL } from '../../config';
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const AllJobs = ({ user }) => {
   const [jobs, setJobs] = useState([]);

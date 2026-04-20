@@ -7,7 +7,9 @@ import {
   HardHat, Smartphone, ArrowLeft
 } from 'lucide-react';
 import Footer from '../../components/Footer';
-import { API_BASE_URL } from '../../config';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+// import { API_BASE_URL } from '../../config';
 
 const Registration = () => {
   const navigate = useNavigate();
@@ -224,7 +226,7 @@ const handleEmployeeSubmit = async (e) => {
   };
 
   try {
-    const response = await fetch(`${API_BASE_URL}/onboarding/employee-profile`, {
+    const response = await fetch(`${API_BASE_URL}/api/onboarding/employee-profile`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(submissionData)
@@ -260,7 +262,7 @@ const handleHrSubmit = async (e) => {
   };
 
   try {
-    const response = await fetch(`${API_BASE_URL}/onboarding/employer-profile`, {
+    const response = await fetch(`${API_BASE_URL}/api/onboarding/employer-profile`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(submissionData)

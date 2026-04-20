@@ -4,7 +4,8 @@ import Card from '../../components/Card';
 import Button from '../../components/Button';
 import { Zap, CheckCircle2, ShieldCheck, MapPin, IndianRupee, Briefcase, ChevronRight, UserPlus, FileText, CheckCircle } from 'lucide-react';
 import './HomeLanding.css';
-import { API_BASE_URL } from '../../config';
+// import { API_BASE_URL } from '../../config';
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const Home = ({ user }) => {
   const [jobs, setJobs] = useState([]);

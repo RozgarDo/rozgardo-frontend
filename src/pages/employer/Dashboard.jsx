@@ -7,7 +7,8 @@ import {
   ChevronDown, Check, Clock, UserCheck, 
   XCircle, AlertCircle, Loader2
 } from 'lucide-react';
-import { API_BASE_URL } from '../../config';
+// import { API_BASE_URL } from '../../config';
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const Dashboard = ({ user }) => {
   const [jobs, setJobs] = useState([]);

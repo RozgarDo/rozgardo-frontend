@@ -3,7 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Zap, CheckCircle2, ShieldCheck, MapPin, IndianRupee, Briefcase, ChevronRight, UserPlus, FileText, CheckCircle, User, Clock } from 'lucide-react';
 import './employee/HomeLanding.css';
 import Footer from '../components/Footer';
-import { API_BASE_URL } from '../config';
+// import { API_BASE_URL } from '../config';
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const Landing = ({ user }) => {
   const navigate = useNavigate();
