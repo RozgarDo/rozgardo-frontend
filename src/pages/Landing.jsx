@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Zap, CheckCircle2, ShieldCheck, MapPin, IndianRupee, Briefcase, ChevronRight, UserPlus, FileText, CheckCircle, User, Clock } from 'lucide-react';
 import './employee/HomeLanding.css';
 import Footer from '../components/Footer';
+import { API_BASE_URL } from '../../config';
 
 const Landing = ({ user }) => {
   const navigate = useNavigate();
@@ -20,7 +21,7 @@ const Landing = ({ user }) => {
 
   const fetchJobs = async () => {
     try {
-      const res = await fetch('http://localhost:5001/api/jobs?status=approved');
+      const res = await fetch(`${API_BASE_URL}/api/jobs?status=approved`);
       if (res.ok) {
         const data = await res.json();
         setJobs(data);

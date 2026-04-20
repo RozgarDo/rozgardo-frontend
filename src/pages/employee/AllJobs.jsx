@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Button from '../../components/Button';
 import { MapPin, IndianRupee, Briefcase, Search, X, ArrowLeft } from 'lucide-react';
+import { API_BASE_URL } from '../../config';
 
 const AllJobs = ({ user }) => {
   const [jobs, setJobs] = useState([]);
@@ -17,7 +18,7 @@ const AllJobs = ({ user }) => {
 
   const fetchJobs = async () => {
     try {
-      const res = await fetch('http://localhost:5001/api/jobs?status=approved');
+      const res = await fetch(`${API_BASE_URL}/api/jobs?status=approved`);
       if (res.ok) {
         const data = await res.json();
         setJobs(data);

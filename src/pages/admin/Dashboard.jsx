@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
 import { ShieldAlert, CheckCircle, XCircle, Users, Briefcase, TrendingUp, DollarSign, Calendar, Building, Download } from 'lucide-react';
+import { API_BASE_URL } from '../../config';
 
 const AdminDashboard = ({ user }) => {
   const [activeTab, setActiveTab] = useState('jobs');
@@ -14,17 +15,17 @@ const AdminDashboard = ({ user }) => {
     fetchData();
   }, [activeTab, usersTab]);
 
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      if (activeTab === 'jobs') {
-        const res = await fetch('http://localhost:5001/api/jobs');
+   const fetchData = async () => {
+     setLoading(true);
+     try {
+       if (activeTab === 'jobs') {
+         const res = await fetch(`${API_BASE_URL}/api/jobs`);
         if (res.ok) {
            const data = await res.json();
            setJobs(data);
         }
-      } else {
-        const res = await fetch('http://localhost:5001/api/auth/users');
+       } else {
+         const res = await fetch(`${API_BASE_URL}/api/auth/users`);
         if (res.ok) {
            const data = await res.json();
            setUsers(data);
@@ -39,7 +40,7 @@ const AdminDashboard = ({ user }) => {
 
   const handleJobAction = async (id, status) => {
     try {
-      const res = await fetch(`http://localhost:5001/api/jobs/${id}/status`, {
+      const res = await fetch(`${API_BASE_URL}/api/jobs/${id}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status })

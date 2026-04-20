@@ -6,9 +6,8 @@ import {
   MapPin as MapPinIcon, Rocket, DollarSign, Map, Users as UsersIcon2, UserCheck, 
   HardHat, Smartphone, ArrowLeft
 } from 'lucide-react';
-import Footer from '../../components/Footer';  // <-- FIXED: two levels up
-
-const API_BASE_URL = 'http://localhost:5001';
+import Footer from '../../components/Footer';
+import { API_BASE_URL } from '../../config';
 
 const Registration = () => {
   const navigate = useNavigate();

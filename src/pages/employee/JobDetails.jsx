@@ -8,6 +8,7 @@ import {
   AlertCircle, LayoutGrid, Award, GraduationCap,
   Users, TrendingUp, DollarSign
 } from 'lucide-react';
+import { API_BASE_URL } from '../../config';
 
 const JobDetails = ({ user }) => {
   const { id } = useParams();
@@ -25,10 +26,10 @@ const JobDetails = ({ user }) => {
     fetchJobDetails();
   }, [id]);
 
-  const fetchJobDetails = async () => {
-    setLoading(true);
-    try {
-      const res = await fetch(`http://localhost:5001/api/jobs/${id}`);
+   const fetchJobDetails = async () => {
+     setLoading(true);
+     try {
+       const res = await fetch(`${API_BASE_URL}/api/jobs/${id}`);
       if (res.ok) {
         const data = await res.json();
         setJob(data);
@@ -68,7 +69,7 @@ const JobDetails = ({ user }) => {
     // 1. Check if user already applied
     if (user?.id) {
       try {
-        const res = await fetch(`http://localhost:5001/api/applications/employee/${user.id}`);
+        const res = await fetch(`${API_BASE_URL}/api/applications/employee/${user.id}`);
         if (res.ok) {
           const apps = await res.json();
           const hasApplied = apps.some(app => app.job_id === jobData.id);
@@ -88,7 +89,7 @@ const JobDetails = ({ user }) => {
     if (applied) return;
     setApplying(true);
     try {
-      const res = await fetch('http://localhost:5001/api/applications', {
+      const res = await fetch(`${API_BASE_URL}/api/applications`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ job_id: job.id, employee_id: user?.id })

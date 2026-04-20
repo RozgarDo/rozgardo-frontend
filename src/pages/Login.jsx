@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShieldCheck, UserPlus, Phone, Lock, Mail } from 'lucide-react';
 import './Login.css';
+import { API_BASE_URL } from '../config';
 
 const Login = ({ onLogin }) => {
   const [loginId, setLoginId] = useState('');
@@ -34,11 +35,11 @@ const Login = ({ onLogin }) => {
       else navigate(user.name ? '/' : '/profile-setup');
   };
 
-  const handleSendOtp = async () => {
-     setError('');
-     setMessage('');
-     try {
-       const res = await fetch('http://localhost:5001/api/auth/send-otp', {
+   const handleSendOtp = async () => {
+      setError('');
+      setMessage('');
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/auth/send-otp`, {
          method: 'POST',
          headers: { 'Content-Type': 'application/json' },
          body: JSON.stringify({ phone: loginId })
@@ -73,8 +74,8 @@ const Login = ({ onLogin }) => {
     
     let finalOtp = Array.isArray(otp) ? otp.join('') : otp;
 
-    try {
-      const endpoint = isRegistering ? 'http://localhost:5001/api/auth/register' : 'http://localhost:5001/api/auth/login';
+     try {
+       const endpoint = isRegistering ? `${API_BASE_URL}/api/auth/register` : `${API_BASE_URL}/api/auth/login`;
       let body = isRegistering 
           ? { phone: loginId, role, name: '', skills: '', location: '', password } 
           : { loginId, type: authMethod, password, otp: finalOtp };

@@ -4,6 +4,7 @@ import {
   UserCircle, Pencil, X, MapPin, Phone, Mail, Briefcase,
   FileText, Star, ChevronDown, Loader2, Check, Camera, Trash2, Plus
 } from 'lucide-react';
+import { API_BASE_URL } from '../config';
 
 const SECTION = { NONE: '', PERSONAL: 'personal', SKILLS: 'skills', EXPERIENCE: 'experience', PREFERENCES: 'preferences' };
 
@@ -96,7 +97,7 @@ const Profile = ({ user, setUser }) => {
     setMessage({ type: '', text: '' });
     const updatedData = { ...formData, name: `${formData.first_name} ${formData.last_name}`.trim(), skills: formData.skills.join(', ') };
     try {
-      const res = await fetch(`http://localhost:5001/api/auth/profile/${user.id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/auth/profile/${user.id}`, {
         method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(updatedData),
       });
       const data = await res.json();

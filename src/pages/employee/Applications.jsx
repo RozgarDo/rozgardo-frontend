@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import Card from '../../components/Card';
 import { IndianRupee, MapPin, X, Briefcase, Calendar, Clock, AlertCircle } from 'lucide-react';
+import { API_BASE_URL } from '../../config';
 
 const Applications = ({ user }) => {
   const [apps, setApps] = useState([]);
@@ -23,7 +24,7 @@ const Applications = ({ user }) => {
 
   const fetchApplications = async () => {
     try {
-      const res = await fetch(`http://localhost:5001/api/applications/employee/${user.id}`);
+      const res = await fetch(`${API_BASE_URL}/api/applications/employee/${user.id}`);
       if (res.ok) {
         const data = await res.json();
         setApps(data);
