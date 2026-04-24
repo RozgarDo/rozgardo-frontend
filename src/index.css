@@ -165,3 +165,10 @@ ul {
   min-height: calc(100vh - 64px); /* assuming navbar is 64px tall */
   padding: 2rem 0;
 }
+
+
+html, body {
+  /* Prevents the 'bounce' effect that reveals the white background */
+  overscroll-behavior-y: none;
+
+}

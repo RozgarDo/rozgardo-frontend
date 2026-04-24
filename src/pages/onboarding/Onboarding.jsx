@@ -5,7 +5,6 @@ import {
   Users as UsersIcon2, UserCheck, HardHat, Smartphone, ArrowRight, TrendingUp,
   UserPlus, Search, Send
 } from 'lucide-react';
-import Footer from '../../components/Footer';
 
 import handshake from '../../assets/handshake.jpeg';
 import workers from '../../assets/workers.png';
@@ -51,7 +50,8 @@ const Onboarding = () => {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
+    // <div className="min-h-screen flex flex-col bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
+    <div className="bg-gradient-to-br from-slate-50 via-white to-indigo-50/30">
       <main className="flex-1">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-1 pb-6">
           {/* Two column layout with equal height */}
@@ -146,6 +146,7 @@ const Onboarding = () => {
           </div>
 
 {/* Trusted by Leading Employers Section */}
+
 {/* 
 <div className="mt-8 bg-white rounded-2xl shadow-sm border border-slate-100 p-8 relative">
 
@@ -201,12 +202,12 @@ const Onboarding = () => {
     </div>
 
   </div>
-</div> */}
+</div> 
+*/}
 
 
         </div>
       </main>
-      <Footer />
     </div>
   );
 };
