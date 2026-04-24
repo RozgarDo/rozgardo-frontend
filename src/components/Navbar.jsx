@@ -96,11 +96,10 @@ const Navbar = ({ user, onLogout }) => {
         justifyContent: 'space-between',
         alignItems: 'center',
         height: '72px',
-        padding: '0 2.5rem', // Increased padding from 1.5rem to 2.5rem on both sides
+        padding: '0 2.5rem',
       }}>
 
-        {/* Logo with more left spacing */}
-        <Link to="/onboarding" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <img
             src={logo}
             alt="RozgarDo Logo"
@@ -108,7 +107,6 @@ const Navbar = ({ user, onLogout }) => {
           />
         </Link>
 
-        {/* Right side (unchanged) */}
         {user ? (
           <>
             <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
@@ -118,18 +116,6 @@ const Navbar = ({ user, onLogout }) => {
                     key={link.to}
                     to={link.to}
                     style={navLinkStyle(link.to)}
-                    onMouseEnter={(e) => {
-                      if (!isActive(link.to)) {
-                        e.currentTarget.style.color = '#4F46E5';
-                        e.currentTarget.style.borderBottomColor = '#C7D2FE';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!isActive(link.to)) {
-                        e.currentTarget.style.color = '#374151';
-                        e.currentTarget.style.borderBottomColor = 'transparent';
-                      }
-                    }}
                   >
                     {link.label}
                   </Link>
@@ -147,18 +133,6 @@ const Navbar = ({ user, onLogout }) => {
                     border: `1px solid ${profileDropdownOpen ? '#C7D2FE' : '#E5E7EB'}`,
                     cursor: 'pointer', fontFamily: 'inherit',
                     transition: 'background 0.2s, border-color 0.2s',
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!profileDropdownOpen) {
-                      e.currentTarget.style.background = '#EEF2FF';
-                      e.currentTarget.style.borderColor = '#C7D2FE';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!profileDropdownOpen) {
-                      e.currentTarget.style.background = '#F8FAFC';
-                      e.currentTarget.style.borderColor = '#E5E7EB';
-                    }
                   }}
                 >
                   <div style={{
@@ -185,7 +159,6 @@ const Navbar = ({ user, onLogout }) => {
                     boxShadow: '0 10px 25px rgba(0,0,0,0.1), 0 4px 6px rgba(0,0,0,0.04)',
                     padding: '0.5rem',
                     zIndex: 200,
-                    animation: 'dropdownFade 150ms ease-out',
                   }}>
                     <div style={{
                       display: 'flex', alignItems: 'center', gap: '0.75rem',
@@ -209,33 +182,16 @@ const Navbar = ({ user, onLogout }) => {
                         </div>
                       </div>
                     </div>
-                    <Link to="/profile" style={dropdownItemStyle}
-                      onMouseEnter={(e) => e.currentTarget.style.background = '#F8FAFC'}
-                      onMouseLeave={(e) => e.currentTarget.style.background = 'none'}>
+                    <Link to="/profile" style={dropdownItemStyle}>
                       <User size={16} color="#64748B" /> My Profile
                     </Link>
-                    <Link to="/settings" style={dropdownItemStyle}
-                      onMouseEnter={(e) => e.currentTarget.style.background = '#F8FAFC'}
-                      onMouseLeave={(e) => e.currentTarget.style.background = 'none'}>
+                    <Link to="/settings" style={dropdownItemStyle}>
                       <Settings size={16} color="#64748B" /> Settings
                     </Link>
                     <div style={{ height: '1px', background: '#F1F5F9', margin: '0.375rem 0.5rem' }} />
-                    <button style={dropdownItemStyle}
-                      onMouseEnter={(e) => e.currentTarget.style.background = '#F8FAFC'}
-                      onMouseLeave={(e) => e.currentTarget.style.background = 'none'}>
-                      <Shield size={16} color="#64748B" /> Security
-                    </button>
-                    <button style={dropdownItemStyle}
-                      onMouseEnter={(e) => e.currentTarget.style.background = '#F8FAFC'}
-                      onMouseLeave={(e) => e.currentTarget.style.background = 'none'}>
-                      <CreditCard size={16} color="#64748B" /> Billing Plan
-                    </button>
-                    <div style={{ height: '1px', background: '#F1F5F9', margin: '0.375rem 0.5rem' }} />
                     <button
                       onClick={handleLogout}
-                      style={{ ...dropdownItemStyle, color: '#DC2626' }}
-                      onMouseEnter={(e) => e.currentTarget.style.background = '#FEF2F2'}
-                      onMouseLeave={(e) => e.currentTarget.style.background = 'none'}>
+                      style={{ ...dropdownItemStyle, color: '#DC2626' }}>
                       <LogOut size={16} color="#DC2626" /> Logout
                     </button>
                   </div>
@@ -252,49 +208,14 @@ const Navbar = ({ user, onLogout }) => {
                 {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
               </button>
             </div>
-            {mobileMenuOpen && (
-              <div className="navbar-mobile-menu" style={{
-                position: 'absolute', top: '72px', left: 0, right: 0,
-                background: 'white', borderBottom: '1px solid #E5E7EB',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.08)', padding: '1rem 1.5rem',
-                display: 'flex', flexDirection: 'column', gap: '0.5rem', zIndex: 99,
-              }}>
-                {navLinks.map(link => (
-                  <Link key={link.to} to={link.to}
-                    onClick={() => setMobileMenuOpen(false)}
-                    style={{
-                      textDecoration: 'none', fontSize: '0.95rem',
-                      fontWeight: isActive(link.to) ? 700 : 500,
-                      color: isActive(link.to) ? '#4F46E5' : '#374151',
-                      padding: '0.6rem 0', borderBottom: '1px solid #F1F5F9',
-                    }}
-                  >
-                    {link.label}
-                  </Link>
-                ))}
-                <Link to="/profile" onClick={() => setMobileMenuOpen(false)}
-                  style={{ textDecoration: 'none', fontSize: '0.95rem', fontWeight: 500, color: '#374151', padding: '0.6rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem', borderBottom: '1px solid #F1F5F9' }}
-                >
-                  <UserCircle size={18} color="#94A3B8" /> My Profile
-                </Link>
-                <button onClick={() => { setMobileMenuOpen(false); handleLogout(); }}
-                  style={{ ...dropdownItemStyle, color: '#DC2626', padding: '0.6rem 0', borderRadius: 0 }}
-                >
-                  <LogOut size={16} color="#DC2626" /> Logout
-                </button>
-              </div>
-            )}
           </>
         ) : (
-          location.pathname !== '/login' &&
-            location.pathname !== '/home' &&
-            location.pathname !== '/test' &&
-            location.pathname !== '/onboarding' &&
-            location.pathname !== '/register' ? (
+          /* SHOW LOGIN BUTTON ONLY IF NOT ON AUTH/ONBOARDING PAGES */
+          !['/login', '/register', '/onboarding', '/', '/terms', '/privacy'].includes(location.pathname) && (
             <Link to="/login" style={{ textDecoration: 'none', fontWeight: 600, color: '#4F46E5', fontSize: '0.9rem' }}>
               Sign In
             </Link>
-          ) : null
+          )
         )}
       </div>
 

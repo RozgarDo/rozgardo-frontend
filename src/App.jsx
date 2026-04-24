@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Login from './pages/Login';
-import EmployeeHome from './pages/employee/Home';
+import EmployeeHome from './pages/employee/Home'; // Your HomeLanding component
 import Profile from './pages/Profile';
 import JobDetails from './pages/employee/JobDetails';
 import Applications from './pages/employee/Applications';
@@ -11,51 +11,124 @@ import EmployerDashboard from './pages/employer/Dashboard';
 import PostJob from './pages/employer/PostJob';
 import AdminDashboard from './pages/admin/Dashboard';
 import Landing from './pages/Landing';
-import TestPage from './pages/TestPage';
 import Settings from './pages/Settings';
 import Onboarding from './pages/onboarding/Onboarding';
-import Registration from './pages/registration/Registration';  // <-- new import
+import Registration from './pages/registration/Registration';
 import ScrollToTop from './components/ScrollToTop';
+import Footer from './components/Footer';
+
+import TermsOfService from './pages/legal/TermsOfService';
+import PrivacyPolicy from './pages/legal/PrivacyPolicy';
 
 function AppContent({ user, handleLogin, handleLogout }) {
   const location = useLocation();
 
-  // Navbar is shown on all routes except login (if you want)
-  const hideNavbar = location.pathname === '/login';
+  // Hide Navbar on specific pages like login or onboarding if preferred
+  const hideNavbar = ['/login'].includes(location.pathname);
+
   return (
     <div className="flex flex-col min-h-screen">
       {!hideNavbar && <Navbar user={user} onLogout={handleLogout} />}
-      <main className="main-content">
+      
+      
+      <main className="main-content flex-grow">
         <Routes>
+          {/* 1. ROOT TRAFFIC CONTROLLER */}
+          {/* <Route 
+            path="/" 
+            element={
+              !user ? (
+                <Onboarding /> 
+              ) : user.role === 'employer' ? (
+                <Navigate to="/employer" replace />
+              ) : user.role === 'admin' ? (
+                <Navigate to="/admin" replace />
+              ) : (
+                <EmployeeHome user={user} />
+              )
+            } 
+          /> */}
+
+
+          <Route path="*" element={<Navigate to="/onboarding" replace />} />
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          <Route path="/terms" element={<TermsOfService />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
+
+          {/* 2. AUTH & ONBOARDING */}
+          <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login onLogin={handleLogin} />} />
+          <Route path="/register" element={<Registration />} />
           <Route path="/onboarding" element={<Onboarding />} />
-          <Route path="/register" element={<Registration />} />   {/* new route */}
-          <Route path="/login" element={user ? <Navigate to="/" /> : <Login onLogin={handleLogin} />} />
-          {/* <Route path="/" element={<Landing user={user} />} /> */}
-          <Route path="/onboarding" element={<Navigate to="/onboarding" replace />} />
-          <Route path="/profile" element={<Profile user={user} setUser={handleLogin} />} />
-          <Route path="/profile-setup" element={<Profile user={user} setUser={handleLogin} />} />
-          <Route path="/settings" element={<Settings user={user} />} />
+
+          {/* 3. EMPLOYEE / APPLICANT ROUTES */}
+          <Route 
+            path="/home" 
+            element={user?.role === 'employee' ? <EmployeeHome user={user} /> : <Navigate to="/login" />} 
+          />
           <Route path="/jobs/:id" element={<JobDetails user={user} />} />
           <Route path="/applications" element={<Applications user={user} />} />
           <Route path="/all-jobs" element={<AllJobs user={user} />} />
-          <Route path="/employer" element={<EmployerDashboard user={user} />} />
-          <Route path="/employer/post-job" element={<PostJob user={user} />} />
-          <Route path="/admin" element={<AdminDashboard user={user} />} />
-          <Route path="*" element={<Navigate to="/onboarding" replace />} />
+
+          {/* 4. SHARED ROUTES */}
+          <Route path="/profile" element={<Profile user={user} setUser={handleLogin} />} />
+          <Route path="/profile-setup" element={<Profile user={user} setUser={handleLogin} />} />
+          <Route path="/settings" element={<Settings user={user} />} />
+
+          {/* 5. EMPLOYER ROUTES */}
+          <Route 
+            path="/employer" 
+            element={user?.role === 'employer' ? <EmployerDashboard user={user} /> : <Navigate to="/login" />} 
+          />
+          <Route 
+            path="/employer/post-job" 
+            element={user?.role === 'employer' ? <PostJob user={user} /> : <Navigate to="/login" />} 
+          />
+
+          {/* 6. ADMIN ROUTES */}
+          <Route 
+            path="/admin" 
+            element={user?.role === 'admin' ? <AdminDashboard user={user} /> : <Navigate to="/login" />} 
+          />
+
+          {/* 7. CATCH-ALL REDIRECT */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
+
+      <Footer />
     </div>
   );
 }
 
 function App() {
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const loggedInUser = localStorage.getItem('user');
     if (loggedInUser) {
-      setUser(JSON.parse(loggedInUser));
+      try {
+        setUser(JSON.parse(loggedInUser));
+      } catch (e) {
+        console.error("Failed to parse user session", e);
+        localStorage.removeItem('user');
+      }
     }
+    setLoading(false);
   }, []);
 
   const handleLogin = (userData) => {
@@ -65,9 +138,11 @@ function App() {
 
   const handleLogout = () => {
     setUser(null);
-    localStorage.clear();
-    window.location.href = '/login';
+    localStorage.removeItem('user');
+    // Using Navigate instead of window.location for a smoother SPA feel
   };
+
+  if (loading) return null; // Prevents flickering while checking localStorage
 
   return (
     <Router>
