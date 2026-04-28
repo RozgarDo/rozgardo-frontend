@@ -2,6 +2,8 @@ import React from 'react';
 import { ShieldCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
+import logo from '../assets/logo.png';
+
 const Footer = () => {
   return (
     <footer className="relative z-10 bg-black border-t border-gray-800">
@@ -9,8 +11,11 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Brand Column */}
           <div>
-            <div className="flex items-center gap-2 mb-3">
-              <ShieldCheck className="w-7 h-7 text-indigo-400" />
+            <div className="flex items-center gap-0 mb-3">
+
+
+              <img src={logo} alt="RozgarDo" style={{ height: '40px', width: 'auto' }} />
+
               <h2 className="text-xl font-bold text-white">RozgarDo</h2>
             </div>
             <p className="text-slate-400 text-sm transition-colors">
