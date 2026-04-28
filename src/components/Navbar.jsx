@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Briefcase, UserCircle, LogOut, Menu, X, User, Settings, Shield, CreditCard, ChevronDown } from 'lucide-react';
+import { Briefcase, UserCircle, LogOut, Menu, X, User, Settings, ChevronDown } from 'lucide-react';
 import logo from '../assets/RozgarDo_Logo.png';
 
 const Navbar = ({ user, onLogout }) => {
@@ -20,11 +20,6 @@ const Navbar = ({ user, onLogout }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  useEffect(() => {
-    setProfileDropdownOpen(false);
-    setMobileMenuOpen(false);
-  }, [location.pathname]);
-
   const handleLogout = () => {
     onLogout();
     navigate('/login');
@@ -32,6 +27,7 @@ const Navbar = ({ user, onLogout }) => {
 
   const isActive = (path) => location.pathname === path;
 
+  // Logged In Links
   const getNavLinks = () => {
     if (!user) return [];
     if (user.role === 'employee') {
@@ -41,196 +37,140 @@ const Navbar = ({ user, onLogout }) => {
         { to: '/applications', label: 'My Applications' },
       ];
     } else if (user.role === 'employer') {
-      return [
-        { to: '/employer', label: 'Dashboard' },
-      ];
-    } else if (user.role === 'admin') {
-      return [{ to: '/admin', label: 'Dashboard' }];
+      return [{ to: '/employer', label: 'Dashboard' }];
     }
     return [];
   };
 
-  const navLinks = getNavLinks();
-
-  const getRoleLabel = () => {
-    if (!user) return '';
-    if (user.role === 'employee') return 'Job Seeker';
-    if (user.role === 'employer') return 'Employer';
-    if (user.role === 'admin') return 'Administrator';
-    return user.role;
-  };
+  // Logged Out (Guest) Links from your screenshot
+  const guestLinks = [
+    { to: '/all-jobs', label: 'Find Jobs' },
+    { to: '/for-employers', label: 'For Employers' },
+    { to: '/how-it-works', label: 'How It Works' },
+    { to: '/resources', label: 'Resources' },
+    { to: '/about', label: 'About Us' },
+  ];
 
   const navLinkStyle = (path) => ({
     textDecoration: 'none',
-    fontSize: '0.875rem',
-    fontWeight: isActive(path) ? 700 : 500,
+    fontSize: '0.85rem',
+    fontWeight: 600,
     color: isActive(path) ? '#4F46E5' : '#374151',
-    borderBottom: isActive(path) ? '2px solid #4F46E5' : '2px solid transparent',
-    paddingBottom: '0.25rem',
-    transition: 'color 0.2s, border-color 0.2s',
+    transition: 'color 0.2s',
     cursor: 'pointer',
     whiteSpace: 'nowrap',
   });
 
-  const dropdownItemStyle = {
-    display: 'flex', alignItems: 'center', gap: '0.625rem',
-    padding: '0.6rem 0.75rem', borderRadius: '0.5rem',
-    fontSize: '0.85rem', fontWeight: 500, color: '#374151',
-    cursor: 'pointer', textDecoration: 'none',
-    transition: 'background 0.15s', border: 'none',
-    background: 'none', width: '100%', textAlign: 'left',
-    fontFamily: 'inherit',
-  };
-
   return (
     <nav style={{
       position: 'sticky', top: 0, zIndex: 100,
-      background: 'rgba(255, 255, 255, 0.92)',
-      backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
-      borderBottom: '1px solid #E5E7EB',
-      boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+      background: 'rgba(255, 255, 255, 0.95)',
+      backdropFilter: 'blur(12px)',
+      borderBottom: '1px solid #F1F5F9',
+      boxShadow: '0 1px 2px rgba(0,0,0,0.03)',
     }}>
       <div style={{
-        width: '100%',
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        height: '72px',
-        padding: '0 2.5rem',
+        maxWidth: '1280px', margin: '0 auto',
+        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        height: '72px', padding: '0 1.5rem',
       }}>
 
-        <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <img
-            src={logo}
-            alt="RozgarDo Logo"
-            style={{ height: '56px', width: 'auto', objectFit: 'contain' }}
-          />
+        {/* LOGO */}
+        <Link to="/" style={{ display: 'flex', alignItems: 'center' }}>
+          <img src={logo} alt="RozgarDo" style={{ height: '52px', width: 'auto' }} />
         </Link>
 
-        {user ? (
-          <>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
-              <div className="navbar-desktop-links" style={{ display: 'flex', alignItems: 'center', gap: '1.75rem' }}>
-                {navLinks.map(link => (
-                  <Link
-                    key={link.to}
-                    to={link.to}
-                    style={navLinkStyle(link.to)}
-                  >
-                    {link.label}
-                  </Link>
-                ))}
-              </div>
-              <div className="navbar-desktop-links" style={{ width: '1px', height: '28px', background: '#E5E7EB' }} />
-              <div ref={dropdownRef} style={{ position: 'relative' }}>
-                <button
-                  onClick={() => setProfileDropdownOpen(prev => !prev)}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: '0.5rem',
-                    background: profileDropdownOpen ? '#EEF2FF' : '#F8FAFC',
-                    padding: '0.375rem 0.75rem 0.375rem 0.5rem',
-                    borderRadius: '9999px',
-                    border: `1px solid ${profileDropdownOpen ? '#C7D2FE' : '#E5E7EB'}`,
-                    cursor: 'pointer', fontFamily: 'inherit',
-                    transition: 'background 0.2s, border-color 0.2s',
-                  }}
-                >
-                  <div style={{
-                    width: '28px', height: '28px', borderRadius: '50%',
-                    background: 'linear-gradient(135deg, #4F46E5, #6366F1)',
-                    color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontWeight: 700, fontSize: '0.75rem',
-                  }}>
-                    {(user.name || user.phone || 'U').charAt(0).toUpperCase()}
-                  </div>
-                  <span className="navbar-desktop-links" style={{ fontSize: '0.8rem', fontWeight: 600, color: '#1E293B', whiteSpace: 'nowrap', display: 'inline' }}>
-                    {user.name || user.phone}
-                  </span>
-                  <ChevronDown size={14} color="#94A3B8" style={{
-                    transition: 'transform 0.2s',
-                    transform: profileDropdownOpen ? 'rotate(180deg)' : 'rotate(0)',
-                  }} />
-                </button>
-                {profileDropdownOpen && (
-                  <div style={{
-                    position: 'absolute', top: 'calc(100% + 0.5rem)', right: 0,
-                    width: '240px', background: 'white',
-                    borderRadius: '0.75rem', border: '1px solid #E5E7EB',
-                    boxShadow: '0 10px 25px rgba(0,0,0,0.1), 0 4px 6px rgba(0,0,0,0.04)',
-                    padding: '0.5rem',
-                    zIndex: 200,
-                  }}>
-                    <div style={{
-                      display: 'flex', alignItems: 'center', gap: '0.75rem',
-                      padding: '0.75rem', marginBottom: '0.25rem',
-                      borderBottom: '1px solid #F1F5F9', paddingBottom: '0.875rem',
-                    }}>
-                      <div style={{
-                        width: '40px', height: '40px', borderRadius: '50%',
-                        background: 'linear-gradient(135deg, #4F46E5, #6366F1)',
-                        color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontWeight: 700, fontSize: '1rem', flexShrink: 0,
-                      }}>
-                        {(user.name || user.phone || 'U').charAt(0).toUpperCase()}
-                      </div>
-                      <div style={{ minWidth: 0 }}>
-                        <div style={{ fontWeight: 700, fontSize: '0.875rem', color: '#0F172A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          {user.name || user.phone}
-                        </div>
-                        <div style={{ fontSize: '0.7rem', color: '#94A3B8', fontWeight: 500 }}>
-                          {getRoleLabel()}
-                        </div>
-                      </div>
-                    </div>
-                    <Link to="/profile" style={dropdownItemStyle}>
-                      <User size={16} color="#64748B" /> My Profile
-                    </Link>
-                    <Link to="/settings" style={dropdownItemStyle}>
-                      <Settings size={16} color="#64748B" /> Settings
-                    </Link>
-                    <div style={{ height: '1px', background: '#F1F5F9', margin: '0.375rem 0.5rem' }} />
-                    <button
-                      onClick={handleLogout}
-                      style={{ ...dropdownItemStyle, color: '#DC2626' }}>
-                      <LogOut size={16} color="#DC2626" /> Logout
-                    </button>
-                  </div>
-                )}
-              </div>
+        {/* CENTER LINKS (Conditional) */}
+        {/* <div className="navbar-desktop-links" style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
+          {!user ? (
+            // Links shown only when Logged Out
+            guestLinks.map(link => (
+              <Link key={link.to} to={link.to} style={navLinkStyle(link.to)}>
+                {link.label}
+              </Link>
+            ))
+          ) : (
+            // Links shown only when Logged In
+            getNavLinks().map(link => (
+              <Link key={link.to} to={link.to} style={navLinkStyle(link.to)}>
+                {link.label}
+              </Link>
+            ))
+          )}
+        </div> */}
+
+        {/* RIGHT SIDE (Profile or Auth Buttons) */}
+        {/* <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+          {!user ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
+              <Link to="/login" style={{ 
+                textDecoration: 'none', fontWeight: 700, color: '#1E293B', fontSize: '0.9rem' 
+              }}>
+                Log in
+              </Link>
+              <Link to="/register" style={{ 
+                textDecoration: 'none', fontWeight: 600, color: 'white', fontSize: '0.85rem',
+                background: '#4F46E5', padding: '0.6rem 1.4rem', borderRadius: '0.75rem',
+                boxShadow: '0 4px 6px -1px rgba(79, 70, 229, 0.2)'
+              }}>
+                Sign up
+              </Link>
+            </div>
+          ) : (
+            
+            <div ref={dropdownRef} style={{ position: 'relative' }}>
               <button
-                className="navbar-mobile-toggle"
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
                 style={{
-                  display: 'none', background: 'none', border: 'none',
-                  cursor: 'pointer', padding: '0.25rem', color: '#374151',
+                  display: 'flex', alignItems: 'center', gap: '0.5rem',
+                  background: '#F8FAFC', padding: '0.35rem 0.75rem 0.35rem 0.4rem',
+                  borderRadius: '9999px', border: '1px solid #E2E8F0', cursor: 'pointer'
                 }}
               >
-                {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+                <div style={{
+                  width: '28px', height: '28px', borderRadius: '50%',
+                  background: '#4F46E5', color: 'white', display: 'flex',
+                  alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '0.75rem',
+                }}>
+                  {(user.name || user.phone || 'U').charAt(0).toUpperCase()}
+                </div>
+                <ChevronDown size={14} color="#64748B" />
               </button>
+
+              {profileDropdownOpen && (
+                <div style={{
+                  position: 'absolute', top: 'calc(100% + 0.5rem)', right: 0,
+                  width: '200px', background: 'white', borderRadius: '0.75rem',
+                  border: '1px solid #E2E8F0', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)',
+                  padding: '0.5rem', zIndex: 200
+                }}>
+                  <button onClick={handleLogout} style={{
+                    width: '100%', display: 'flex', alignItems: 'center', gap: '0.5rem',
+                    padding: '0.6rem', color: '#DC2626', background: 'none', border: 'none',
+                    fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer'
+                  }}>
+                    <LogOut size={16} /> Logout
+                  </button>
+                </div>
+              )}
             </div>
-          </>
-        ) : (
-          /* SHOW LOGIN BUTTON ONLY IF NOT ON AUTH/ONBOARDING PAGES */
-          !['/login', '/register', '/onboarding', '/', '/terms', '/privacy'].includes(location.pathname) && (
-            <Link to="/login" style={{ textDecoration: 'none', fontWeight: 600, color: '#4F46E5', fontSize: '0.9rem' }}>
-              Sign In
-            </Link>
-          )
-        )}
+          )}
+
+          
+          <button
+            className="navbar-mobile-toggle"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            style={{ display: 'none', background: 'none', border: 'none', cursor: 'pointer' }}
+          >
+            {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div> */}
       </div>
 
       <style>{`
-        @keyframes dropdownFade {
-          from { opacity: 0; transform: translateY(-6px) scale(0.97); }
-          to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-        @media (max-width: 768px) {
+        @media (max-width: 992px) {
           .navbar-desktop-links { display: none !important; }
-          .navbar-mobile-toggle { display: flex !important; }
-        }
-        @media (min-width: 769px) {
-          .navbar-mobile-menu { display: none !important; }
-          .navbar-mobile-toggle { display: none !important; }
+          .navbar-mobile-toggle { display: block !important; }
         }
       `}</style>
     </nav>

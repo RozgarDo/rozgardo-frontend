@@ -30,7 +30,6 @@ function AppContent({ user, handleLogin, handleLogout }) {
     <div className="flex flex-col min-h-screen">
       {!hideNavbar && <Navbar user={user} onLogout={handleLogout} />}
       
-      
       <main className="main-content flex-grow">
         <Routes>
           {/* 1. ROOT TRAFFIC CONTROLLER */}
@@ -39,6 +38,7 @@ function AppContent({ user, handleLogin, handleLogout }) {
             element={
               !user ? (
                 <Onboarding /> 
+                //<Landing />
               ) : user.role === 'employer' ? (
                 <Navigate to="/employer" replace />
               ) : user.role === 'admin' ? (
@@ -48,23 +48,6 @@ function AppContent({ user, handleLogin, handleLogout }) {
               )
             } 
           /> */}
-
-
-          <Route path="*" element={<Navigate to="/onboarding" replace />} />
-          
-
-
-
-
-
-
-
-
-
-
-
-
-
 
           <Route path="/terms" element={<TermsOfService />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
@@ -105,7 +88,7 @@ function AppContent({ user, handleLogin, handleLogout }) {
           />
 
           {/* 7. CATCH-ALL REDIRECT */}
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<Navigate to="/onboarding" replace />} />
         </Routes>
       </main>
 
