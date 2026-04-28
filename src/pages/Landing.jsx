@@ -1,229 +1,156 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { Zap, CheckCircle2, ShieldCheck, MapPin, IndianRupee, Briefcase, ChevronRight, UserPlus, FileText, CheckCircle, User, Clock } from 'lucide-react';
-import './employee/HomeLanding.css';
-// import { API_BASE_URL } from '../config';
-const API_BASE_URL = import.meta.env.VITE_API_URL;
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Shield, Briefcase, Users, Zap, IndianRupee, ArrowRight, Star } from 'lucide-react';
+import handshakeImg from '../assets/handshake.png';
 
 const Landing = ({ user }) => {
   const navigate = useNavigate();
-  const isEmployer = user?.role === 'employer';
-  const isEmployee = user?.role === 'employee';
-  
-  const [jobs, setJobs] = useState([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (isEmployee) {
-      fetchJobs();
-    }
-  }, [isEmployee]);
-
-  const fetchJobs = async () => {
-    try {
-      const res = await fetch(`${API_BASE_URL}/api/jobs?status=approved`);
-      if (res.ok) {
-        const data = await res.json();
-        setJobs(data);
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
+  const handleFindJobs = () => {
+    if (user) {
+      navigate(user.role === 'employee' ? '/all-jobs' : '/jobs');
+    } else {
+      navigate('/login');
     }
   };
 
-  const displayedJobs = jobs.slice(0, 6);
+  const handlePostJob = () => {
+    if (user) {
+      navigate(user.role === 'employer' ? '/post-job' : '/become-employer');
+    } else {
+      navigate('/login');
+    }
+  };
 
   return (
-    <div className="home-page-container page-enter" style={{ backgroundColor: '#a5b4fc', minHeight: '100vh' }}>
-      {/* 1. HERO SECTION */}
-      <section className="hero-section">
-        <div className="hero-glow"></div>
-        <div className="hero-glow hero-glow-alt"></div>
-        
-        <div className="hero-greeting-chip">
-           {isEmployee ? `Welcome back, ${user?.name || user?.phone || 'Applicant'}` : 'Welcome to RozgarDo'}
-        </div>
-
-        <h1 className="hero-title">{isEmployee ? "Let's find your next job today." : "Connecting workers with real jobs across India."}</h1>
-        <p className="hero-subtitle">
-          The unified platform for <strong>Drivers | Helpers | Delivery | Cooks | Cleaners</strong>. Start earning instantly.
-        </p>
-        {!isEmployer && (
-        <div className="hero-cta-group mt-2">
-          {isEmployee ? (
-            <>
-              <button className="hero-btn-primary px-8" onClick={() => document.getElementById('latest-jobs').scrollIntoView({ behavior: 'smooth' })}>
-                Find Jobs <ChevronRight size={18} />
-              </button>
-              <button className="hero-btn-secondary px-8" onClick={() => navigate('/applications')}>
-                My Applications
-              </button>
-            </>
-          ) : (
-            <button className="hero-btn-primary px-8" onClick={() => navigate('/login')}>
-              Get Started <ChevronRight size={18} />
-            </button>
-          )}
-        </div>
-        )}
-        <div className="hero-trust-line mt-4">
-           <ShieldCheck size={18} className="text-primary" /> No agents. Verified jobs only.
-        </div>
-      </section>
-
-
-      {/* 2. ABOUT / VALUE SECTION */}
-      <section className="value-section">
-        <div className="section-container">
-          <div className="value-grid">
-            <div className="value-card">
-               <div className="value-icon-wrapper">
-                 <Zap size={32} />
-               </div>
-               <h3 className="value-title">Find work faster</h3>
-               <p className="value-desc">Get verified jobs near you instantly and start earning without delays or endless interviews.</p>
-            </div>
-            <div className="value-card">
-               <div className="value-icon-wrapper green">
-                 <CheckCircle2 size={32} />
-               </div>
-               <h3 className="value-title">Hire instantly</h3>
-               <p className="value-desc">Connect with reliable, background-checked workers perfectly suited for your immediate business needs.</p>
-            </div>
-            <div className="value-card">
-               <div className="value-icon-wrapper purple">
-                 <ShieldCheck size={32} />
-               </div>
-               <h3 className="value-title">100% Verified jobs</h3>
-               <p className="value-desc">Every employer and job listing goes through rigorous safety checks before reaching your screen.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 3. JOB LISTING (For Logged in Employees) */}
-      {isEmployee && (
-        <section className="jobs-section" id="latest-jobs">
-          <div className="section-container">
-            <div className="section-header">
-              <h2 className="section-title flex items-center gap-2 justify-center">
-                 Latest Jobs Near You
-              </h2>
-              <p className="section-subtitle">Discover fresh opportunities posted by trusted companies matching your profile.</p>
-            </div>
-
-            {loading ? (
-              <div className="text-center py-12 text-muted text-lg">Loading active jobs...</div>
-            ) : (
-              <div className="jobs-list-layer">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
-                  {displayedJobs.length > 0 ? (
-                    displayedJobs.map((job, index) => {
-                      const isUrgent = index % 3 === 0;
-                      const companyInitial = job.employer_name ? job.employer_name.charAt(0).toUpperCase() : 'C';
-
-                      return (
-                        <div key={job.id} className="premium-job-card cursor-pointer flex flex-col justify-between h-full bg-white" onClick={() => navigate(`/jobs/${job.id}`)}>
-                          <div className="flex flex-col gap-4">
-                             <div className="job-card-header mb-0">
-                                <div className="flex items-start gap-3 w-full">
-                                   <div className="company-logo-circle">{companyInitial}</div>
-                                   <div className="flex-1 min-w-0 pr-2">
-                                      <h3 className="text-lg font-bold text-slate-900 line-clamp-2 group-hover:text-primary transition-colors job-card-title-fixed">{job.title}</h3>
-                                      <p className="text-slate-500 font-medium text-sm mt-1 line-clamp-1 truncate">{job.employer_name}</p>
-                                   </div>
-                                </div>
-                             </div>
-                             <div className="flex flex-wrap items-center gap-2 mb-2 min-h-[32px]">
-                                <span className="job-badge-category">{job.category}</span>
-                                <div className="ml-auto flex items-center">
-                                  {isUrgent ? (
-                                     <span className="job-badge-urgent">Urgent</span>
-                                  ) : (
-                                     <span className="text-xs text-slate-400 font-medium whitespace-nowrap">Posted {Math.floor(Math.random() * 5) + 1}d ago</span>
-                                  )}
-                                </div>
-                             </div>
-                          </div>
-                          <div className="mt-auto">
-                             <div className="flex justify-between items-center py-4">
-                                <div className="flex items-center gap-1.5 text-slate-600 font-semibold text-sm bg-slate-50 px-3 py-1.5 rounded-full whitespace-nowrap">
-                                   <MapPin size={16} className="text-slate-400" /> {job.location}
-                                </div>
-                                <div className="job-card-salary whitespace-nowrap">
-                                   <IndianRupee size={16} /> {job.salary}
-                                </div>
-                             </div>
-                              <div className="job-card-actions pt-4 border-t border-slate-100 flex gap-2" onClick={(e) => e.stopPropagation()}>
-                                <Link to={`/jobs/${job.id}`} className="flex-1 block">
-                                  <div className="w-full py-2.5 text-center bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 font-semibold rounded-lg text-sm transition-colors">
-                                    View Details
-                                  </div>
-                                </Link>
-                                <Link to={`/jobs/${job.id}`} className="flex-1 block">
-                                  <div className="w-full py-2.5 text-center bg-gradient-to-r from-indigo-600 to-indigo-600 text-white font-semibold rounded-lg text-sm transition-colors" style={{ background: 'linear-gradient(to right, #4F46E5, #6366F1)' }}>
-                                    Apply Job
-                                  </div>
-                                </Link>
-                              </div>
-                          </div>
-                        </div>
-                      );
-                    })
-                  ) : (
-                    <div className="col-span-full py-12 text-center text-muted">
-                      <h3 className="text-xl font-medium">No verified jobs at the moment</h3>
-                      <p>Check back soon to be the first to apply!</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {displayedJobs.length >= 4 && (
-               <div className="jobs-show-all-btn">
-                 <button className="px-8 shadow-sm" onClick={() => navigate('/all-jobs')} style={{ padding: '0.75rem 2rem', background: '#fff', border: '1px solid #E5E7EB', borderRadius: '0.5rem', fontWeight: 600, cursor: 'pointer' }}>
-                   View All Active Jobs
-                 </button>
-               </div>
-            )}
-          </div>
-        </section>
-      )}
-
-      {/* 4. HOW IT WORKS */}
-      <section className="steps-section">
-        <div className="section-container">
-          <div className="section-header">
-            <h2 className="section-title">How It Works</h2>
-            <p className="section-subtitle">Get started in minutes and find your next opportunity effortlessly.</p>
-          </div>
+    <div className="bg-[#F8FAFF] min-h-0 font-sans overflow-x-hidden">
+      
+      {/* Hero Section - Reduced pt-2 for a tight top margin */}
+      <div className="max-w-7xl mx-auto px-6 pt-2 pb-8 lg:pt-6">
+        <div className="flex flex-col lg:flex-row items-start justify-between gap-8">
           
-          <div className="steps-grid">
-             <div className="step-card">
-               <div className="step-number">1</div>
-               <UserPlus size={40} className="text-primary mb-2 opacity-80" />
-               <h3 className="step-title">Create Profile</h3>
-               <p className="step-desc">Register securely using your mobile number and set up a verified profile detailing your skills.</p>
-             </div>
-             <div className="step-card">
-               <div className="step-number">2</div>
-               <FileText size={40} className="text-primary mb-2 opacity-80" />
-               <h3 className="step-title">Find Jobs</h3>
-               <p className="step-desc">Browse jobs precisely matched to your location and categories and apply with a single tap.</p>
-             </div>
-             <div className="step-card">
-               <div className="step-number">3</div>
-               <CheckCircle size={40} className="text-primary mb-2 opacity-80" />
-               <h3 className="step-title">Get Hired</h3>
-               <p className="step-desc">Receive direct calls from checked employers instantly and start your new job effortlessly.</p>
-             </div>
+          {/* Left Content Column */}
+          <div className="flex-1 lg:max-w-[550px] text-center lg:text-left pt-4 lg:pt-8 flex flex-col items-center lg:items-start">
+            <h1 className="text-4xl md:text-5xl lg:text-[64px] font-extrabold text-[#1E293B] leading-[1.1] tracking-tight">
+              Better <span className="text-[#4F46E5]">Jobs.</span><br />
+              Better <span className="text-[#4F46E5]">Hiring.</span>
+            </h1>
+            <p className="mt-4 text-slate-500 text-base md:text-[17px] leading-relaxed max-w-sm mx-auto lg:mx-0">
+              India's most trusted platform connecting blue-collar workers with verified employers.
+            </p>
+
+            {/* FIXED MOBILE IMAGE CONTAINER: Re-integrated your CSS, but fixed the overlap */}
+            {/* Removed negative margin (-mt-4) and fixed scale (removed scale-110) for normal spacing */}
+            <div className="lg:hidden flex-1 flex justify-center relative w-full pt-6 mb-4">
+              {/* Background blur effect, centered */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] h-[90%] bg-indigo-50 rounded-full blur-3xl opacity-60"></div>
+              
+              {/* Image, centered and respect flow */}
+              <img
+                src={handshakeImg}
+                alt="Illustration"
+                className="relative w-full max-w-[380px] sm:max-w-[450px] h-auto object-contain origin-center"
+              /> 
+            </div>
+
+            {/* CTA Buttons */}
+            <div className="mt-6 flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 w-full sm:w-auto">
+              <button
+                onClick={handleFindJobs}
+                className="w-full sm:w-auto flex items-center justify-center gap-3 bg-[#4F46E5] text-white px-7 py-3 rounded-xl font-semibold text-base hover:bg-indigo-700 transition-all shadow-md shadow-indigo-100"
+              >
+                Find Jobs <ArrowRight size={18} strokeWidth={2.5} />
+              </button>
+              
+              <button
+                onClick={handlePostJob}
+                className="w-full sm:w-auto flex items-center justify-center gap-3 border border-[#4F46E5]/40 bg-white text-[#4F46E5] px-7 py-3 rounded-xl font-semibold text-base hover:bg-indigo-50 transition-all"
+              >
+                <Briefcase size={18} strokeWidth={2.5} />
+                Post a Job
+              </button>
+            </div>
+
+            {/* Trust Badges - Forced Single Line on Desktop, Stack on Mobile */}
+            <div className="mt-12 flex flex-col md:flex-row md:flex-nowrap items-center justify-center lg:justify-start gap-y-4 md:gap-x-6 whitespace-nowrap overflow-x-auto no-scrollbar">
+              <div className="flex items-center gap-2 shrink-0">
+                <Shield size={16} className="text-slate-400 stroke-[2]" />
+                <span className="text-slate-500 font-semibold text-[13px]">Verified Employers</span>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <Users size={16} className="text-slate-400 stroke-[2]" />
+                <span className="text-slate-500 font-semibold text-[13px]">Thousands of Jobs</span>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <Star size={16} className="text-slate-400 stroke-[2]" />
+                <span className="text-slate-500 font-semibold text-[13px]">Trusted by Millions</span>
+              </div>
+            </div>
+          </div>
+
+          {/* DESKTOP IMAGE: Hidden on mobile, shows on right on Desktop */}
+          {/* Kept your exact classes for the desktop position */}
+          <div className="hidden lg:flex flex-1 justify-center lg:justify-end relative w-full lg:-mt-16">
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] h-[90%] bg-indigo-50 rounded-full blur-3xl opacity-60"></div>
+            <img
+              src={handshakeImg}
+              alt="Illustration"
+              className="relative w-full max-w-[640px] h-auto object-contain transform scale-110 lg:scale-125 origin-top"
+            /> 
           </div>
         </div>
-      </section>
+      </div>
 
+      {/* Feature Section */}
+      <div className="max-w-7xl mx-auto px-6 mb-8">
+        <div className="bg-white rounded-[2rem] shadow-[0_4px_30px_rgba(0,0,0,0.03)] border border-slate-100 p-8 md:p-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            
+            <div className="flex flex-col items-center text-center group">
+              <div className="w-12 h-12 rounded-full bg-[#F5F7FF] flex items-center justify-center mb-4">
+                <Shield className="text-[#4F46E5] stroke-[2]" size={22} />
+              </div>
+              <h3 className="font-bold text-slate-800 text-base mb-1">Verified Employers</h3>
+              <p className="text-slate-400 text-xs md:text-[13px] leading-relaxed max-w-[180px]">
+                All employers are verified for a safe experience.
+              </p>
+            </div>
+
+            <div className="flex flex-col items-center text-center group">
+              <div className="w-12 h-12 rounded-full bg-[#F5F7FF] flex items-center justify-center mb-4">
+                <Zap className="text-[#4F46E5] stroke-[2]" size={22} />
+              </div>
+              <h3 className="font-bold text-slate-800 text-base mb-1">Fast Hiring Process</h3>
+              <p className="text-slate-400 text-xs md:text-[13px] leading-relaxed max-w-[180px]">
+                Quick matching and faster hiring for every need.
+              </p>
+            </div>
+
+            <div className="flex flex-col items-center text-center group">
+              <div className="w-12 h-12 rounded-full bg-[#F5F7FF] flex items-center justify-center mb-4">
+                <IndianRupee className="text-[#4F46E5] stroke-[2]" size={22} />
+              </div>
+              <h3 className="font-bold text-slate-800 text-base mb-1">Zero Fees for Workers</h3>
+              <p className="text-slate-400 text-xs md:text-[13px] leading-relaxed max-w-[180px]">
+                100% free for job seekers. No hidden charges.
+              </p>
+            </div>
+
+            <div className="flex flex-col items-center text-center group">
+              <div className="w-12 h-12 rounded-full bg-[#F5F7FF] flex items-center justify-center mb-4">
+                <Users className="text-[#4F46E5] stroke-[2]" size={22} />
+              </div>
+              <h3 className="font-bold text-slate-800 text-base mb-1">Local Job Matching</h3>
+              <p className="text-slate-400 text-xs md:text-[13px] leading-relaxed max-w-[180px]">
+                Find jobs near you. Work close to home.
+              </p>
+            </div>
+
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
