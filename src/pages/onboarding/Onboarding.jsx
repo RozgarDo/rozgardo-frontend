@@ -12,7 +12,7 @@ import employers from '../../assets/employers.png';
 
 import flurys from '../../assets/flurys.png';
 import barbeque_nation from '../../assets/barbeque_nation.png';
-import six_downtown from '../../assets/6downtown.jpeg';
+import six_downtown from '../../assets/6downtown.png';
 
 const Onboarding = () => {
   const navigate = useNavigate();
@@ -147,7 +147,7 @@ const Onboarding = () => {
 
 {/* Trusted by Leading Employers Section */}
 
-{/* 
+
 <div className="mt-8 bg-white rounded-2xl shadow-sm border border-slate-100 p-8 relative">
 
   <div className="absolute -top-3 left-0 right-0 flex justify-center">
@@ -203,7 +203,7 @@ const Onboarding = () => {
 
   </div>
 </div> 
-*/}
+
 
 
         </div>

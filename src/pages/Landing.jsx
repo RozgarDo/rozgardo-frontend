@@ -3,24 +3,34 @@ import { useNavigate } from 'react-router-dom';
 import { Shield, Briefcase, Users, Zap, IndianRupee, ArrowRight, Star } from 'lucide-react';
 import handshakeImg from '../assets/handshake.png';
 
+
+
 const Landing = ({ user }) => {
   const navigate = useNavigate();
 
-  const handleFindJobs = () => {
-    if (user) {
-      navigate(user.role === 'employee' ? '/all-jobs' : '/jobs');
-    } else {
-      navigate('/login');
-    }
-  };
+  // const handleFindJobs = () => {
+  //   if (user) {
+  //     navigate(user.role === 'employee' ? '/all-jobs' : '/jobs');
+  //   } else {
+  //     navigate('/login');
+  //   }
+  // };
 
-  const handlePostJob = () => {
-    if (user) {
-      navigate(user.role === 'employer' ? '/post-job' : '/become-employer');
-    } else {
-      navigate('/login');
-    }
-  };
+  // const handlePostJob = () => {
+  //   if (user) {
+  //     navigate(user.role === 'employer' ? '/post-job' : '/become-employer');
+  //   } else {
+  //     navigate('/login');
+  //   }
+  // };
+
+const handleFindJobs = () => {
+  navigate('/employee-registration');
+};
+
+const handlePostJob = () => {
+  navigate('/employer-registration');
+};
 
   return (
     <div className="bg-[#F8FAFF] min-h-0 font-sans overflow-x-hidden">
