@@ -54,7 +54,7 @@ const Navbar = ({ user, onLogout }) => {
     { to: '/for-employers', label: 'For Employers' },
     { to: '/how-it-works', label: 'How It Works' },
     { to: '/resources', label: 'Resources' },
-    { to: '/about', label: 'About Us' },
+    { to: '/contact', label: 'Contact Us' },
   ];
 
   const navLinkStyle = (path) => ({
@@ -98,7 +98,7 @@ const Navbar = ({ user, onLogout }) => {
           </Link>
 
           {/* CENTER LINKS */}
-          {/* <div className="navbar-desktop-links" style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
+          <div className="navbar-desktop-links" style={{ display: 'flex', alignItems: 'center', gap: '2rem' }}>
             {!user ? (
               guestLinks.map(link => (
                 <Link key={link.to} to={link.to} style={navLinkStyle(link.to)}>
@@ -112,10 +112,10 @@ const Navbar = ({ user, onLogout }) => {
                 </Link>
               ))
             )}
-          </div> */}
+          </div>
 
           {/* RIGHT SIDE */}
-          {/* <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
             {!user ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
                 <Link to="/login" style={{ 
@@ -180,7 +180,7 @@ const Navbar = ({ user, onLogout }) => {
             >
               {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
-          </div> */}
+          </div>
         </div>
 
         <style>{`
