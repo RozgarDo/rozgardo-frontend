@@ -116,7 +116,7 @@ const Navbar = ({ user, onLogout }) => {
 
           {/* RIGHT SIDE */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-            {!user ? (
+            {/* {!user ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
                 <Link to="/login" style={{ 
                   textDecoration: 'none', fontWeight: 700, color: '#1E293B', fontSize: '0.9rem' 
@@ -171,7 +171,7 @@ const Navbar = ({ user, onLogout }) => {
                   </div>
                 )}
               </div>
-            )}
+            )} */}
 
             <button
               className="navbar-mobile-toggle"
