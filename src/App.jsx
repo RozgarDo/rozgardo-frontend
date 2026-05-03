@@ -19,6 +19,8 @@ import Footer from './components/Footer';
 import TermsOfService from './pages/legal/TermsOfService';
 import PrivacyPolicy from './pages/legal/PrivacyPolicy';
 
+import Contact from './pages/Contact';
+
 import EmployeeRegistration from './pages/employee/employee_registration';
 import EmployerRegistration from './pages/employer/employer_registration';
 
@@ -128,6 +130,7 @@ function AppContent({ user, handleLogin, handleLogout }) {
           <Route path="/jobs/:id" element={<JobDetails user={user} />} />
           <Route path="/applications" element={<Applications user={user} />} />
           <Route path="/all-jobs" element={<AllJobs user={user} />} />
+          <Route path="/contact" element={<Contact />} />
           <Route path="/profile" element={<Profile user={user} setUser={handleLogin} />} />
           <Route path="/profile-setup" element={<Profile user={user} setUser={handleLogin} />} />
           <Route path="/settings" element={<Settings user={user} />} />
