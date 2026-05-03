@@ -53,7 +53,7 @@ const Navbar = ({ user, onLogout }) => {
     { to: '/all-jobs', label: 'Find Jobs' },
     { to: '/for-employers', label: 'For Employers' },
     { to: '/how-it-works', label: 'How It Works' },
-    { to: '/resources', label: 'Resources' },
+    // { to: '/resources', label: 'Resources' },
     { to: '/contact', label: 'Contact Us' },
   ];
 
