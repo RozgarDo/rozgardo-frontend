@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Mail, Phone, MapPin, Clock, Send, CheckCircle2, ChevronDown, Users } from 'lucide-react';
-import laptopImg from '../assets/handshake.png';
+import laptopImg from '../assets/laptop.jpeg';
 
 const Contact = () => {
   const [formData, setFormData] = useState({
@@ -43,8 +43,8 @@ const Contact = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-6 md:gap-8">
               <ContactInfoCard icon={<Mail size={20} />} title="Email Us" detail="support@rozgardo.com" />
-              <ContactInfoCard icon={<Phone size={20} />} title="Call Us" detail="+91 98765 43210" sub="Mon - Sat: 9:00 AM - 6:00 PM" />
-              <ContactInfoCard icon={<MapPin size={20} />} title="Our Office" detail="RozgarDo Technologies Pvt. Ltd." sub="2nd Floor, Sector 62, Noida, UP - 201309" />
+              <ContactInfoCard icon={<Phone size={20} />} title="Call Us" detail="+91 81160 89529" sub="Mon - Sat: 9:00 AM - 6:00 PM" />
+              {/* <ContactInfoCard icon={<MapPin size={20} />} title="Our Office" detail="RozgarDo Technologies Pvt. Ltd." sub="2nd Floor, Sector 62, Noida, UP - 201309" /> */}
               <ContactInfoCard icon={<Clock size={20} />} title="Business Hours" detail="Monday - Saturday" sub="9:00 AM - 6:00 PM IST" />
             </div>
           </div>
@@ -160,7 +160,7 @@ const Contact = () => {
                 <Phone size={16} fill="currentColor" />
               </div>
               <span className="text-[#4f46e5] font-bold text-base whitespace-nowrap">
-                +91 98765 43210
+                +91 81160 89529
               </span>
             </div>
 
