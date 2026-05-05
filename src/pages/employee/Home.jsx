@@ -220,41 +220,6 @@ const Home = ({ user }) => {
         </div>
       </section>
 
-      {/* 5. FOOTER */}
-      <footer className="site-footer">
-         <div className="footer-content">
-            <div className="footer-brand">
-               <h2>
-                 <ShieldCheck size={28} className="text-primary" /> RozgarDo
-               </h2>
-               <p>Revolutionizing the blue-collar job market in India. We instantly connect skilled workers with reliable employers bridging the gap without unfair agent fees.</p>
-            </div>
-            
-            <div className="footer-links">
-               <h3>Quick Links</h3>
-               <ul>
-                 <li><Link to="/home">Homepage</Link></li>
-                 <li><Link to="/profile">My Profile</Link></li>
-                 <li><Link to="/applications">My Applications</Link></li>
-                 <li><Link to="/login">Sign In / Register</Link></li>
-               </ul>
-            </div>
-            
-            <div className="footer-links">
-               <h3>Support</h3>
-               <ul>
-                 <li><a href="#">Contact Us</a></li>
-                 <li><a href="mailto:support@rozgardo.com">support@rozgardo.com</a></li>
-                 <li><a href="#">Terms of Service</a></li>
-                 <li><a href="#">Privacy Policy</a></li>
-               </ul>
-            </div>
-         </div>
-         
-         <div className="footer-bottom">
-           © 2026 RozgarDo Technologies. Built for India.
-         </div>
-      </footer>
 
     </div>
   );
