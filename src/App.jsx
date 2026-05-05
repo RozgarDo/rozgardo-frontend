@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Login from './pages/Login';
@@ -18,92 +18,25 @@ import ScrollToTop from './components/ScrollToTop';
 import Footer from './components/Footer';
 import TermsOfService from './pages/legal/TermsOfService';
 import PrivacyPolicy from './pages/legal/PrivacyPolicy';
-
 import Contact from './pages/Contact';
-
 import EmployeeRegistration from './pages/employee/employee_registration';
 import EmployerRegistration from './pages/employer/employer_registration';
 
-
-
-// Custom hook for natural overscroll bounce
-const useElasticOverscroll = () => {
-  const [offsetY, setOffsetY] = useState(0);
-  const lastScrollY = useRef(0);
-  const isAnimating = useRef(false);
-  const animationFrame = useRef(null);
-
-  useEffect(() => {
-    const handleScroll = () => {
-      if (animationFrame.current) return;
-      animationFrame.current = requestAnimationFrame(() => {
-        const currentScrollY = window.scrollY;
-        const isAtTop = currentScrollY <= 0;
-        const isAtBottom = window.innerHeight + currentScrollY >= document.documentElement.scrollHeight - 2;
-        const scrollDelta = currentScrollY - lastScrollY.current;
-
-        // Trigger only when overscrolling (trying to go beyond limits)
-        if (!isAnimating.current) {
-          if (isAtTop && scrollDelta < -3) {
-            // Overscroll at top – pull content down
-            isAnimating.current = true;
-            setOffsetY(24);
-            setTimeout(() => {
-              setOffsetY(0);
-              setTimeout(() => { isAnimating.current = false; }, 200);
-            }, 180);
-          } else if (isAtBottom && scrollDelta > 3) {
-            // Overscroll at bottom – pull content up
-            isAnimating.current = true;
-            setOffsetY(-24);
-            setTimeout(() => {
-              setOffsetY(0);
-              setTimeout(() => { isAnimating.current = false; }, 200);
-            }, 180);
-          }
-        }
-
-        lastScrollY.current = currentScrollY;
-        animationFrame.current = null;
-      });
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      if (animationFrame.current) cancelAnimationFrame(animationFrame.current);
-    };
-  }, []);
-
-  return offsetY;
-};
-
 function AppContent({ user, handleLogin, handleLogout }) {
   const location = useLocation();
-  const hideNavbar = ['/login'].includes(location.pathname);
-  const bounceY = useElasticOverscroll();
-
-  // Smooth transition with natural easing
-  const contentStyle = {
-    transform: `translateY(${bounceY}px)`,
-    transition: 'transform 0.2s cubic-bezier(0.2, 0.9, 0.4, 1.1)',
-    willChange: 'transform',
-  };
+  const hideNavbar = location.pathname === '/login';
 
   return (
-    <div className="min-h-screen">
-      {/* Fixed Navbar */}
+    <div className="flex flex-col min-h-screen">
+      {/* Navbar – sticky at top while scrolling, no layout shift */}
       {!hideNavbar && (
-        <div className="fixed top-0 left-0 right-0 z-50">
+        <div className="sticky top-0 z-20">
           <Navbar user={user} onLogout={handleLogout} />
         </div>
       )}
 
-      {/* Spacer to prevent content from hiding under navbar (adjust height to your navbar's actual height) */}
-      {!hideNavbar && <div className="h-16 md:h-20" />}
-
-      {/* Scrollable content wrapper with elastic bounce */}
-      <div style={contentStyle}>
+      {/* Main content – grows to push footer down */}
+      <main className="flex-1">
         <Routes>
           {/* <Route 
             path="/" 
@@ -140,7 +73,7 @@ function AppContent({ user, handleLogin, handleLogout }) {
           <Route path="*" element={<Navigate to="/onboarding" replace />} />
         </Routes>
         <Footer />
-      </div>
+      </main>
     </div>
   );
 }
