@@ -22,6 +22,11 @@ import Contact from './pages/Contact';
 import EmployeeRegistration from './pages/employee/employee_registration';
 import EmployerRegistration from './pages/employer/employer_registration';
 
+import EmployeeLogin from './pages/employee/employee_login';
+import EmployerLogin from './pages/employer/employer_login';
+
+import TrustedEmployers from './pages/legal/TrustedEmployeers';
+
 function AppContent({ user, handleLogin, handleLogout }) {
   const location = useLocation();
   const hideNavbar = location.pathname === '/login';
@@ -54,11 +59,17 @@ function AppContent({ user, handleLogin, handleLogout }) {
           /> */}
           <Route path="/terms" element={<TermsOfService />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
-          <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login onLogin={handleLogin} />} />
+          {/* <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login onLogin={handleLogin} />} /> */}
           <Route path="/register" element={<Registration />} />
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/employee-registration" element={<EmployeeRegistration />} />
           <Route path="/employer-registration" element={<EmployerRegistration />} />
+          
+          <Route path="/employee-login" element={user ? <Navigate to="/" replace /> : <EmployeeLogin onLogin={handleLogin} />} />
+          <Route path="/employer-login" element={user ? <Navigate to="/" replace /> : <EmployerLogin onLogin={handleLogin} />} />
+
+          <Route path="/trusted-employers" element={<TrustedEmployers />} />
+
           <Route path="/home" element={user?.role === 'employee' ? <EmployeeHome user={user} /> : <Navigate to="/login" />} />
           <Route path="/jobs/:id" element={<JobDetails user={user} />} />
           <Route path="/applications" element={<Applications user={user} />} />

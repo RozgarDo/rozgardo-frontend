@@ -5,7 +5,7 @@ import { ShieldCheck, UserPlus, Phone, Lock, Mail, Building2, X } from 'lucide-r
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
-const Login = ({ onLogin }) => {
+const EmployerLogin = ({ onLogin }) => {
   const [loginId, setLoginId] = useState('');
   const [password, setPassword] = useState('');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
@@ -154,7 +154,7 @@ const Login = ({ onLogin }) => {
           <div className="w-14 h-14 mx-auto mb-4 bg-gradient-to-br from-indigo-50 to-indigo-100 text-indigo-600 flex items-center justify-center rounded-full shadow-[0_4px_10px_rgba(79,70,229,0.1)]">
             <ShieldCheck size={24} />
           </div>
-          <h1 className="text-2xl font-extrabold text-slate-900 mb-1 tracking-tight">Login</h1>
+          <h1 className="text-2xl font-extrabold text-slate-900 mb-1 tracking-tight">Employer Login</h1>
           <p className="text-sm font-medium text-slate-500">Access your RozgarDo account</p>
         </div>
 
@@ -357,4 +357,4 @@ const Login = ({ onLogin }) => {
   );
 };
 
-export default Login;
+export default EmployerLogin;
