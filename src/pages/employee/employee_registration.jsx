@@ -92,8 +92,7 @@ const EmployeeRegistration = () => {
     setErrors({});
 
     // Use Vite environment variable
-    // Make sure your .env file contains VITE_API_URL=http://localhost:5001
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+    const API_URL = import.meta.env.VITE_API_URL;
 
     try {
       const response = await fetch(`${API_URL}/api/auth/employee-register`, {

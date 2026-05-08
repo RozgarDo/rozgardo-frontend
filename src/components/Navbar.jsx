@@ -46,7 +46,7 @@ const Navbar = ({ user, onLogout }) => {
 
   const handleLogout = () => {
     onLogout();
-    navigate('/login');
+    navigate('/');
   };
 
   const isActive = (path) => location.pathname === path;
