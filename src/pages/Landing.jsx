@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { Shield, Briefcase, Users, Zap, IndianRupee, ArrowRight, Star } from 'lucide-react';
 import handshakeImg from '../assets/handshake.png';
 
+import TrustedEmployers from './legal/TrustedEmployeers';
+
 
 
 const Landing = ({ user }) => {
@@ -164,6 +166,8 @@ const handlePostJob = () => {
           
         </div>
       </div>
+
+      <TrustedEmployers/>
     </div>
   );
 };

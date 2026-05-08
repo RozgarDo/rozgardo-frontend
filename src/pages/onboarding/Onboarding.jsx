@@ -14,6 +14,8 @@ import flurys from '../../assets/flurys.png';
 import barbeque_nation from '../../assets/barbeque_nation.png';
 import six_downtown from '../../assets/6downtown.png';
 
+import TrustedEmployers from '../legal/TrustedEmployeers';
+
 const Onboarding = () => {
   const navigate = useNavigate();
 
@@ -146,65 +148,7 @@ const Onboarding = () => {
             </div>
           </div>
 
-{/* Trusted by Leading Employers Section */}
-
-
-<div className="mt-8 bg-white rounded-2xl shadow-sm border border-slate-100 p-8 relative">
-
-  <div className="absolute -top-3 left-0 right-0 flex justify-center">
-    <div className="bg-slate-50 px-6 py-1 rounded-full border border-slate-100 flex items-center gap-3">
-      <div className="w-1.5 h-1.5 rounded-full bg-indigo-500"></div>
-      <h3 className="text-[11px] font-bold text-slate-500 uppercase tracking-[0.2em]">
-        Trusted by Leading Employers
-      </h3>
-      <div className="w-1.5 h-1.5 rounded-full bg-indigo-500"></div>
-    </div>
-  </div>
-
-
-  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-center">
-    
-
-    <div className="flex justify-center items-center h-24 bg-slate-50/40 rounded-xl border border-transparent hover:border-slate-200 transition-all group">
-      <img 
-        src={flurys} 
-        alt="Flurys" 
-        className="h-14 md:h-16 w-auto object-contain transition-transform duration-300 group-hover:scale-105" 
-      />
-    </div>
-
-
-    <div className="flex justify-center items-center h-24 bg-slate-50/40 rounded-xl border border-transparent hover:border-slate-200 transition-all group">
-      <img 
-        src={barbeque_nation} 
-        alt="Barbeque Nation" 
-        className="h-16 md:h-20 w-auto object-contain transition-transform duration-300 group-hover:scale-105" 
-      />
-    </div>
-
-
-    <div className="flex justify-center items-center h-24 bg-slate-50/40 rounded-xl border border-transparent hover:border-slate-200 transition-all group">
-      <img 
-        src={six_downtown} 
-        alt="6 Downtown" 
-        className="h-14 md:h-16 w-auto object-contain transition-transform duration-300 group-hover:scale-105" 
-      />
-    </div>
-
-
-    <div className="flex items-center gap-4 px-6 h-24 bg-indigo-50/40 rounded-xl border border-indigo-100/50 group cursor-default">
-      <div className="bg-white p-3 rounded-xl shadow-sm border border-indigo-50">
-        <UsersIcon2 size={24} className="text-indigo-600" />
-      </div>
-      <div className="flex flex-col">
-        <span className="text-sm font-bold text-slate-700 leading-tight">And many more</span>
-        <span className="text-xs text-slate-500">trusted partners...</span>
-      </div>
-    </div>
-
-  </div>
-</div> 
-
+          <TrustedEmployers />
 
 
         </div>

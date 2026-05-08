@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { 
   User, Settings, LogOut, Menu, X, ChevronDown, 
   UserPlus, Building2, Shield, CreditCard, Briefcase,
-  Home, FileText, LayoutDashboard, PlusCircle 
+  Home, FileText, LayoutDashboard, PlusCircle, LogIn
 } from 'lucide-react';
 import logo from '../assets/RozgarDo_Logo.png';
 
@@ -13,8 +13,11 @@ const Navbar = ({ user, onLogout }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [signupModalOpen, setSignupModalOpen] = useState(false);
+  const [loginModalOpen, setLoginModalOpen] = useState(false);
+  
   const dropdownRef = useRef(null);
-  const modalRef = useRef(null);
+  const signupModalRef = useRef(null);
+  const loginModalRef = useRef(null);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -22,19 +25,23 @@ const Navbar = ({ user, onLogout }) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setProfileDropdownOpen(false);
       }
-      if (signupModalOpen && modalRef.current && !modalRef.current.contains(e.target)) {
+      if (signupModalOpen && signupModalRef.current && !signupModalRef.current.contains(e.target)) {
         setSignupModalOpen(false);
+      }
+      if (loginModalOpen && loginModalRef.current && !loginModalRef.current.contains(e.target)) {
+        setLoginModalOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [signupModalOpen]);
+  }, [signupModalOpen, loginModalOpen]);
 
   // Close menus on route change
   useEffect(() => {
     setProfileDropdownOpen(false);
     setMobileMenuOpen(false);
     setSignupModalOpen(false);
+    setLoginModalOpen(false);
   }, [location.pathname]);
 
   const handleLogout = () => {
@@ -68,8 +75,8 @@ const Navbar = ({ user, onLogout }) => {
   const guestLinks = [
     // { to: '/employee-registration', label: 'Find Jobs' },
     // { to: '/employer-registration', label: 'For Employers' },
-    // // { to: '/how-it-works', label: 'How It Works' },
-    // // { to: '/resources', label: 'Resources' },
+    // { to: '/how-it-works', label: 'How It Works' },
+    // { to: '/resources', label: 'Resources' },
     // { to: '/contact', label: 'Contact Us' },
   ];
 
@@ -79,6 +86,15 @@ const Navbar = ({ user, onLogout }) => {
       navigate('/employee-registration');
     } else if (role === 'employer') {
       navigate('/employer-registration');
+    }
+  };
+
+  const handleLoginAs = (role) => {
+    setLoginModalOpen(false);
+    if (role === 'employee') {
+      navigate('/employee-login');
+    } else if (role === 'employer') {
+      navigate('/employer-login');
     }
   };
 
@@ -133,15 +149,16 @@ const Navbar = ({ user, onLogout }) => {
           {/* Right Side */}
           <div className="flex items-center gap-6">
             {/* Desktop Auth Buttons (hidden on mobile) */}
-            <div className="hidden lg:block">
-              {/* {!user ? (
+            {/* <div className="hidden lg:block">
+              {!user ? (
                 <div className="flex items-center gap-5">
-                  <Link
-                    to="/login"
+                  <button
+                    onClick={() => setLoginModalOpen(true)}
                     className="font-bold text-gray-800 text-sm hover:text-indigo-600 transition"
                   >
                     Log in
-                  </Link>
+                  </button>
+
                   <button
                     onClick={() => setSignupModalOpen(true)}
                     className="bg-indigo-600 text-white font-semibold text-sm px-5 py-2 rounded-xl shadow-md shadow-indigo-200 hover:bg-indigo-700 transition"
@@ -225,8 +242,8 @@ const Navbar = ({ user, onLogout }) => {
                     </div>
                   )}
                 </div>
-              )} */}
-            </div>
+              )}
+            </div> */}
 
             {/* Mobile Menu Toggle */}
             {/* <button
@@ -256,13 +273,15 @@ const Navbar = ({ user, onLogout }) => {
                   </Link>
                 ))}
                 <div className="h-px bg-gray-200 my-1" />
-                <Link
-                  to="/login"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="py-2 font-semibold text-indigo-600"
+                <button
+                  onClick={() => {
+                    setLoginModalOpen(true);
+                    setMobileMenuOpen(false);
+                  }}
+                  className="py-2 font-semibold text-indigo-600 text-left"
                 >
                   Log in
-                </Link>
+                </button>
                 <button
                   onClick={() => {
                     setSignupModalOpen(true);
@@ -340,7 +359,7 @@ const Navbar = ({ user, onLogout }) => {
       {signupModalOpen && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[1000]">
           <div
-            ref={modalRef}
+            ref={signupModalRef}
             className="bg-white rounded-2xl max-w-md w-[90%] p-8 text-center shadow-2xl"
           >
             <h2 className="text-3xl font-bold text-gray-900 mb-2">Join RozgarDo</h2>
@@ -378,6 +397,56 @@ const Navbar = ({ user, onLogout }) => {
 
             <button
               onClick={() => setSignupModalOpen(false)}
+              className="mt-6 text-sm text-gray-500 underline hover:text-gray-700"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Login Modal */}
+      {loginModalOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[1000]">
+          <div
+            ref={loginModalRef}
+            className="bg-white rounded-2xl max-w-md w-[90%] p-8 text-center shadow-2xl"
+          >
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h2>
+            <p className="text-gray-500 mb-8">Log in to your account</p>
+
+            <div className="flex flex-col gap-4">
+              <button
+                onClick={() => handleLoginAs('employee')}
+                className="flex items-center gap-4 p-4 bg-gray-50 border border-gray-200 rounded-xl hover:bg-gray-100 transition w-full text-left"
+              >
+                <div className="w-12 h-12 rounded-xl bg-indigo-600 flex items-center justify-center">
+                  <LogIn size={24} className="text-white" />
+                </div>
+                <div className="flex-1">
+                  <div className="font-bold text-gray-900">Job Seeker Login</div>
+                  <div className="text-xs text-gray-500">Access your job applications</div>
+                </div>
+                <span className="text-gray-400">→</span>
+              </button>
+
+              <button
+                onClick={() => handleLoginAs('employer')}
+                className="flex items-center gap-4 p-4 bg-gray-50 border border-gray-200 rounded-xl hover:bg-gray-100 transition w-full text-left"
+              >
+                <div className="w-12 h-12 rounded-xl bg-emerald-600 flex items-center justify-center">
+                  <Building2 size={24} className="text-white" />
+                </div>
+                <div className="flex-1">
+                  <div className="font-bold text-gray-900">Employer Login</div>
+                  <div className="text-xs text-gray-500">Post jobs & manage candidates</div>
+                </div>
+                <span className="text-gray-400">→</span>
+              </button>
+            </div>
+
+            <button
+              onClick={() => setLoginModalOpen(false)}
               className="mt-6 text-sm text-gray-500 underline hover:text-gray-700"
             >
               Close
