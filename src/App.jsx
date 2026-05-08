@@ -59,7 +59,7 @@ function AppContent({ user, handleLogin, handleLogout }) {
           /> */}
           <Route path="/terms" element={<TermsOfService />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
-          {/* <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login onLogin={handleLogin} />} /> */}
+          <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login onLogin={handleLogin} />} />
           <Route path="/register" element={<Registration />} />
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/employee-registration" element={<EmployeeRegistration />} />
@@ -78,9 +78,12 @@ function AppContent({ user, handleLogin, handleLogout }) {
           <Route path="/profile" element={<Profile user={user} setUser={handleLogin} />} />
           <Route path="/profile-setup" element={<Profile user={user} setUser={handleLogin} />} />
           <Route path="/settings" element={<Settings user={user} />} />
+
           <Route path="/employer" element={user?.role === 'employer' ? <EmployerDashboard user={user} /> : <Navigate to="/login" />} />
           <Route path="/employer/post-job" element={user?.role === 'employer' ? <PostJob user={user} /> : <Navigate to="/login" />} />
           <Route path="/admin" element={user?.role === 'admin' ? <AdminDashboard user={user} /> : <Navigate to="/login" />} />
+
+
           <Route path="*" element={<Navigate to="/onboarding" replace />} />
         </Routes>
         <Footer />
