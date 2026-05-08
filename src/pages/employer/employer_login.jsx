@@ -30,7 +30,6 @@ const EmployerLogin = ({ onLogin }) => {
     }
   }, [timeLeft]);
 
-  // Close modal when clicking outside
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (signupModalOpen && modalRef.current && !modalRef.current.contains(e.target)) {
@@ -42,12 +41,13 @@ const EmployerLogin = ({ onLogin }) => {
   }, [signupModalOpen]);
 
   const routeUser = (user) => {
-    onLogin(user);
+    if (onLogin) onLogin(user);
     if (user.role === 'admin') navigate('/admin');
     else if (user.role === 'employer') navigate('/employer');
     else navigate(user.name ? '/' : '/profile-setup');
   };
 
+  // OTP flow (unchanged, uses old login endpoint)
   const handleSendOtp = async () => {
     setError('');
     setMessage('');
@@ -73,41 +73,69 @@ const EmployerLogin = ({ onLogin }) => {
       }
     } catch (err) {
       console.error(err);
-      setError('Login service unavailable fallback. Mocking OTP.');
+      setError('Login service unavailable. Mocking OTP.');
       setOtpSent(true);
       setMessage('OTP Sent. Use 123456');
       setTimeLeft(30);
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handlePasswordLogin = async () => {
     setError('');
     setMessage('');
-    
-    let finalOtp = Array.isArray(otp) ? otp.join('') : otp;
+    // Use phone number only (employer login uses contact_number)
+    if (!loginId.trim()) {
+      setError('Phone number is required');
+      return;
+    }
+    if (!password) {
+      setError('Password is required');
+      return;
+    }
 
     try {
-      const endpoint = `${API_BASE_URL}/api/auth/login`;
-      const body = { loginId, type: authMethod, password, otp: finalOtp };
-
-      const res = await fetch(endpoint, {
+      const response = await fetch(`${API_BASE_URL}/api/auth/employer-login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
+        body: JSON.stringify({ phone: loginId, password })
       });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        throw new Error(data.message || data.error || 'Authentication failed');
-      }
-
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Login failed');
       routeUser(data.user);
-      
     } catch (err) {
-      console.error('Login Error:', err);
-      setError(err.message || 'Login failed. Please check your credentials or network.');
+      setError(err.message);
+    }
+  };
+
+  const handleOtpLogin = async () => {
+    setError('');
+    setMessage('');
+    const finalOtp = Array.isArray(otp) ? otp.join('') : otp;
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ loginId, type: 'otp', password: '', otp: finalOtp })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || data.error || 'Authentication failed');
+      routeUser(data.user);
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (authMethod === 'password') {
+      await handlePasswordLogin();
+    } else {
+      if (!otpSent) {
+        e.preventDefault();
+        await handleSendOtp();
+      } else {
+        await handleOtpLogin();
+      }
     }
   };
 
@@ -129,11 +157,8 @@ const EmployerLogin = ({ onLogin }) => {
 
   const handleSignupAs = (selectedRole) => {
     setSignupModalOpen(false);
-    if (selectedRole === 'employee') {
-      navigate('/employee-registration');
-    } else {
-      navigate('/employer-registration');
-    }
+    if (selectedRole === 'employee') navigate('/employee-registration');
+    else navigate('/employer-registration');
   };
 
   return (
@@ -183,7 +208,7 @@ const EmployerLogin = ({ onLogin }) => {
           </button>
         </div>
 
-        <form onSubmit={authMethod === 'otp' && !otpSent ? (e) => { e.preventDefault(); handleSendOtp(); } : handleSubmit} className="flex flex-col gap-3 animate-[fadeIn_0.3s_ease-out]">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3 animate-[fadeIn_0.3s_ease-out]">
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-semibold text-slate-700">
               {authMethod === 'otp' ? "Mobile Number" : "Mobile / Email ID"}
@@ -199,10 +224,10 @@ const EmployerLogin = ({ onLogin }) => {
                 className={`w-full py-3 pl-10 pr-4 border rounded-lg text-sm text-slate-900 bg-white transition-all focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 placeholder:text-slate-300 ${
                   error && !(Array.isArray(otp) ? otp.join('') : '') ? 'border-red-500 focus:ring-red-100' : 'border-slate-200'
                 }`}
-                placeholder={authMethod === 'otp' ? "+91..." : "Enter Mobile or Email"}
+                placeholder={authMethod === 'otp' ? "+91..." : "Enter Mobile"}
                 value={loginId}
                 onChange={(e) => setLoginId(e.target.value)}
-                disabled={otpSent}
+                disabled={authMethod === 'otp' && otpSent}
                 required
               />
             </div>
@@ -283,7 +308,7 @@ const EmployerLogin = ({ onLogin }) => {
         </form>
       </div>
 
-      {/* SIGNUP MODAL - Portal */}
+      {/* SIGNUP MODAL - same as original */}
       {signupModalOpen && ReactDOM.createPortal(
         <>
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40" />
