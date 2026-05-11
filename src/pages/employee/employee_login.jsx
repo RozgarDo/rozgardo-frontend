@@ -157,11 +157,9 @@ const EmployeeLogin = ({ onLogin }) => {
   };
 
 
-
-  const handleSendOtp = async () => {
+const handleSendOtp = async () => {
   setError('');
   setMessage('');
-  setLoading(true);
   try {
     const res = await fetch(`${API_BASE_URL}/api/auth/employee/send-otp`, {
       method: 'POST',
@@ -171,24 +169,25 @@ const EmployeeLogin = ({ onLogin }) => {
     const data = await res.json();
     if (res.ok) {
       setOtpSent(true);
-      setMessage(data.message || 'OTP sent successfully');
+      setMessage(data.message);
       setTimeLeft(30);
     } else {
-      setError(data.error || 'Failed to send OTP');
+      if (res.status === 404) {
+        setError('Mobile number not found. Please register.');
+        // You can also trigger a modal or redirect to registration
+      } else {
+        throw new Error(data.error || data.message || 'Failed to send OTP');
+      }
     }
   } catch (err) {
     console.error(err);
-    setError('Network error. Please try again.');
-  } finally {
-    setLoading(false);
+    setError(err.message || 'Login service unavailable. Try password login.');
   }
 };
-
 
 const handleOtpLogin = async () => {
   setError('');
   setMessage('');
-  setLoading(true);
   const finalOtp = otp.join('');
   try {
     const res = await fetch(`${API_BASE_URL}/api/auth/employee/verify-otp`, {
@@ -197,16 +196,63 @@ const handleOtpLogin = async () => {
       body: JSON.stringify({ phone: loginId, otp: finalOtp })
     });
     const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.error || 'Authentication failed');
-    }
+    if (!res.ok) throw new Error(data.error || 'Authentication failed');
     routeUser(data.user);
   } catch (err) {
     setError(err.message);
-  } finally {
-    setLoading(false);
   }
 };
+
+
+//   const handleSendOtp = async () => {
+//   setError('');
+//   setMessage('');
+//   setLoading(true);
+//   try {
+//     const res = await fetch(`${API_BASE_URL}/api/auth/employee/send-otp`, {
+//       method: 'POST',
+//       headers: { 'Content-Type': 'application/json' },
+//       body: JSON.stringify({ phone: loginId })
+//     });
+//     const data = await res.json();
+//     if (res.ok) {
+//       setOtpSent(true);
+//       setMessage(data.message || 'OTP sent successfully');
+//       setTimeLeft(30);
+//     } else {
+//       setError(data.error || 'Failed to send OTP');
+//     }
+//   } catch (err) {
+//     console.error(err);
+//     setError('Network error. Please try again.');
+//   } finally {
+//     setLoading(false);
+//   }
+// };
+
+
+// const handleOtpLogin = async () => {
+//   setError('');
+//   setMessage('');
+//   setLoading(true);
+//   const finalOtp = otp.join('');
+//   try {
+//     const res = await fetch(`${API_BASE_URL}/api/auth/employee/verify-otp`, {
+//       method: 'POST',
+//       headers: { 'Content-Type': 'application/json' },
+//       body: JSON.stringify({ phone: loginId, otp: finalOtp })
+//     });
+//     const data = await res.json();
+//     if (!res.ok) {
+//       throw new Error(data.error || 'Authentication failed');
+//     }
+//     routeUser(data.user);
+//   } catch (err) {
+//     setError(err.message);
+//   } finally {
+//     setLoading(false);
+//   }
+// };
 
 
 

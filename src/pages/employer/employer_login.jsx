@@ -47,18 +47,18 @@ const EmployerLogin = ({ onLogin }) => {
     else navigate(user.name ? '/' : '/profile-setup');
   };
 
-  // OTP flow (unchanged, uses old login endpoint)
+  // ----- UPDATED OTP FLOW (employer-specific) -----
   const handleSendOtp = async () => {
     setError('');
     setMessage('');
     try {
-      const res = await fetch(`${API_BASE_URL}/api/auth/send-otp`, {
+      const res = await fetch(`${API_BASE_URL}/api/auth/employer/send-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone: loginId })
       });
+      const data = await res.json();
       if (res.ok) {
-        const data = await res.json();
         setOtpSent(true);
         setMessage(data.message);
         setTimeLeft(30);
@@ -67,23 +67,18 @@ const EmployerLogin = ({ onLogin }) => {
           setError('Mobile number not found. Please register.');
           setSignupModalOpen(true);
         } else {
-          const data = await res.json();
-          throw new Error(data.message || 'Failed to send OTP');
+          throw new Error(data.error || data.message || 'Failed to send OTP');
         }
       }
     } catch (err) {
       console.error(err);
-      setError('Login service unavailable. Mocking OTP.');
-      setOtpSent(true);
-      setMessage('OTP Sent. Use 123456');
-      setTimeLeft(30);
+      setError(err.message || 'Login service unavailable. Try password login.');
     }
   };
 
   const handlePasswordLogin = async () => {
     setError('');
     setMessage('');
-    // Use phone number only (employer login uses contact_number)
     if (!loginId.trim()) {
       setError('Phone number is required');
       return;
@@ -92,7 +87,6 @@ const EmployerLogin = ({ onLogin }) => {
       setError('Password is required');
       return;
     }
-
     try {
       const response = await fetch(`${API_BASE_URL}/api/auth/employer-login`, {
         method: 'POST',
@@ -110,15 +104,15 @@ const EmployerLogin = ({ onLogin }) => {
   const handleOtpLogin = async () => {
     setError('');
     setMessage('');
-    const finalOtp = Array.isArray(otp) ? otp.join('') : otp;
+    const finalOtp = otp.join('');
     try {
-      const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
+      const res = await fetch(`${API_BASE_URL}/api/auth/employer/verify-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ loginId, type: 'otp', password: '', otp: finalOtp })
+        body: JSON.stringify({ phone: loginId, otp: finalOtp })
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || data.error || 'Authentication failed');
+      if (!res.ok) throw new Error(data.error || 'Authentication failed');
       routeUser(data.user);
     } catch (err) {
       setError(err.message);
@@ -131,7 +125,6 @@ const EmployerLogin = ({ onLogin }) => {
       await handlePasswordLogin();
     } else {
       if (!otpSent) {
-        e.preventDefault();
         await handleSendOtp();
       } else {
         await handleOtpLogin();
@@ -222,7 +215,7 @@ const EmployerLogin = ({ onLogin }) => {
               <input 
                 type={authMethod === 'otp' ? "tel" : "text"}
                 className={`w-full py-3 pl-10 pr-4 border rounded-lg text-sm text-slate-900 bg-white transition-all focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 placeholder:text-slate-300 ${
-                  error && !(Array.isArray(otp) ? otp.join('') : '') ? 'border-red-500 focus:ring-red-100' : 'border-slate-200'
+                  error && !otpSent ? 'border-red-500 focus:ring-red-100' : 'border-slate-200'
                 }`}
                 placeholder={authMethod === 'otp' ? "+91..." : "Enter Mobile"}
                 value={loginId}
@@ -308,7 +301,7 @@ const EmployerLogin = ({ onLogin }) => {
         </form>
       </div>
 
-      {/* SIGNUP MODAL - same as original */}
+      {/* SIGNUP MODAL (same as original) */}
       {signupModalOpen && ReactDOM.createPortal(
         <>
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40" />
