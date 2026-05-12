@@ -149,7 +149,7 @@ const Navbar = ({ user, onLogout }) => {
           {/* Right Side */}
           <div className="flex items-center gap-6">
             {/* Desktop Auth Buttons (hidden on mobile) */}
-            {/* <div className="hidden lg:block">
+            <div className="hidden lg:block">
               {!user ? (
                 <div className="flex items-center gap-5">
                   <button
@@ -243,15 +243,15 @@ const Navbar = ({ user, onLogout }) => {
                   )}
                 </div>
               )}
-            </div> */}
+            </div>
 
             {/* Mobile Menu Toggle */}
-            {/* <button
+            <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="block lg:hidden text-gray-700"
             >
               {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-            </button> */}
+            </button>
           </div>
         </div>
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShieldCheck, Phone, Lock, Mail, X } from 'lucide-react';
+import ReactDOM from 'react-dom';
+import { ShieldCheck, UserPlus, Phone, Lock, Mail, Building2, X } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -17,9 +18,13 @@ const EmployeeLogin = ({ onLogin }) => {
   const [message, setMessage] = useState('');
   const [timeLeft, setTimeLeft] = useState(0);
   const [loading, setLoading] = useState(false);
+
+  const [signupModalOpen, setSignupModalOpen] = useState(false);
+  const modalRef = useRef(null);
   
   const navigate = useNavigate();
 
+  // Timer for OTP resend
   useEffect(() => {
     if (timeLeft > 0) {
       const timerId = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
@@ -27,46 +32,53 @@ const EmployeeLogin = ({ onLogin }) => {
     }
   }, [timeLeft]);
 
+  // Close modal on outside click
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (signupModalOpen && modalRef.current && !modalRef.current.contains(e.target)) {
+        setSignupModalOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [signupModalOpen]);
+
   const routeUser = (user) => {
     if (onLogin) onLogin(user);
-    // For employee, always go to employee-dashboard
-    // Could check role but employee login should be employee
     navigate('/employee-dashboard');
   };
 
   // Send OTP
-  // const handleSendOtp = async () => {
-  //   setError('');
-  //   setMessage('');
-  //   setLoading(true);
-  //   try {
-  //     const res = await fetch(`${API_BASE_URL}/api/auth/send-otp`, {
-  //       method: 'POST',
-  //       headers: { 'Content-Type': 'application/json' },
-  //       body: JSON.stringify({ phone: loginId })
-  //     });
-  //     const data = await res.json();
-  //     if (res.ok) {
-  //       setOtpSent(true);
-  //       setMessage(data.message || 'OTP sent successfully');
-  //       setTimeLeft(30);
-  //     } else {
-  //       if (res.status === 404) {
-  //         setError('Mobile number not found. Please register.');
-  //       } else {
-  //         throw new Error(data.message || 'Failed to send OTP');
-  //       }
-  //     }
-  //   } catch (err) {
-  //     console.error(err);
-  //     setError('Login service unavailable. Mocking OTP.');
-  //     setOtpSent(true);
-  //     setMessage('OTP Sent. Use 123456');
-  //     setTimeLeft(30);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
+  const handleSendOtp = async () => {
+    setError('');
+    setMessage('');
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/auth/employee/send-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: loginId })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setOtpSent(true);
+        setMessage(data.message);
+        setTimeLeft(30);
+      } else {
+        if (res.status === 404) {
+          setError('Mobile number not found. Please register.');
+          setSignupModalOpen(true);
+        } else {
+          throw new Error(data.error || data.message || 'Failed to send OTP');
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      setError(err.message || 'Login service unavailable. Try password login.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Password login
   const handlePasswordLogin = async () => {
@@ -104,28 +116,26 @@ const EmployeeLogin = ({ onLogin }) => {
   };
 
   // OTP login
-  // const handleOtpLogin = async () => {
-  //   setError('');
-  //   setMessage('');
-  //   setLoading(true);
-  //   const finalOtp = otp.join('');
-  //   try {
-  //     const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
-  //       method: 'POST',
-  //       headers: { 'Content-Type': 'application/json' },
-  //       body: JSON.stringify({ loginId, type: 'otp', password: '', otp: finalOtp })
-  //     });
-  //     const data = await res.json();
-  //     if (!res.ok) {
-  //       throw new Error(data.message || data.error || 'Authentication failed');
-  //     }
-  //     routeUser(data.user);
-  //   } catch (err) {
-  //     setError(err.message);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
+  const handleOtpLogin = async () => {
+    setError('');
+    setMessage('');
+    setLoading(true);
+    const finalOtp = otp.join('');
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/auth/employee/verify-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: loginId, otp: finalOtp })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Authentication failed');
+      routeUser(data.user);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -156,105 +166,11 @@ const EmployeeLogin = ({ onLogin }) => {
     }
   };
 
-
-const handleSendOtp = async () => {
-  setError('');
-  setMessage('');
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/auth/employee/send-otp`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone: loginId })
-    });
-    const data = await res.json();
-    if (res.ok) {
-      setOtpSent(true);
-      setMessage(data.message);
-      setTimeLeft(30);
-    } else {
-      if (res.status === 404) {
-        setError('Mobile number not found. Please register.');
-        // You can also trigger a modal or redirect to registration
-      } else {
-        throw new Error(data.error || data.message || 'Failed to send OTP');
-      }
-    }
-  } catch (err) {
-    console.error(err);
-    setError(err.message || 'Login service unavailable. Try password login.');
-  }
-};
-
-const handleOtpLogin = async () => {
-  setError('');
-  setMessage('');
-  const finalOtp = otp.join('');
-  try {
-    const res = await fetch(`${API_BASE_URL}/api/auth/employee/verify-otp`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ phone: loginId, otp: finalOtp })
-    });
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Authentication failed');
-    routeUser(data.user);
-  } catch (err) {
-    setError(err.message);
-  }
-};
-
-
-//   const handleSendOtp = async () => {
-//   setError('');
-//   setMessage('');
-//   setLoading(true);
-//   try {
-//     const res = await fetch(`${API_BASE_URL}/api/auth/employee/send-otp`, {
-//       method: 'POST',
-//       headers: { 'Content-Type': 'application/json' },
-//       body: JSON.stringify({ phone: loginId })
-//     });
-//     const data = await res.json();
-//     if (res.ok) {
-//       setOtpSent(true);
-//       setMessage(data.message || 'OTP sent successfully');
-//       setTimeLeft(30);
-//     } else {
-//       setError(data.error || 'Failed to send OTP');
-//     }
-//   } catch (err) {
-//     console.error(err);
-//     setError('Network error. Please try again.');
-//   } finally {
-//     setLoading(false);
-//   }
-// };
-
-
-// const handleOtpLogin = async () => {
-//   setError('');
-//   setMessage('');
-//   setLoading(true);
-//   const finalOtp = otp.join('');
-//   try {
-//     const res = await fetch(`${API_BASE_URL}/api/auth/employee/verify-otp`, {
-//       method: 'POST',
-//       headers: { 'Content-Type': 'application/json' },
-//       body: JSON.stringify({ phone: loginId, otp: finalOtp })
-//     });
-//     const data = await res.json();
-//     if (!res.ok) {
-//       throw new Error(data.error || 'Authentication failed');
-//     }
-//     routeUser(data.user);
-//   } catch (err) {
-//     setError(err.message);
-//   } finally {
-//     setLoading(false);
-//   }
-// };
-
-
+  const handleSignupAs = (selectedRole) => {
+    setSignupModalOpen(false);
+    if (selectedRole === 'employee') navigate('/employee-registration');
+    else navigate('/employer-registration');
+  };
 
   return (
     <div className="min-h-[calc(100vh-64px)] flex items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50 p-4">
@@ -262,6 +178,10 @@ const handleOtpLogin = async () => {
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(10px); }
           to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes modalFadeIn {
+          from { opacity: 0; transform: scale(0.95); }
+          to { opacity: 1; transform: scale(1); }
         }
       `}</style>
 
@@ -304,14 +224,10 @@ const handleOtpLogin = async () => {
           {/* Phone/Login ID Field */}
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-semibold text-slate-700">
-              {authMethod === 'otp' ? "Mobile Number" : "Mobile Number"}
+              Mobile Number
             </label>
             <div className="relative flex items-center">
-              {authMethod === 'otp' ? (
-                <Phone className="absolute left-3 text-slate-400 pointer-events-none w-[18px] h-[18px]" />
-              ) : (
-                <Phone className="absolute left-3 text-slate-400 pointer-events-none w-[18px] h-[18px]" />
-              )}
+              <Phone className="absolute left-3 text-slate-400 pointer-events-none w-[18px] h-[18px]" />
               <input 
                 type="tel"
                 className={`w-full py-3 pl-10 pr-4 border rounded-lg text-sm text-slate-900 bg-white transition-all focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 placeholder:text-slate-300 ${
@@ -397,30 +313,92 @@ const handleOtpLogin = async () => {
             {loading ? 'Processing...' : (authMethod === 'otp' ? (otpSent ? 'Verify & Login' : 'Get OTP') : 'Login')}
           </button>
 
-          {/* Registration Link */}
+          {/* Registration Link - OPENS MODAL */}
           <p className="text-center text-sm text-slate-500 mt-1">
             Don't have an account?{' '}
             <button
               type="button"
               className="text-indigo-600 font-bold hover:underline bg-none border-none cursor-pointer"
-              onClick={() => navigate('/employee-registration')}
+              onClick={() => setSignupModalOpen(true)}
             >
               Register Now
             </button>
           </p>
         </form>
       </div>
+
+      {/* SIGNUP MODAL (identical to EmployerLogin) */}
+      {signupModalOpen && ReactDOM.createPortal(
+        <>
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40" />
+          <div 
+            ref={modalRef}
+            className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-[90%] max-w-md"
+          >
+            <div className="bg-white rounded-2xl shadow-2xl" style={{ animation: 'modalFadeIn 0.2s ease-out' }}>
+              <div className="relative p-6 text-center">
+                <button
+                  onClick={() => setSignupModalOpen(false)}
+                  className="absolute right-4 top-4 text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <X size={20} />
+                </button>
+
+                <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <UserPlus className="text-indigo-600" size={28} />
+                </div>
+
+                <h2 className="text-2xl font-bold text-gray-800 mb-2">
+                  Join RozgarDo
+                </h2>
+                <p className="text-gray-500 mb-6">
+                  Choose how you want to get started
+                </p>
+
+                <div className="space-y-3">
+                  <button
+                    onClick={() => handleSignupAs('employee')}
+                    className="w-full flex items-center gap-4 p-4 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-xl transition-all duration-200 group"
+                  >
+                    <div className="bg-indigo-100 w-12 h-12 rounded-xl flex items-center justify-center group-hover:bg-indigo-200 transition">
+                      <UserPlus size={22} className="text-indigo-600" />
+                    </div>
+                    <div className="flex-1 text-left">
+                      <div className="font-semibold text-gray-800">I'm a Job Seeker</div>
+                      <div className="text-xs text-gray-500">Find jobs, apply instantly</div>
+                    </div>
+                    <span className="text-gray-400 group-hover:text-indigo-500 transition">→</span>
+                  </button>
+
+                  <button
+                    onClick={() => handleSignupAs('employer')}
+                    className="w-full flex items-center gap-4 p-4 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-xl transition-all duration-200 group"
+                  >
+                    <div className="bg-green-100 w-12 h-12 rounded-xl flex items-center justify-center group-hover:bg-green-200 transition">
+                      <Building2 size={22} className="text-green-700" />
+                    </div>
+                    <div className="flex-1 text-left">
+                      <div className="font-semibold text-gray-800">I'm an Employer</div>
+                      <div className="text-xs text-gray-500">Post jobs, hire talent</div>
+                    </div>
+                    <span className="text-gray-400 group-hover:text-green-600 transition">→</span>
+                  </button>
+                </div>
+
+                <button
+                  onClick={() => setSignupModalOpen(false)}
+                  className="mt-6 text-sm text-gray-400 hover:text-gray-600 underline transition"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </>,
+        document.body
+      )}
     </div>
   );
 };
-
-
-
-
-
-
-
-
-
 
 export default EmployeeLogin;
