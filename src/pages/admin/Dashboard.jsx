@@ -2,40 +2,53 @@ import React, { useState, useEffect } from 'react';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
 import { ShieldAlert, CheckCircle, XCircle, Users, Briefcase, TrendingUp, DollarSign, Calendar, Building, Download } from 'lucide-react';
-// import { API_BASE_URL } from '../../config';
+
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const AdminDashboard = ({ user }) => {
   const [activeTab, setActiveTab] = useState('jobs');
   const [usersTab, setUsersTab] = useState('employer');
   const [jobs, setJobs] = useState([]);
-  const [users, setUsers] = useState([]);
+  const [employees, setEmployees] = useState([]);
+  const [employers, setEmployers] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchData();
-  }, [activeTab, usersTab]);
+    if (activeTab === 'jobs') {
+      fetchJobs();
+    } else {
+      fetchAllUsers();
+    }
+  }, [activeTab]);
 
-   const fetchData = async () => {
-     setLoading(true);
-     try {
-       if (activeTab === 'jobs') {
-         const res = await fetch(`${API_BASE_URL}/api/jobs`);
-        if (res.ok) {
-           const data = await res.json();
-           setJobs(data);
-        }
-       } else {
-         const res = await fetch(`${API_BASE_URL}/api/auth/users`);
-        if (res.ok) {
-           const data = await res.json();
-           setUsers(data);
-        }
+  const fetchJobs = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/jobs`);
+      if (res.ok) {
+        const data = await res.json();
+        setJobs(data);
       }
     } catch (err) {
-       console.error(err);
+      console.error(err);
     } finally {
-       setLoading(false);
+      setLoading(false);
+    }
+  };
+
+  const fetchAllUsers = async () => {
+    setLoading(true);
+    try {
+      const [empRes, employerRes] = await Promise.all([
+        fetch(`${API_BASE_URL}/api/auth/employees`),
+        fetch(`${API_BASE_URL}/api/auth/employers`)
+      ]);
+      if (empRes.ok) setEmployees(await empRes.json());
+      if (employerRes.ok) setEmployers(await employerRes.json());
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -47,14 +60,18 @@ const AdminDashboard = ({ user }) => {
         body: JSON.stringify({ status })
       });
       if (res.ok) {
-          setJobs(jobs.map(job => job.id === id ? { ...job, status } : job));
+        setJobs(jobs.map(job => job.id === id ? { ...job, status } : job));
       }
     } catch (err) {
       console.error(err);
     }
   };
 
-  const getFilteredUsers = (role) => users.filter(u => u.role === role);
+  const getFilteredUsers = (role) => {
+    if (role === 'employee') return employees;
+    if (role === 'employer') return employers;
+    return [];
+  };
 
   const exportToCSV = (data, filename, headers) => {
     if (!data || data.length === 0) return;
@@ -92,13 +109,16 @@ const AdminDashboard = ({ user }) => {
   };
 
   const exportUsers = () => {
-    const data = users.map(u => ({
-      name: u.name,
-      phone: u.phone,
-      email: u.email,
+    let data = [];
+    if (usersTab === 'employee') data = employees;
+    else if (usersTab === 'employer') data = employers;
+    const exportData = data.map(u => ({
+      name: u.name || u.full_name || u.company_name || 'N/A',
+      phone: u.phone || u.phone_number || u.contact_number || 'N/A',
+      email: u.email || u.official_email || 'N/A',
       role: u.role
     }));
-    exportToCSV(data, 'users_export', ['Name', 'Phone', 'Email', 'Role']);
+    exportToCSV(exportData, `${usersTab}s_export`, ['Name', 'Phone', 'Email', 'Role']);
   };
 
   const exportMonthlyAnalytics = () => {
@@ -112,10 +132,9 @@ const AdminDashboard = ({ user }) => {
   const pendingJobs = jobs.filter(j => j.status === 'pending');
   const decidedJobs = jobs.filter(j => j.status !== 'pending');
 
-  const totalJobsPosted = jobs.length;
   const approvedJobs = jobs.filter(j => j.status === 'approved').length;
-  const totalEmployers = getFilteredUsers('employer').length;
-  const totalEmployees = getFilteredUsers('employee').length;
+  const totalEmployers = employers.length;
+  const totalEmployees = employees.length;
 
   // Calculate estimated revenue (mock - based on job fees)
   const estimatedRevenue = {
@@ -164,9 +183,9 @@ const AdminDashboard = ({ user }) => {
         <tbody>
           {filteredUsers.map(u => (
             <tr key={u.id} className="border-b border-gray-100 hover:bg-gray-50">
-              <td className="p-4 font-semibold">{u.name || 'N/A'}</td>
-              <td className="p-4 text-gray-600">{u.phone}</td>
-              <td className="p-4 text-gray-600">{u.email || 'N/A'}</td>
+              <td className="p-4 font-semibold">{u.name || u.full_name || u.company_name || 'N/A'}</td>
+              <td className="p-4 text-gray-600">{u.phone || u.phone_number || u.contact_number || 'N/A'}</td>
+              <td className="p-4 text-gray-600">{u.email || u.official_email || 'N/A'}</td>
               <td className="p-4">
                 <button className="text-primary hover:underline font-medium text-xs mr-3">View</button>
                 <button className="text-danger hover:underline font-medium text-xs">Suspend</button>
@@ -181,9 +200,9 @@ const AdminDashboard = ({ user }) => {
   return (
     <div className="container py-8 page-enter">
       <div className="flex justify-between items-center mb-8">
-         <h1 className="text-3xl font-bold flex items-center gap-3">
-            <ShieldAlert className="text-primary" size={32} /> Admin Center
-         </h1>
+        <h1 className="text-3xl font-bold flex items-center gap-3">
+          <ShieldAlert className="text-primary" size={32} /> Admin Center
+        </h1>
       </div>
 
       {/* Stats Overview */}
@@ -211,23 +230,23 @@ const AdminDashboard = ({ user }) => {
       </div>
 
       <div className="flex gap-4 mb-8 pb-4 border-b border-gray-200">
-        <button 
-           className={`px-6 py-2 rounded-full font-bold flex items-center gap-2 transition-colors ${activeTab === 'jobs' ? 'bg-indigo-100 text-primary' : 'text-gray-500 hover:bg-gray-100'}`}
-           onClick={() => setActiveTab('jobs')}
+        <button
+          className={`px-6 py-2 rounded-full font-bold flex items-center gap-2 transition-colors ${activeTab === 'jobs' ? 'bg-indigo-100 text-primary' : 'text-gray-500 hover:bg-gray-100'}`}
+          onClick={() => setActiveTab('jobs')}
         >
-           <Briefcase size={18} /> Moderate Jobs
+          <Briefcase size={18} /> Moderate Jobs
         </button>
-        <button 
-           className={`px-6 py-2 rounded-full font-bold flex items-center gap-2 transition-colors ${activeTab === 'users' ? 'bg-indigo-100 text-primary' : 'text-gray-500 hover:bg-gray-100'}`}
-           onClick={() => setActiveTab('users')}
+        <button
+          className={`px-6 py-2 rounded-full font-bold flex items-center gap-2 transition-colors ${activeTab === 'users' ? 'bg-indigo-100 text-primary' : 'text-gray-500 hover:bg-gray-100'}`}
+          onClick={() => setActiveTab('users')}
         >
-           <Users size={18} /> Manage Users
+          <Users size={18} /> Manage Users
         </button>
-        <button 
-           className={`px-6 py-2 rounded-full font-bold flex items-center gap-2 transition-colors ${activeTab === 'analytics' ? 'bg-indigo-100 text-primary' : 'text-gray-500 hover:bg-gray-100'}`}
-           onClick={() => setActiveTab('analytics')}
+        <button
+          className={`px-6 py-2 rounded-full font-bold flex items-center gap-2 transition-colors ${activeTab === 'analytics' ? 'bg-indigo-100 text-primary' : 'text-gray-500 hover:bg-gray-100'}`}
+          onClick={() => setActiveTab('analytics')}
         >
-           <TrendingUp size={18} /> Analytics
+          <TrendingUp size={18} /> Analytics
         </button>
       </div>
 
@@ -245,23 +264,17 @@ const AdminDashboard = ({ user }) => {
 
       {activeTab === 'users' && (
         <div className="flex gap-2 mb-6">
-          <button 
-             className={`px-4 py-2 rounded-full font-bold text-sm flex items-center gap-2 transition-colors ${usersTab === 'employer' ? 'bg-blue-100 text-blue-700' : 'text-gray-500 hover:bg-gray-100'}`}
-             onClick={() => setUsersTab('employer')}
+          <button
+            className={`px-4 py-2 rounded-full font-bold text-sm flex items-center gap-2 transition-colors ${usersTab === 'employer' ? 'bg-blue-100 text-blue-700' : 'text-gray-500 hover:bg-gray-100'}`}
+            onClick={() => setUsersTab('employer')}
           >
-             Employers ({totalEmployers})
+            Employers ({totalEmployers})
           </button>
-          <button 
-             className={`px-4 py-2 rounded-full font-bold text-sm flex items-center gap-2 transition-colors ${usersTab === 'employee' ? 'bg-green-100 text-green-700' : 'text-gray-500 hover:bg-gray-100'}`}
-             onClick={() => setUsersTab('employee')}
+          <button
+            className={`px-4 py-2 rounded-full font-bold text-sm flex items-center gap-2 transition-colors ${usersTab === 'employee' ? 'bg-green-100 text-green-700' : 'text-gray-500 hover:bg-gray-100'}`}
+            onClick={() => setUsersTab('employee')}
           >
-             Employees ({totalEmployees})
-          </button>
-          <button 
-             className={`px-4 py-2 rounded-full font-bold text-sm flex items-center gap-2 transition-colors ${usersTab === 'admin' ? 'bg-purple-100 text-purple-700' : 'text-gray-500 hover:bg-gray-100'}`}
-             onClick={() => setUsersTab('admin')}
-          >
-             Admins ({getFilteredUsers('admin').length})
+            Employees ({totalEmployees})
           </button>
         </div>
       )}
@@ -296,7 +309,7 @@ const AdminDashboard = ({ user }) => {
               </tbody>
             </table>
           </Card>
-          
+
           <Card className="p-6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-bold flex items-center gap-2">
@@ -333,52 +346,52 @@ const AdminDashboard = ({ user }) => {
       )}
 
       <div>
-         {loading ? <p className="text-center py-12 text-muted text-lg">Loading data...</p> : (
-            activeTab === 'jobs' ? (
-               <div className="flex flex-col gap-4">
-                  {pendingJobs.length > 0 && <h2 className="text-xl font-bold mb-2">Pending Approval ({pendingJobs.length})</h2>}
-                  {pendingJobs.length === 0 && (
-                     <Card className="py-12 text-center text-muted">
-                        <CheckCircle size={48} className="mx-auto text-gray-200 mb-4" />
-                        <h3 className="text-xl font-medium">All caught up!</h3>
-                        <p>No pending job postings to review.</p>
-                      </Card>
-                  )}
-                  {pendingJobs.map(job => (
-                     <Card key={job.id} className="border-l-4 border-warning flex flex-col md:flex-row justify-between md:items-center">
-                        <div className="mb-4 md:mb-0">
-                           <h3 className="text-xl font-bold mb-1">{job.title}</h3>
-                           <p className="text-muted font-medium mb-1">{job.employer_name}</p>
-                           <span className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-600 font-semibold">{job.category}</span>
-                        </div>
-                        <div className="flex items-center gap-3">
-                           <Button variant="outline" className="text-danger border-danger hover:bg-red-50" onClick={() => handleJobAction(job.id, 'rejected')}>
-                              <XCircle size={18} className="mr-2" /> Reject
-                           </Button>
-                           <Button className="bg-success hover:bg-emerald-600 hover:text-white text-white border-none" onClick={() => handleJobAction(job.id, 'approved')}>
-                              <CheckCircle size={18} className="mr-2" /> Approve
-                           </Button>
-                        </div>
-                     </Card>
-                  ))}
-                  
-                  {decidedJobs.length > 0 && <h2 className="text-xl font-bold mt-8 mb-4">Past Decisions</h2>}
-                  {decidedJobs.map(job => (
-                     <Card key={job.id} className={`flex flex-col md:flex-row justify-between md:items-center p-4 bg-gray-50 border-l-4 ${job.status === 'approved' ? 'border-success' : 'border-danger'}`}>
-                        <div className="mb-2 md:mb-0">
-                           <h3 className="font-bold">{job.title}</h3>
-                           <p className="text-sm text-gray-500">{job.employer_name}</p>
-                        </div>
-                        <span className={`badge badge-${job.status}`}>{job.status}</span>
-                     </Card>
-                  ))}
-               </div>
-            ) : activeTab === 'users' ? (
-               <div className="overflow-x-auto">
-                  {renderUsersTable()}
-               </div>
-            ) : null
-         )}
+        {loading ? <p className="text-center py-12 text-muted text-lg">Loading data...</p> : (
+          activeTab === 'jobs' ? (
+            <div className="flex flex-col gap-4">
+              {pendingJobs.length > 0 && <h2 className="text-xl font-bold mb-2">Pending Approval ({pendingJobs.length})</h2>}
+              {pendingJobs.length === 0 && (
+                <Card className="py-12 text-center text-muted">
+                  <CheckCircle size={48} className="mx-auto text-gray-200 mb-4" />
+                  <h3 className="text-xl font-medium">All caught up!</h3>
+                  <p>No pending job postings to review.</p>
+                </Card>
+              )}
+              {pendingJobs.map(job => (
+                <Card key={job.id} className="border-l-4 border-warning flex flex-col md:flex-row justify-between md:items-center">
+                  <div className="mb-4 md:mb-0">
+                    <h3 className="text-xl font-bold mb-1">{job.title}</h3>
+                    <p className="text-muted font-medium mb-1">{job.employer_name}</p>
+                    <span className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-600 font-semibold">{job.category}</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Button variant="outline" className="text-danger border-danger hover:bg-red-50" onClick={() => handleJobAction(job.id, 'rejected')}>
+                      <XCircle size={18} className="mr-2" /> Reject
+                    </Button>
+                    <Button className="bg-success hover:bg-emerald-600 hover:text-white text-white border-none" onClick={() => handleJobAction(job.id, 'approved')}>
+                      <CheckCircle size={18} className="mr-2" /> Approve
+                    </Button>
+                  </div>
+                </Card>
+              ))}
+
+              {decidedJobs.length > 0 && <h2 className="text-xl font-bold mt-8 mb-4">Past Decisions</h2>}
+              {decidedJobs.map(job => (
+                <Card key={job.id} className={`flex flex-col md:flex-row justify-between md:items-center p-4 bg-gray-50 border-l-4 ${job.status === 'approved' ? 'border-success' : 'border-danger'}`}>
+                  <div className="mb-2 md:mb-0">
+                    <h3 className="font-bold">{job.title}</h3>
+                    <p className="text-sm text-gray-500">{job.employer_name}</p>
+                  </div>
+                  <span className={`badge badge-${job.status}`}>{job.status}</span>
+                </Card>
+              ))}
+            </div>
+          ) : activeTab === 'users' ? (
+            <div className="overflow-x-auto">
+              {renderUsersTable()}
+            </div>
+          ) : null
+        )}
       </div>
     </div>
   );

@@ -19,6 +19,9 @@ const Navbar = ({ user, onLogout }) => {
   const signupModalRef = useRef(null);
   const loginModalRef = useRef(null);
 
+  // Determine if current page is a login page (hide auth buttons)
+  const isLoginPage = ['/admin/login', '/employee-login', '/employer-login'].includes(location.pathname);
+
   // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -151,21 +154,22 @@ const Navbar = ({ user, onLogout }) => {
             {/* Desktop Auth Buttons (hidden on mobile) */}
             {/* <div className="hidden lg:block">
               {!user ? (
-                <div className="flex items-center gap-5">
-                  <button
-                    onClick={() => setLoginModalOpen(true)}
-                    className="font-bold text-gray-800 text-sm hover:text-indigo-600 transition"
-                  >
-                    Log in
-                  </button>
-
-                  <button
-                    onClick={() => setSignupModalOpen(true)}
-                    className="bg-indigo-600 text-white font-semibold text-sm px-5 py-2 rounded-xl shadow-md shadow-indigo-200 hover:bg-indigo-700 transition"
-                  >
-                    Sign up
-                  </button>
-                </div>
+                !isLoginPage ? (
+                  <div className="flex items-center gap-5">
+                    <button
+                      onClick={() => setLoginModalOpen(true)}
+                      className="font-bold text-gray-800 text-sm hover:text-indigo-600 transition"
+                    >
+                      Log in
+                    </button>
+                    <button
+                      onClick={() => setSignupModalOpen(true)}
+                      className="bg-indigo-600 text-white font-semibold text-sm px-5 py-2 rounded-xl shadow-md shadow-indigo-200 hover:bg-indigo-700 transition"
+                    >
+                      Sign up
+                    </button>
+                  </div>
+                ) : null
               ) : (
                 <div className="relative" ref={dropdownRef}>
                   <button
@@ -273,24 +277,28 @@ const Navbar = ({ user, onLogout }) => {
                   </Link>
                 ))}
                 <div className="h-px bg-gray-200 my-1" />
-                <button
-                  onClick={() => {
-                    setLoginModalOpen(true);
-                    setMobileMenuOpen(false);
-                  }}
-                  className="py-2 font-semibold text-indigo-600 text-left"
-                >
-                  Log in
-                </button>
-                <button
-                  onClick={() => {
-                    setSignupModalOpen(true);
-                    setMobileMenuOpen(false);
-                  }}
-                  className="text-left py-2 font-semibold text-indigo-600"
-                >
-                  Sign up
-                </button>
+                {!isLoginPage && (
+                  <>
+                    <button
+                      onClick={() => {
+                        setLoginModalOpen(true);
+                        setMobileMenuOpen(false);
+                      }}
+                      className="py-2 font-semibold text-indigo-600 text-left"
+                    >
+                      Log in
+                    </button>
+                    <button
+                      onClick={() => {
+                        setSignupModalOpen(true);
+                        setMobileMenuOpen(false);
+                      }}
+                      className="text-left py-2 font-semibold text-indigo-600"
+                    >
+                      Sign up
+                    </button>
+                  </>
+                )}
               </>
             ) : (
               <>

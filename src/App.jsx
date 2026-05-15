@@ -27,9 +27,11 @@ import EmployerLogin from './pages/employer/employer_login';
 
 import TrustedEmployers from './pages/legal/TrustedEmployeers';
 
+import AdminLogin from './pages/admin/AdminLogin';
+
 function AppContent({ user, handleLogin, handleLogout }) {
   const location = useLocation();
-  const hideNavbar = location.pathname === '/login';
+  const hideNavbar = location.pathname === '/login';////////////////////////Check
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -79,9 +81,23 @@ function AppContent({ user, handleLogin, handleLogout }) {
           <Route path="/profile-setup" element={<Profile user={user} setUser={handleLogin} />} />
           <Route path="/settings" element={<Settings user={user} />} />
 
-          <Route path="/employer" element={user?.role === 'employer' ? <EmployerDashboard user={user} /> : <Navigate to="/login" />} />
-          <Route path="/employer/post-job" element={user?.role === 'employer' ? <PostJob user={user} /> : <Navigate to="/login" />} />
-          <Route path="/admin" element={user?.role === 'admin' ? <AdminDashboard user={user} /> : <Navigate to="/login" />} />
+          <Route path="/employer" element={user?.role === 'employer' ? <EmployerDashboard user={user} /> : <Navigate to="/employer-login" />} />
+          <Route path="/employer/post-job" element={user?.role === 'employer' ? <PostJob user={user} /> : <Navigate to="/login" />} /> //////////////////////check
+          {/* <Route path="/admin" element={user?.role === 'admin' ? <AdminDashboard user={user} /> : <Navigate to="/login" />} /> */}
+          {/* <Route path="/admin/login" element={<AdminLogin onLogin={handleLogin} />} /> */}
+
+          <Route path="/admin/login"  element={<AdminLogin onLogin={handleLogin} user={user} />} />
+
+          <Route
+          path="/admin"
+          element={
+            user?.role === 'admin' ? (
+              <AdminDashboard user={user} />
+            ) : (
+              <Navigate to="/admin/login" />
+            )
+          }
+        />
 
 
           <Route path="*" element={<Navigate to="/onboarding" replace />} />
