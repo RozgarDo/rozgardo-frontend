@@ -29,7 +29,10 @@ import TrustedEmployers from './pages/legal/TrustedEmployeers';
 
 import AdminLogin from './pages/admin/AdminLogin';
 
-function AppContent({ user, handleLogin, handleLogout }) {
+import EmployeeProfile from './pages/employee/EmployeeProfile';
+import EmployerProfile from './pages/employer/EmployerProfile';
+
+function AppContent({ user, setUser, handleLogin, handleLogout }) {
   const location = useLocation();
   const hideNavbar = location.pathname === '/login';////////////////////////Check
 
@@ -66,6 +69,11 @@ function AppContent({ user, handleLogin, handleLogout }) {
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/employee-registration" element={<EmployeeRegistration />} />
           <Route path="/employer-registration" element={<EmployerRegistration />} />
+          <Route path="/employee-profile" element={<EmployeeProfile user={user} setUser={setUser} />} />
+          <Route path="/employer-profile" element={<EmployerProfile user={user} setUser={setUser} />} />
+          
+
+          
           
           <Route path="/employee-login" element={user ? <Navigate to="/" replace /> : <EmployeeLogin onLogin={handleLogin} />} />
           <Route path="/employer-login" element={user ? <Navigate to="/" replace /> : <EmployerLogin onLogin={handleLogin} />} />
@@ -140,7 +148,12 @@ function App() {
   return (
     <Router>
       <ScrollToTop />
-      <AppContent user={user} handleLogin={handleLogin} handleLogout={handleLogout} />
+      <AppContent
+        user={user}
+        setUser={setUser}               // ← add this line
+        handleLogin={handleLogin}
+        handleLogout={handleLogout}
+      />
     </Router>
   );
 }

@@ -109,6 +109,14 @@ const Navbar = ({ user, onLogout }) => {
     return user.role;
   };
 
+  // Determine profile link based on role
+const getProfileLink = () => {
+  if (!user) return '/profile';
+  if (user.role === 'employee') return '/employee-profile';
+  if (user.role === 'employer') return '/employer-profile';
+  return '/profile';
+};
+
   return (
     <>
       <nav className="sticky top-0 z-100 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm">
@@ -151,7 +159,7 @@ const Navbar = ({ user, onLogout }) => {
 
           {/* Right Side */}
           <div className="flex items-center gap-6">
-            {/* Desktop Auth Buttons (hidden on mobile) */}
+
             {/* <div className="hidden lg:block">
               {!user ? (
                 !isLoginPage ? (
@@ -210,8 +218,9 @@ const Navbar = ({ user, onLogout }) => {
                         </div>
                       </div>
 
+
                       <Link
-                        to="/profile"
+                        to={getProfileLink()}
                         className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
                       >
                         <User size={16} className="text-gray-500" /> My Profile
@@ -319,8 +328,9 @@ const Navbar = ({ user, onLogout }) => {
                   </Link>
                 ))}
                 <div className="h-px bg-gray-200 my-1" />
+                {/* Conditionally route to employee-profile or profile */}
                 <Link
-                  to="/profile"
+                  to={getProfileLink()}
                   onClick={() => setMobileMenuOpen(false)}
                   className="flex items-center gap-2 py-2 text-sm font-medium text-gray-700"
                 >
