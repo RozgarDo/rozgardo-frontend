@@ -159,8 +159,8 @@ const getProfileLink = () => {
 
           {/* Right Side */}
           <div className="flex items-center gap-6">
-            {/* Desktop Auth Buttons (hidden on mobile) */}
-            <div className="hidden lg:block">
+
+            {/* <div className="hidden lg:block">
               {!user ? (
                 !isLoginPage ? (
                   <div className="flex items-center gap-5">
@@ -218,7 +218,7 @@ const getProfileLink = () => {
                         </div>
                       </div>
 
-                      {/* Conditionally route to employee-profile or profile */}
+
                       <Link
                         to={getProfileLink()}
                         className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
@@ -256,15 +256,15 @@ const getProfileLink = () => {
                   )}
                 </div>
               )}
-            </div>
+            </div> */}
 
             {/* Mobile Menu Toggle */}
-            <button
+            {/* <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="block lg:hidden text-gray-700"
             >
               {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
+            </button> */}
           </div>
         </div>
 
