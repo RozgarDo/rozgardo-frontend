@@ -1,7 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
-import { ShieldAlert, CheckCircle, XCircle, Users, Briefcase, TrendingUp, DollarSign, Calendar, Building, Download } from 'lucide-react';
+import { 
+  ShieldAlert, CheckCircle, XCircle, Users, Briefcase, 
+  TrendingUp, DollarSign, Calendar, Building, Download, 
+  ChevronDown, ChevronUp, MapPin, IndianRupee, Clock, 
+  Award, GraduationCap, LayoutGrid, UserCheck, UserX, 
+  Mail, Phone, AlertCircle
+} from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -12,6 +18,9 @@ const AdminDashboard = ({ user }) => {
   const [employees, setEmployees] = useState([]);
   const [employers, setEmployers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [expandedJobId, setExpandedJobId] = useState(null);
+  const [applicantsMap, setApplicantsMap] = useState({}); // jobId -> applicants array
+  const [loadingApplicants, setLoadingApplicants] = useState({});
 
   useEffect(() => {
     if (activeTab === 'jobs') {
@@ -52,6 +61,25 @@ const AdminDashboard = ({ user }) => {
     }
   };
 
+  const fetchApplicantsForJob = async (jobId) => {
+    if (applicantsMap[jobId]) return; // already fetched
+    setLoadingApplicants(prev => ({ ...prev, [jobId]: true }));
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/applications/job/${jobId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setApplicantsMap(prev => ({ ...prev, [jobId]: data }));
+      } else {
+        setApplicantsMap(prev => ({ ...prev, [jobId]: [] }));
+      }
+    } catch (err) {
+      console.error(err);
+      setApplicantsMap(prev => ({ ...prev, [jobId]: [] }));
+    } finally {
+      setLoadingApplicants(prev => ({ ...prev, [jobId]: false }));
+    }
+  };
+
   const handleJobAction = async (id, status) => {
     try {
       const res = await fetch(`${API_BASE_URL}/api/jobs/${id}/status`, {
@@ -64,6 +92,15 @@ const AdminDashboard = ({ user }) => {
       }
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const toggleExpandJob = (jobId) => {
+    if (expandedJobId === jobId) {
+      setExpandedJobId(null);
+    } else {
+      setExpandedJobId(jobId);
+      fetchApplicantsForJob(jobId);
     }
   };
 
@@ -136,14 +173,12 @@ const AdminDashboard = ({ user }) => {
   const totalEmployers = employers.length;
   const totalEmployees = employees.length;
 
-  // Calculate estimated revenue (mock - based on job fees)
   const estimatedRevenue = {
     total: approvedJobs * 500,
     thisMonth: Math.floor(approvedJobs * 500 * 0.3),
     lastMonth: Math.floor(approvedJobs * 500 * 0.25),
   };
 
-  // Monthly breakdown (mock data)
   const monthlyData = [
     { month: 'Apr 2026', jobs: Math.floor(Math.random() * 10) + 5, revenue: Math.floor(Math.random() * 5000) + 2000 },
     { month: 'Mar 2026', jobs: Math.floor(Math.random() * 10) + 3, revenue: Math.floor(Math.random() * 5000) + 1500 },
@@ -193,7 +228,70 @@ const AdminDashboard = ({ user }) => {
             </tr>
           ))}
         </tbody>
-      </table>
+       </table>
+    );
+  };
+
+  const renderApplicantDetails = (jobId) => {
+    const applicants = applicantsMap[jobId] || [];
+    const isLoading = loadingApplicants[jobId];
+    if (isLoading) return <div className="text-center py-4">Loading applicants...</div>;
+    if (applicants.length === 0) return <div className="text-center py-4 text-gray-500">No applicants yet for this position.</div>;
+
+    const counts = {
+      applied: applicants.filter(a => a.status === 'applied').length,
+      shortlisted: applicants.filter(a => a.status === 'shortlisted').length,
+      interview: applicants.filter(a => a.status === 'interview').length,
+      selected: applicants.filter(a => a.status === 'selected').length,
+      rejected: applicants.filter(a => a.status === 'rejected').length
+    };
+
+    return (
+      <div className="mt-4 space-y-4">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mb-4">
+          <div className="bg-blue-50 p-2 rounded text-center"><span className="font-bold">{counts.applied}</span><p className="text-xs">Applied</p></div>
+          <div className="bg-purple-50 p-2 rounded text-center"><span className="font-bold">{counts.shortlisted}</span><p className="text-xs">Shortlisted</p></div>
+          <div className="bg-indigo-50 p-2 rounded text-center"><span className="font-bold">{counts.interview}</span><p className="text-xs">Interview</p></div>
+          <div className="bg-green-50 p-2 rounded text-center"><span className="font-bold">{counts.selected}</span><p className="text-xs">Selected</p></div>
+          <div className="bg-red-50 p-2 rounded text-center"><span className="font-bold">{counts.rejected}</span><p className="text-xs">Rejected</p></div>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm border-collapse">
+            <thead className="bg-gray-100">
+              <tr>
+                <th className="p-2 text-left">Name</th>
+                <th className="p-2 text-left">Contact</th>
+                <th className="p-2 text-left">Skills</th>
+                <th className="p-2 text-left">Status</th>
+                <th className="p-2 text-left">Interview Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {applicants.map(app => (
+                <tr key={app.id} className="border-b hover:bg-gray-50">
+                  <td className="p-2 font-medium">{app.users?.name || 'Unknown'}</td>
+                  <td className="p-2">
+                    <div className="flex flex-col text-xs">
+                      {app.users?.phone && <span className="flex items-center gap-1"><Phone size={12}/> {app.users.phone}</span>}
+                      {app.users?.email && <span className="flex items-center gap-1"><Mail size={12}/> {app.users.email}</span>}
+                    </div>
+                  </td>
+                  <td className="p-2 text-xs max-w-[200px] truncate">{app.users?.skills || 'N/A'}</td>
+                  <td className="p-2">
+                    <span className={`badge badge-${app.status}`}>
+                      {app.status === 'selected' ? 'HIRED' : app.status}
+                    </span>
+                  </td>
+                  <td className="p-2 text-xs">
+                    {app.interview_date ? new Date(app.interview_date).toLocaleString() : '-'}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     );
   };
 
@@ -377,13 +475,66 @@ const AdminDashboard = ({ user }) => {
 
               {decidedJobs.length > 0 && <h2 className="text-xl font-bold mt-8 mb-4">Past Decisions</h2>}
               {decidedJobs.map(job => (
-                <Card key={job.id} className={`flex flex-col md:flex-row justify-between md:items-center p-4 bg-gray-50 border-l-4 ${job.status === 'approved' ? 'border-success' : 'border-danger'}`}>
-                  <div className="mb-2 md:mb-0">
-                    <h3 className="font-bold">{job.title}</h3>
-                    <p className="text-sm text-gray-500">{job.employer_name}</p>
-                  </div>
-                  <span className={`badge badge-${job.status}`}>{job.status}</span>
-                </Card>
+                <div key={job.id} className="mb-4">
+                  <Card
+                    className={`cursor-pointer transition-all hover:shadow-md ${
+                      job.status === 'approved' ? 'border-l-4 border-success' : 'border-l-4 border-danger'
+                    }`}
+                    onClick={() => toggleExpandJob(job.id)}
+                  >
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h3 className="font-bold text-lg">{job.title}</h3>
+                        <p className="text-sm text-gray-500">{job.employer_name}</p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className={`badge badge-${job.status}`}>{job.status}</span>
+                        {expandedJobId === job.id ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                      </div>
+                    </div>
+                  </Card>
+                  {expandedJobId === job.id && (
+                    <div className="mt-2 p-4 bg-gray-50 rounded-lg border border-gray-200 shadow-inner">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                          <p className="text-sm font-semibold flex items-center gap-1"><MapPin size={14} /> Location</p>
+                          <p className="text-gray-700">{job.location || 'N/A'}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold flex items-center gap-1"><IndianRupee size={14} /> Salary</p>
+                          <p className="text-gray-700">₹{job.salary}/month</p>
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold flex items-center gap-1"><Briefcase size={14} /> Job Type</p>
+                          <p className="text-gray-700">{job.job_type || 'Full-time'}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold flex items-center gap-1"><Clock size={14} /> Posted On</p>
+                          <p className="text-gray-700">{job.created_at ? new Date(job.created_at).toLocaleDateString() : 'N/A'}</p>
+                        </div>
+                        <div className="col-span-2">
+                          <p className="text-sm font-semibold">Description</p>
+                          <p className="text-gray-700 whitespace-pre-line">{job.description || 'No description provided.'}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold flex items-center gap-1"><Award size={14} /> Experience</p>
+                          <p className="text-gray-700">{job.required_experience || 'Not specified'}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold flex items-center gap-1"><GraduationCap size={14} /> Education</p>
+                          <p className="text-gray-700">{job.education || 'Not specified'}</p>
+                        </div>
+                        <div className="col-span-2">
+                          <p className="text-sm font-semibold flex items-center gap-1"><LayoutGrid size={14} /> Technical Skills</p>
+                          <p className="text-gray-700">{job.technical_skills || 'Not specified'}</p>
+                        </div>
+                      </div>
+                      <hr className="my-3" />
+                      <h4 className="font-bold flex items-center gap-2"><Users size={18} /> Applicants & Pipeline</h4>
+                      {renderApplicantDetails(job.id)}
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
           ) : activeTab === 'users' ? (
