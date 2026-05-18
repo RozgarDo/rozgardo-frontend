@@ -12,7 +12,12 @@ const PostJob = ({ user }) => {
     category: '',
     salary: '',
     location: '',
-    description: ''
+    description: '',
+    job_type: 'Full-time',        // <-- NEW: job type with default
+    required_experience: '',
+    education: '',
+    technical_skills: '',
+    vacancies: ''
   });
   const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
@@ -26,14 +31,12 @@ const PostJob = ({ user }) => {
     setSubmitting(true);
     try {
       const res = await fetch(`${API_BASE_URL}/api/jobs`, {
-        
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           ...formData, 
           employer_id: user.id
         })
-        
       });
       
       if(res.ok) {
@@ -87,6 +90,22 @@ const PostJob = ({ user }) => {
                 </select>
              </div>
 
+             {/* NEW: Job Type selection */}
+             <div>
+                <label className="text-sm font-medium text-gray-800 mb-1 block">Job Type</label>
+                <select 
+                   name="job_type"
+                   className="w-full p-2.5 rounded-md border border-gray-300 outline-none focus:border-primary bg-white"
+                   value={formData.job_type}
+                   onChange={handleChange}
+                   required
+                >
+                   <option value="Full-time">Full-time</option>
+                   <option value="Part-time">Part-time</option>
+                   <option value="Contract">Contract</option>
+                </select>
+             </div>
+
              <div>
                 <label className="text-sm font-medium text-gray-800 mb-1 block">Job Description</label>
                 <textarea 
@@ -98,6 +117,50 @@ const PostJob = ({ user }) => {
                    required
                 />
              </div>
+
+             {/* --- New Fields Section --- */}
+             <div>
+                <label className="text-sm font-medium text-gray-800 mb-1 block">Required Experience</label>
+                <textarea 
+                   name="required_experience"
+                   className="w-full p-2.5 rounded-md border border-gray-300 outline-none focus:border-primary bg-white min-h-[80px] resize-y"
+                   placeholder="e.g., Minimum 2 years of driving experience, or Freshers welcome"
+                   value={formData.required_experience}
+                   onChange={handleChange}
+                />
+             </div>
+
+             <div>
+                <label className="text-sm font-medium text-gray-800 mb-1 block">Education</label>
+                <input 
+                   type="text"
+                   name="education"
+                   className="w-full p-2.5 rounded-md border border-gray-300 outline-none focus:border-primary bg-white"
+                   placeholder="e.g., 10th Pass, Diploma, Any Graduate"
+                   value={formData.education}
+                   onChange={handleChange}
+                />
+             </div>
+
+             <div>
+                <label className="text-sm font-medium text-gray-800 mb-1 block">Technical Skills</label>
+                <textarea 
+                   name="technical_skills"
+                   className="w-full p-2.5 rounded-md border border-gray-300 outline-none focus:border-primary bg-white min-h-[80px] resize-y"
+                   placeholder="e.g., Forklift operation, Welding, Basic computer skills"
+                   value={formData.technical_skills}
+                   onChange={handleChange}
+                />
+             </div>
+
+             <Input 
+               label="Number of Vacancies (positions required)" 
+               name="vacancies"
+               type="number"
+               placeholder="e.g., 5"
+               value={formData.vacancies}
+               onChange={handleChange}
+             />
 
              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                  <Input 

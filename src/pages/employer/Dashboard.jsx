@@ -5,9 +5,8 @@ import Button from '../../components/Button';
 import { 
   Plus, Users, MapPin, Briefcase, 
   ChevronDown, Check, Clock, UserCheck, 
-  XCircle, AlertCircle, Loader2
+  XCircle, AlertCircle, Loader2, Calendar
 } from 'lucide-react';
-// import { API_BASE_URL } from '../../config';
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const Dashboard = ({ user }) => {
@@ -20,11 +19,13 @@ const Dashboard = ({ user }) => {
   const [updatingAppId, setUpdatingAppId] = useState(null);
   const [toast, setToast] = useState(null);
 
+  // Inline picker state for interview scheduling
+  const [pendingInterview, setPendingInterview] = useState(null); // { appId, dateTime }
+
   useEffect(() => {
     fetchEmployerJobs();
   }, []);
 
-  // Auto-hide toast
   useEffect(() => {
     if (toast) {
       const timer = setTimeout(() => setToast(null), 3000);
@@ -61,8 +62,8 @@ const Dashboard = ({ user }) => {
     setApplicantsLoading(true);
     setApplicants([]);
     
-     try {
-       const res = await fetch(`${API_BASE_URL}/api/applications/job/${job.id}`);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/applications/job/${job.id}`);
       if (res.ok) {
         const data = await res.json();
         setApplicants(data);
@@ -75,37 +76,72 @@ const Dashboard = ({ user }) => {
     }
   };
 
-  const handleStatusChange = async (appId, newStatus) => {
-    const originalStatus = applicants.find(a => a.id === appId)?.status;
-    
-    console.log(`[Status Update] Attempting to change Application ${appId} to: "${newStatus}"`);
+  const handleStatusChange = (appId, newStatus) => {
+    // Shortlist: update immediately without datetime
+    if (newStatus === 'shortlisted') {
+      performStatusUpdate(appId, 'shortlisted', null);
+    } 
+    // Interview: show inline picker
+    else if (newStatus === 'interview') {
+      setPendingInterview({ appId, dateTime: '' });
+    }
+    // Other statuses (selected, rejected, applied) – direct update
+    else {
+      performStatusUpdate(appId, newStatus, null);
+    }
+  };
 
-    // 1. Optimistic Update
+  const handlePickerChange = (dateTime) => {
+    if (pendingInterview) {
+      setPendingInterview({ ...pendingInterview, dateTime });
+    }
+  };
+
+  const handlePickerConfirm = async () => {
+    if (!pendingInterview) return;
+    const { appId, dateTime } = pendingInterview;
+    if (!dateTime) {
+      setToast({ message: 'Please select a date and time for the interview', type: 'error' });
+      return;
+    }
+    await performStatusUpdate(appId, 'interview', dateTime);
+    setPendingInterview(null);
+  };
+
+  const handlePickerCancel = () => {
+    setPendingInterview(null);
+  };
+
+  const performStatusUpdate = async (appId, newStatus, interviewDate) => {
+    const originalApp = applicants.find(a => a.id === appId);
+    const originalStatus = originalApp?.status;
+    
     setApplicants(prev => prev.map(app => 
-      app.id === appId ? { ...app, status: newStatus } : app
+      app.id === appId ? { ...app, status: newStatus, interview_date: interviewDate } : app
     ));
     setUpdatingAppId(appId);
 
     try {
+      const payload = { status: newStatus };
+      if (interviewDate) payload.interview_date = interviewDate;
+
       const res = await fetch(`${API_BASE_URL}/api/applications/${appId}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: newStatus })
+        body: JSON.stringify(payload)
       });
 
       const data = await res.json();
 
       if (res.ok) {
-        console.log(`[Status Update] Successfully updated to: "${newStatus}"`);
         setToast({ message: `Status updated to ${newStatus}`, type: 'success' });
       } else {
         throw new Error(data.error || 'Failed to update status');
       }
     } catch (err) {
-      console.error('[Status Update Error]:', err);
-      // 2. Revert on failure
+      console.error(err);
       setApplicants(prev => prev.map(app => 
-        app.id === appId ? { ...app, status: originalStatus } : app
+        app.id === appId ? { ...app, status: originalStatus, interview_date: originalApp?.interview_date || null } : app
       ));
       setToast({ message: `Error: ${err.message}`, type: 'error' });
     } finally {
@@ -113,9 +149,22 @@ const Dashboard = ({ user }) => {
     }
   };
 
+  const formatDateTime = (dateStr) => {
+    if (!dateStr) return null;
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return null;
+    return date.toLocaleString('en-IN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
+
   return (
     <div className="container py-8 page-enter relative">
-      {/* Toast Notification */}
       {toast && (
         <div className={`fixed top-20 right-8 z-50 p-4 rounded-xl shadow-2xl flex items-center gap-3 animate-in fade-in slide-in-from-right-4 duration-300 ${
           toast.type === 'success' ? 'bg-emerald-600 text-white' : 'bg-rose-600 text-white'
@@ -138,17 +187,12 @@ const Dashboard = ({ user }) => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-         {/* Left panel: Job list */}
          <div className="lg:col-span-1">
             <h2 className="text-xl font-black mb-4 flex items-center gap-2"><Briefcase size={20} /> My Jobs ({jobs.length})</h2>
             {loading ? <p>Loading...</p> : jobs.length === 0 ? <p className="text-muted">No jobs posted yet.</p> : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                   {jobs.map(job => (
-                     <div
-                         key={job.id}
-                         className={`rounded-2xl border-2 overflow-hidden transition-all cursor-pointer ${selectedJob === job.id ? 'border-indigo-600 shadow-xl scale-[1.02]' : 'border-gray-100 hover:border-indigo-200 bg-white shadow-sm'}`}
-                         onClick={() => handleViewApplicants(job)}
-                     >
+                     <div key={job.id} className={`rounded-2xl border-2 overflow-hidden transition-all cursor-pointer ${selectedJob === job.id ? 'border-indigo-600 shadow-xl scale-[1.02]' : 'border-gray-100 hover:border-indigo-200 bg-white shadow-sm'}`} onClick={() => handleViewApplicants(job)}>
                          <div className={`p-5 ${selectedJob === job.id ? 'bg-indigo-50/50' : 'bg-white'}`}>
                              <div className="flex justify-between items-start gap-2 mb-3">
                                  <h3 className="font-black text-sm leading-tight text-gray-900">{job.title}</h3>
@@ -165,72 +209,95 @@ const Dashboard = ({ user }) => {
             )}
          </div>
 
-         {/* Right panel: Applicants for selected job */}
          <div className="lg:col-span-2 min-h-[500px]">
             {!selectedJob ? (
                <Card className="h-full flex flex-col items-center justify-center text-muted bg-white border-dashed border-2 border-gray-200">
-                  <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-6">
-                    <Users size={40} className="text-gray-300" />
-                  </div>
+                  <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mb-6"><Users size={40} className="text-gray-300" /></div>
                   <h3 className="text-xl font-black text-gray-800">Select a job to view applicants</h3>
                   <p className="text-sm mt-2 text-gray-400">Manage your pipeline and hire the best talent</p>
                </Card>
             ) : (
                <div className="page-enter">
                   <header className="mb-8">
-                    <h2 className="text-2xl font-black text-gray-900 leading-none">
-                       Applicants for <span className="text-indigo-600">{selectedJobTitle}</span>
-                    </h2>
+                    <h2 className="text-2xl font-black text-gray-900 leading-none">Applicants for <span className="text-indigo-600">{selectedJobTitle}</span></h2>
                     <p className="text-sm font-bold text-gray-400 mt-2 uppercase tracking-widest">{applicants.length} candidates in pipeline</p>
                   </header>
-
                   {applicantsLoading ? (
-                     <div className="flex flex-col items-center justify-center py-20 grayscale opacity-50">
-                        <Loader2 size={40} className="animate-spin text-indigo-600 mb-4" />
-                        <p className="font-black text-sm tracking-widest uppercase">Fetching candidates...</p>
-                     </div>
+                     <div className="flex flex-col items-center justify-center py-20 grayscale opacity-50"><Loader2 size={40} className="animate-spin text-indigo-600 mb-4" /><p className="font-black text-sm tracking-widest uppercase">Fetching candidates...</p></div>
                   ) : applicants.length === 0 ? (
-                     <Card className="py-20 text-center bg-gray-50 border-gray-100 rounded-3xl">
-                        <div className="w-16 h-16 bg-white rounded-2xl shadow-sm border border-gray-100 flex items-center justify-center mx-auto mb-6">
-                          <Users size={30} className="text-gray-200" />
-                        </div>
-                        <p className="font-black text-gray-800">No applicants yet for this position.</p>
-                        <p className="text-xs text-gray-400 mt-1">Check back later or promote your job posting.</p>
-                     </Card>
+                     <Card className="py-20 text-center bg-gray-50 border-gray-100 rounded-3xl"><div className="w-16 h-16 bg-white rounded-2xl shadow-sm border border-gray-100 flex items-center justify-center mx-auto mb-6"><Users size={30} className="text-gray-200" /></div><p className="font-black text-gray-800">No applicants yet for this position.</p><p className="text-xs text-gray-400 mt-1">Check back later or promote your job posting.</p></Card>
                   ) : (
                      <div className="flex flex-col gap-6">
-                        {applicants.map(app => (
-                           <Card key={app.id} className="p-6 border-gray-100 hover:border-indigo-100 transition-all hover:shadow-lg rounded-3xl group">
+                        {applicants.map(app => {
+                          const showInterviewPicker = pendingInterview && pendingInterview.appId === app.id;
+                          return (
+                            <Card key={app.id} className="p-6 border-gray-100 hover:border-indigo-100 transition-all hover:shadow-lg rounded-3xl group">
                               <div className="flex flex-col lg:flex-row justify-between lg:items-center gap-6">
                                  <div className="flex-1">
                                     <div className="flex items-center gap-3 mb-2">
                                       <h3 className="text-xl font-black text-gray-900 group-hover:text-indigo-600 transition-colors uppercase tracking-tight">{app.users?.name || 'Applicant'}</h3>
-                                      <span className={`badge badge-${app.status} px-3 py-1 text-[10px]`}>
-                                         {app.status === 'selected' ? 'HIRED' : app.status}
-                                      </span>
+                                      <span className={`badge badge-${app.status} px-3 py-1 text-[10px]`}>{app.status === 'selected' ? 'HIRED' : app.status}</span>
                                     </div>
                                     <div className="flex flex-wrap gap-4 mb-4">
                                        <ContactItem icon="📞" text={app.users?.phone} />
                                        {app.users?.email && <ContactItem icon="✉️" text={app.users?.email} />}
                                        {app.users?.languages && <ContactItem icon="🌐" text={app.users?.languages} />}
                                     </div>
-                                    <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-2xl border border-gray-100 w-fit">
-                                       <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Skills:</span> 
-                                       <span className="text-xs font-black text-gray-800">{app.users?.skills || 'Not specified'}</span>
+                                    {app.interview_date && (
+                                      <div className="flex items-center gap-2 text-xs font-bold text-indigo-600 bg-indigo-50 p-2 rounded-xl w-fit">
+                                        <Calendar size={14} /> 
+                                        {app.status === 'interview' ? 'Interview: ' : 'Shortlist Review: '}
+                                        {formatDateTime(app.interview_date)}
+                                      </div>
+                                    )}
+                                    <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-2xl border border-gray-100 w-fit mt-2">
+                                      <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Skills:</span> 
+                                      <span className="text-xs font-black text-gray-800">{app.users?.skills || 'Not specified'}</span>
                                     </div>
                                  </div>
-                                 
                                  <div className="lg:text-right">
-                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Update Application Status</p>
-                                    <StatusDropdown 
-                                      currentStatus={app.status === 'selected' ? 'hired' : app.status} 
-                                      isLoading={updatingAppId === app.id}
-                                      onChange={(s) => handleStatusChange(app.id, s)} 
-                                    />
+                                    {!showInterviewPicker ? (
+                                      <>
+                                        <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3">Update Application Status</p>
+                                        <StatusDropdown 
+                                          currentStatus={app.status === 'selected' ? 'selected' : app.status} 
+                                          isLoading={updatingAppId === app.id}
+                                          onChange={(s) => handleStatusChange(app.id, s)} 
+                                        />
+                                      </>
+                                    ) : (
+                                      <div className="bg-white p-5 rounded-xl border-2 border-indigo-200 shadow-lg w-full min-w-[260px]">
+                                        <div className="flex items-center gap-2 mb-3">
+                                          <Calendar size={20} className="text-indigo-600" />
+                                          <p className="text-sm font-black text-gray-800">Schedule Interview</p>
+                                        </div>
+                                        <input
+                                          type="datetime-local"
+                                          className="w-full p-3 border-2 border-gray-200 rounded-xl text-sm focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 transition-all mb-4"
+                                          value={pendingInterview.dateTime}
+                                          onChange={(e) => handlePickerChange(e.target.value)}
+                                        />
+                                        <div className="flex gap-3">
+                                          <button
+                                            onClick={handlePickerConfirm}
+                                            className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold py-2.5 rounded-xl transition-all"
+                                          >
+                                            Confirm
+                                          </button>
+                                          <button
+                                            onClick={handlePickerCancel}
+                                            className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-bold py-2.5 rounded-xl transition-all"
+                                          >
+                                            Cancel
+                                          </button>
+                                        </div>
+                                      </div>
+                                    )}
                                  </div>
                               </div>
-                           </Card>
-                        ))}
+                            </Card>
+                          );
+                        })}
                      </div>
                   )}
                </div>
@@ -241,64 +308,34 @@ const Dashboard = ({ user }) => {
   );
 };
 
-// --- Subcomponents ---
-
 const ContactItem = ({ icon, text }) => (
-  <p className="text-sm font-bold text-gray-500 flex items-center gap-1.5">
-    <span>{icon}</span> {text}
-  </p>
+  <p className="text-sm font-bold text-gray-500 flex items-center gap-1.5"><span>{icon}</span> {text}</p>
 );
 
 const StatusDropdown = ({ currentStatus, onChange, isLoading }) => {
   const [isOpen, setIsOpen] = useState(false);
-  
   const statusOptions = [
     { label: "Applied", value: "applied" },
     { label: "Shortlist", value: "shortlisted" },
     { label: "Call for Interview", value: "interview" },
-    { label: "Select & Hire", value: "hired" },
+    { label: "Select & Hire", value: "selected" },
     { label: "Reject", value: "rejected" },
   ];
 
   return (
     <div className="relative inline-block text-left w-full sm:w-[200px]">
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        disabled={isLoading}
-        className={`w-full flex items-center justify-between gap-2 px-4 py-3 rounded-2xl border-2 transition-all font-black text-xs uppercase tracking-widest ${
-          isOpen ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-gray-100 bg-white text-gray-700 hover:border-gray-200'
-        }`}
-      >
-        <span className="flex items-center gap-2">
-          {isLoading ? <Loader2 size={14} className="animate-spin text-indigo-600" /> : <div className="w-1.5 h-1.5 rounded-full bg-current"></div>}
-          {currentStatus}
-        </span>
+      <button onClick={() => setIsOpen(!isOpen)} disabled={isLoading} className={`w-full flex items-center justify-between gap-2 px-4 py-3 rounded-2xl border-2 transition-all font-black text-xs uppercase tracking-widest ${isOpen ? 'border-indigo-600 bg-indigo-50 text-indigo-700' : 'border-gray-100 bg-white text-gray-700 hover:border-gray-200'}`}>
+        <span className="flex items-center gap-2">{isLoading ? <Loader2 size={14} className="animate-spin text-indigo-600" /> : <div className="w-1.5 h-1.5 rounded-full bg-current"></div>}{currentStatus}</span>
         <ChevronDown size={14} className={`transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
-
       {isOpen && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)}></div>
           <div className="absolute right-0 mt-2 w-full origin-top-right rounded-2xl bg-white shadow-2xl ring-1 ring-black ring-opacity-5 z-20 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
             <div className="py-1">
               {statusOptions.map((option) => (
-                <button
-                  key={option.value}
-                  onClick={() => {
-                    onChange(option.value);
-                    setIsOpen(false);
-                  }}
-                  className={`flex items-center gap-3 w-full px-4 py-3 text-xs font-black uppercase tracking-widest transition-colors hover:bg-gray-50 ${
-                    currentStatus === option.value ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600'
-                  }`}
-                >
-                  <span className="text-current">
-                    {option.value === 'shortlisted' && <Check size={14} />}
-                    {option.value === 'interview' && <Users size={14} />}
-                    {option.value === 'hired' && <UserCheck size={14} />}
-                    {option.value === 'rejected' && <XCircle size={14} />}
-                    {option.value === 'applied' && <Clock size={14} />}
-                  </span>
+                <button key={option.value} onClick={() => { onChange(option.value); setIsOpen(false); }} className={`flex items-center gap-3 w-full px-4 py-3 text-xs font-black uppercase tracking-widest transition-colors hover:bg-gray-50 ${currentStatus === option.value ? 'bg-indigo-50 text-indigo-700' : 'text-gray-600'}`}>
+                  <span className="text-current">{option.value === 'shortlisted' && <Check size={14} />}{option.value === 'interview' && <Users size={14} />}{option.value === 'selected' && <UserCheck size={14} />}{option.value === 'rejected' && <XCircle size={14} />}{option.value === 'applied' && <Clock size={14} />}</span>
                   {option.label}
                 </button>
               ))}
@@ -311,4 +348,3 @@ const StatusDropdown = ({ currentStatus, onChange, isLoading }) => {
 };
 
 export default Dashboard;
-
