@@ -50,7 +50,7 @@ function AppContent({ user, setUser, handleLogin, handleLogout }) {
       {/* Main content – grows to push footer down */}
       <main className="flex-1">
         <Routes>
-          <Route 
+          {/* <Route 
             path="/" 
             element={
               !user ? (
@@ -63,7 +63,7 @@ function AppContent({ user, setUser, handleLogin, handleLogout }) {
                 <EmployeeHome user={user} />
               )
             } 
-          />
+          /> */}
           <Route path="/terms" element={<TermsOfService />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           {/* <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login onLogin={handleLogin} />} /> */}
