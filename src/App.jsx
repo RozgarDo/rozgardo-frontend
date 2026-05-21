@@ -32,6 +32,8 @@ import AdminLogin from './pages/admin/AdminLogin';
 import EmployeeProfile from './pages/employee/EmployeeProfile';
 import EmployerProfile from './pages/employer/EmployerProfile';
 
+import ConnectEmployees from './pages/employer/ConnectEmployees';
+
 function AppContent({ user, setUser, handleLogin, handleLogout }) {
   const location = useLocation();
   const hideNavbar = location.pathname === '/login';////////////////////////Check
@@ -71,6 +73,21 @@ function AppContent({ user, setUser, handleLogin, handleLogout }) {
           <Route path="/employer-registration" element={<EmployerRegistration />} />
           <Route path="/employee-profile" element={<EmployeeProfile user={user} setUser={setUser} />} />
           <Route path="/employer-profile" element={<EmployerProfile user={user} setUser={setUser} />} />
+
+<Route
+  path="/employer/connect-employees"
+  element={
+    user === undefined ? (
+      <div className="flex justify-center items-center min-h-[60vh]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
+      </div>
+    ) : user?.role === 'employer' ? (
+      <ConnectEmployees user={user} />
+    ) : (
+      <Navigate to="/employer-login" replace />
+    )
+  }
+/>
           
 
           
