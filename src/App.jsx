@@ -34,6 +34,9 @@ import EmployerProfile from './pages/employer/EmployerProfile';
 
 import ConnectEmployees from './pages/employer/ConnectEmployees';
 
+import EmployeeSettings from './pages/employee/EmployeeSettings';
+import EmployerSettings from './pages/employer/EmployerSettings';
+
 function AppContent({ user, setUser, handleLogin, handleLogout }) {
   const location = useLocation();
   const hideNavbar = location.pathname === '/login';////////////////////////Check
@@ -50,7 +53,7 @@ function AppContent({ user, setUser, handleLogin, handleLogout }) {
       {/* Main content – grows to push footer down */}
       <main className="flex-1">
         <Routes>
-          {/* <Route 
+          <Route 
             path="/" 
             element={
               !user ? (
@@ -63,7 +66,7 @@ function AppContent({ user, setUser, handleLogin, handleLogout }) {
                 <EmployeeHome user={user} />
               )
             } 
-          /> */}
+          />
           <Route path="/terms" element={<TermsOfService />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           {/* <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login onLogin={handleLogin} />} /> */}
@@ -114,18 +117,44 @@ function AppContent({ user, setUser, handleLogin, handleLogout }) {
           <Route path="/admin/login"  element={<AdminLogin onLogin={handleLogin} user={user} />} />
 
           <Route
-          path="/admin"
-          element={
-            user?.role === 'admin' ? (
-              <AdminDashboard user={user} />
-            ) : (
-              <Navigate to="/admin/login" />
-            )
-          }
-        />
+            path="/admin"
+            element={
+              user?.role === 'admin' ? (
+                <AdminDashboard user={user} />
+              ) : (
+                <Navigate to="/admin/login" />
+              )
+            }
+          />
 
 
           <Route path="*" element={<Navigate to="/onboarding" replace />} />
+
+
+
+          <Route
+            path="/employee-settings"
+            element={
+              user?.role === 'employee' ? (
+                <EmployeeSettings user={user} setUser={setUser} />
+              ) : (
+                <Navigate to="/login" replace />
+              )
+            }
+          />
+
+          <Route
+            path="/employer-settings"
+            element={
+              user?.role === 'employer' ? (
+                <EmployerSettings user={user} setUser={setUser} />
+              ) : (
+                <Navigate to="/login" replace />
+              )
+            }
+          />
+
+
         </Routes>
         <Footer />
       </main>

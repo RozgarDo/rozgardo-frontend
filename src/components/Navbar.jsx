@@ -161,7 +161,7 @@ const getProfileLink = () => {
           {/* Right Side */}
           <div className="flex items-center gap-6">
 
-            {/* <div className="hidden lg:block">
+            <div className="hidden lg:block">
               {!user ? (
                 !isLoginPage ? (
                   <div className="flex items-center gap-5">
@@ -226,12 +226,31 @@ const getProfileLink = () => {
                       >
                         <User size={16} className="text-gray-500" /> My Profile
                       </Link>
-                      <Link
+
+
+                      {/* <Link
                         to="/settings"
                         className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
                       >
                         <Settings size={16} className="text-gray-500" /> Settings
-                      </Link>
+                      </Link> */}
+
+<Link
+  to={
+    user?.role === 'employee'
+      ? '/employee-settings'
+      : user?.role === 'employer'
+      ? '/employer-settings'
+      : '/settings'
+  }
+  className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
+>
+  <Settings size={16} className="text-gray-500" /> Settings
+</Link>
+
+
+
+
                       <Link
                         to="/security"
                         className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
@@ -257,7 +276,7 @@ const getProfileLink = () => {
                   )}
                 </div>
               )}
-            </div> */}
+            </div>
 
             {/* Mobile Menu Toggle */}
             {/* <button
@@ -337,13 +356,29 @@ const getProfileLink = () => {
                 >
                   <User size={18} className="text-gray-400" /> My Profile
                 </Link>
-                <Link
+                {/* <Link
                   to="/settings"
                   onClick={() => setMobileMenuOpen(false)}
                   className="flex items-center gap-2 py-2 text-sm font-medium text-gray-700"
                 >
                   <Settings size={18} className="text-gray-400" /> Settings
-                </Link>
+                </Link> */}
+
+
+<Link
+  to={
+    user?.role === 'employee'
+      ? '/employee-settings'
+      : user?.role === 'employer'
+      ? '/employer-settings'
+      : '/settings'
+  }
+  onClick={() => setMobileMenuOpen(false)}
+  className="flex items-center gap-2 py-2 text-sm font-medium text-gray-700"
+>
+  <Settings size={18} className="text-gray-400" /> Settings
+</Link>
+
                 <Link
                   to="/security"
                   onClick={() => setMobileMenuOpen(false)}
