@@ -251,7 +251,7 @@ const getProfileLink = () => {
 
 
 
-                      <Link
+                      {/* <Link
                         to="/security"
                         className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
                       >
@@ -262,7 +262,7 @@ const getProfileLink = () => {
                         className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
                       >
                         <CreditCard size={16} className="text-gray-500" /> Billing Plan
-                      </Link>
+                      </Link> */}
 
                       <div className="h-px bg-gray-100 my-1" />
 
@@ -379,7 +379,7 @@ const getProfileLink = () => {
   <Settings size={18} className="text-gray-400" /> Settings
 </Link>
 
-                <Link
+                {/* <Link
                   to="/security"
                   onClick={() => setMobileMenuOpen(false)}
                   className="flex items-center gap-2 py-2 text-sm font-medium text-gray-700"
@@ -392,7 +392,7 @@ const getProfileLink = () => {
                   className="flex items-center gap-2 py-2 text-sm font-medium text-gray-700"
                 >
                   <CreditCard size={18} className="text-gray-400" /> Billing Plan
-                </Link>
+                </Link> */}
                 <div className="h-px bg-gray-200 my-1" />
                 <button
                   onClick={() => {

@@ -8,7 +8,7 @@ import {
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
-const EmployeeSettings = ({ user, setUser }) => {
+const EmployeeSettings = ({ user, setUser, onLogout }) => {
   const navigate = useNavigate();
 
   // Password change state
@@ -20,20 +20,16 @@ const EmployeeSettings = ({ user, setUser }) => {
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [passwordMessage, setPasswordMessage] = useState({ type: '', text: '' });
 
-  // Mock state for other sections (commented out – kept for future use)
-  const [notifications, setNotifications] = useState({ sms: true, whatsapp: true, email: false });
-  const [preferences, setPreferences] = useState({ language: 'English', jobAlerts: 'Daily', locationPref: user?.location || '' });
-  const [privacy, setPrivacy] = useState({ showProfile: true, hideContact: false });
-  const [saved, setSaved] = useState(false);
+  // Deactivation loading state
+  const [actionLoading, setActionLoading] = useState(false);
 
   const handlePasswordChange = (e) => {
     setPasswordData({ ...passwordData, [e.target.name]: e.target.value });
-    // Clear message when user starts typing again
     if (passwordMessage.text) setPasswordMessage({ type: '', text: '' });
   };
 
   const handleUpdatePassword = async () => {
-    // Validation
+    // ... same as before (unchanged)
     if (!passwordData.currentPassword) {
       setPasswordMessage({ type: 'error', text: 'Current password is required' });
       return;
@@ -76,13 +72,59 @@ const EmployeeSettings = ({ user, setUser }) => {
     }
   };
 
-  // Mock save for other settings (commented out for now)
-  const handleSaveAll = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 3000);
+  const handleDeactivateAccount = async () => {
+    if (!window.confirm('Deactivating your account will hide your profile from employers. You can reactivate anytime. Proceed?')) {
+      return;
+    }
+    setActionLoading(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/auth/employee/deactivate-account`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert('Account deactivated. You will be logged out.');
+        if (onLogout) onLogout();
+        navigate('/');
+      } else {
+        throw new Error(data.error || 'Deactivation failed');
+      }
+    } catch (err) {
+      alert('Error: ' + err.message);
+    } finally {
+      setActionLoading(false);
+    }
   };
 
-  // Styles
+  const handleDeleteAccount = async () => {
+    if (!window.confirm('Are you sure you want to permanently delete your account? This action cannot be undone.')) {
+      return;
+    }
+    setActionLoading(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/auth/employee/delete-account`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert('Your account has been deleted permanently.');
+        if (onLogout) onLogout();
+        navigate('/');
+      } else {
+        throw new Error(data.error || 'Deletion failed');
+      }
+    } catch (err) {
+      alert('Error deleting account: ' + err.message);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  // Styles (same as before)
   const cardStyle = {
     background: 'white', borderRadius: '1rem', border: '1px solid #E5E7EB',
     boxShadow: '0 1px 3px rgba(0,0,0,0.04)', padding: '1.5rem', marginBottom: '1.5rem',
@@ -130,21 +172,9 @@ const EmployeeSettings = ({ user, setUser }) => {
         <p style={{ color: '#64748B', fontSize: '0.95rem' }}>Manage your password and account settings.</p>
       </div>
 
-      {/* Success banner (for future full save) */}
-      {saved && (
-        <div style={{
-          padding: '0.875rem 1rem', borderRadius: '0.75rem', marginBottom: '1.5rem',
-          fontSize: '0.875rem', fontWeight: 600, background: '#F0FDF4', color: '#166534',
-          border: '1px solid #BBF7D0', display: 'flex', alignItems: 'center', gap: '0.5rem',
-        }}>
-          <Check size={16} /> Settings saved successfully!
-        </div>
-      )}
-
-      {/* PASSWORD CHANGE SECTION (active) */}
+      {/* Password Change Section */}
       <div style={cardStyle}>
         <h3 style={sectionTitleStyle}><Lock size={20} color="#4F46E5" /> Change Password</h3>
-
         {passwordMessage.text && (
           <div style={{
             padding: '0.75rem', borderRadius: '0.5rem', marginBottom: '1rem',
@@ -157,40 +187,18 @@ const EmployeeSettings = ({ user, setUser }) => {
             {passwordMessage.text}
           </div>
         )}
-
         <div style={{ ...rowStyle, flexDirection: 'column', alignItems: 'stretch', gap: '1rem' }}>
           <div>
             <div style={{ ...rowTextStyle, marginBottom: '0.25rem' }}>Current Password</div>
-            <input
-              type="password"
-              name="currentPassword"
-              value={passwordData.currentPassword}
-              onChange={handlePasswordChange}
-              placeholder="Enter current password"
-              style={{ ...inputStyle, width: '100%' }}
-            />
+            <input type="password" name="currentPassword" value={passwordData.currentPassword} onChange={handlePasswordChange} placeholder="Enter current password" style={{ ...inputStyle, width: '100%' }} />
           </div>
           <div>
             <div style={{ ...rowTextStyle, marginBottom: '0.25rem' }}>New Password</div>
-            <input
-              type="password"
-              name="newPassword"
-              value={passwordData.newPassword}
-              onChange={handlePasswordChange}
-              placeholder="Min. 6 characters"
-              style={{ ...inputStyle, width: '100%' }}
-            />
+            <input type="password" name="newPassword" value={passwordData.newPassword} onChange={handlePasswordChange} placeholder="Min. 6 characters" style={{ ...inputStyle, width: '100%' }} />
           </div>
           <div>
             <div style={{ ...rowTextStyle, marginBottom: '0.25rem' }}>Confirm New Password</div>
-            <input
-              type="password"
-              name="confirmPassword"
-              value={passwordData.confirmPassword}
-              onChange={handlePasswordChange}
-              placeholder="Re‑enter new password"
-              style={{ ...inputStyle, width: '100%' }}
-            />
+            <input type="password" name="confirmPassword" value={passwordData.confirmPassword} onChange={handlePasswordChange} placeholder="Re‑enter new password" style={{ ...inputStyle, width: '100%' }} />
           </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
             <button onClick={handleUpdatePassword} disabled={passwordLoading} style={primaryBtnStyle}>
@@ -201,71 +209,44 @@ const EmployeeSettings = ({ user, setUser }) => {
         </div>
       </div>
 
-      {/* ===== OTHER SETTINGS (commented out – kept for future) ===== */}
-      {/*
-      <div style={cardStyle}>
-        <h3 style={sectionTitleStyle}><Bell size={20} color="#4F46E5" /> Notification Settings</h3>
-        <div style={rowStyle}><div style={rowLabelStyle}><Smartphone size={18} /><div><div style={rowTextStyle}>SMS Alerts</div><div style={rowSubStyle}>Receive job alerts via text message</div></div></div><Toggle checked={notifications.sms} onChange={() => setNotifications({...notifications, sms: !notifications.sms})} /></div>
-        <div style={rowStyle}><div style={rowLabelStyle}><MessageSquare size={18} /><div><div style={rowTextStyle}>WhatsApp Alerts</div><div style={rowSubStyle}>Get updates on WhatsApp</div></div></div><Toggle checked={notifications.whatsapp} onChange={() => setNotifications({...notifications, whatsapp: !notifications.whatsapp})} /></div>
-        <div style={{...rowStyle, borderBottom: 'none'}}><div style={rowLabelStyle}><Mail size={18} /><div><div style={rowTextStyle}>Email Notifications</div><div style={rowSubStyle}>Weekly job digest and updates</div></div></div><Toggle checked={notifications.email} onChange={() => setNotifications({...notifications, email: !notifications.email})} /></div>
-      </div>
-
-      <div style={cardStyle}>
-        <h3 style={sectionTitleStyle}><Globe size={20} color="#4F46E5" /> Preferences</h3>
-        <div style={rowStyle}><div style={rowLabelStyle}><Globe size={18} /><div><div style={rowTextStyle}>Language</div><div style={rowSubStyle}>App display language</div></div></div><select value={preferences.language} onChange={e => setPreferences({...preferences, language: e.target.value})} style={selectStyle}><option>English</option><option>Hindi</option><option>Marathi</option><option>Bengali</option><option>Tamil</option></select></div>
-        <div style={rowStyle}><div style={rowLabelStyle}><Bell size={18} /><div><div style={rowTextStyle}>Job Alert Frequency</div><div style={rowSubStyle}>How often you receive job recommendations</div></div></div><select value={preferences.jobAlerts} onChange={e => setPreferences({...preferences, jobAlerts: e.target.value})} style={selectStyle}><option>Instant</option><option>Daily</option><option>Weekly</option><option>Never</option></select></div>
-        <div style={{...rowStyle, borderBottom: 'none'}}><div style={rowLabelStyle}><MapPin size={18} /><div><div style={rowTextStyle}>Location Preference</div><div style={rowSubStyle}>Preferred job search area</div></div></div><input value={preferences.locationPref} onChange={e => setPreferences({...preferences, locationPref: e.target.value})} placeholder="e.g., Mumbai" style={inputStyle} /></div>
-      </div>
-
-      <div style={cardStyle}>
-        <h3 style={sectionTitleStyle}><Eye size={20} color="#4F46E5" /> Privacy Settings</h3>
-        <div style={rowStyle}><div style={rowLabelStyle}><Eye size={18} /><div><div style={rowTextStyle}>Show Profile to Employers</div><div style={rowSubStyle}>Employers can discover your profile</div></div></div><Toggle checked={privacy.showProfile} onChange={() => setPrivacy({...privacy, showProfile: !privacy.showProfile})} /></div>
-        <div style={{...rowStyle, borderBottom: 'none'}}><div style={rowLabelStyle}><EyeOff size={18} /><div><div style={rowTextStyle}>Hide Contact Details</div><div style={rowSubStyle}>Phone and email hidden from listings</div></div></div><Toggle checked={privacy.hideContact} onChange={() => setPrivacy({...privacy, hideContact: !privacy.hideContact})} /></div>
-      </div>
-      */}
-
-      {/* ACCOUNT SETTINGS (active – deactivate/delete remain as mock for now) */}
+      {/* Account Settings */}
       <div style={cardStyle}>
         <h3 style={sectionTitleStyle}><UserX size={20} color="#DC2626" /> Account Settings</h3>
 
+        {/* Deactivate Account */}
         <div style={rowStyle}>
           <div style={rowLabelStyle}>
             <UserX size={18} color="#64748B" />
-            <div><div style={rowTextStyle}>Deactivate Account</div><div style={rowSubStyle}>Temporarily hide your account. You can reactivate anytime.</div></div>
+            <div><div style={rowTextStyle}>Deactivate Account</div><div style={rowSubStyle}>Temporarily hide your profile. You can reactivate later.</div></div>
           </div>
           <button
+            onClick={handleDeactivateAccount}
+            disabled={actionLoading}
             style={{ ...dangerBtnStyle, background: '#FEF3C7', color: '#92400E', border: '1px solid #FDE68A' }}
             onMouseEnter={e => e.currentTarget.style.background = '#FDE68A'}
             onMouseLeave={e => e.currentTarget.style.background = '#FEF3C7'}
-            onClick={() => alert('Deactivation feature coming soon.')}
           >
-            Deactivate
+            {actionLoading ? <Loader2 size={14} className="animate-spin" /> : 'Deactivate'}
           </button>
         </div>
 
+        {/* Delete Account (permanent) */}
         <div style={{ ...rowStyle, borderBottom: 'none' }}>
           <div style={rowLabelStyle}>
             <Trash2 size={18} color="#DC2626" />
-            <div><div style={rowTextStyle}>Delete Account</div><div style={rowSubStyle}>Permanently delete all your data. This cannot be undone.</div></div>
+            <div><div style={rowTextStyle}>Delete Account</div><div style={rowSubStyle}>Permanently remove all your data. Cannot be undone.</div></div>
           </div>
           <button
+            onClick={handleDeleteAccount}
+            disabled={actionLoading}
             style={{ ...dangerBtnStyle, background: '#FEF2F2', color: '#DC2626', border: '1px solid #FECACA' }}
             onMouseEnter={e => e.currentTarget.style.background = '#FEE2E2'}
             onMouseLeave={e => e.currentTarget.style.background = '#FEF2F2'}
-            onClick={() => alert('Account deletion feature coming soon.')}
           >
-            Delete
+            {actionLoading ? <Loader2 size={14} className="animate-spin" /> : 'Delete'}
           </button>
         </div>
       </div>
-
-      {/* Global Save (commented out – not needed until we restore other sections) */}
-      {/*
-      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', paddingBottom: '2rem' }}>
-        <button onClick={() => navigate(-1)} style={...}>Cancel</button>
-        <button onClick={handleSaveAll} style={...}><Save size={16} /> Save Settings</button>
-      </div>
-      */}
 
       <style>{`
         @keyframes spin {
@@ -276,26 +257,5 @@ const EmployeeSettings = ({ user, setUser }) => {
     </div>
   );
 };
-
-// Toggle component (unused now, but kept in case we restore other sections)
-const Toggle = ({ checked, onChange }) => (
-  <button
-    onClick={onChange}
-    style={{
-      width: '44px', height: '24px', borderRadius: '12px',
-      background: checked ? '#4F46E5' : '#CBD5E1',
-      border: 'none', cursor: 'pointer', position: 'relative',
-      transition: 'background 0.2s', flexShrink: 0,
-    }}
-  >
-    <div style={{
-      width: '18px', height: '18px', borderRadius: '50%', background: 'white',
-      position: 'absolute', top: '3px',
-      left: checked ? '23px' : '3px',
-      transition: 'left 0.2s',
-      boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
-    }} />
-  </button>
-);
 
 export default EmployeeSettings;
