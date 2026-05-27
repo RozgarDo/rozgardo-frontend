@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { ShieldCheck, UserPlus, Phone, Lock, Mail, Building2, X, KeyRound, CheckCircle } from 'lucide-react';
+import { ShieldCheck, UserPlus, Phone, Lock, Mail, Building2, X, KeyRound, RefreshCw, Loader2 } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -16,7 +16,7 @@ const EmployerLogin = ({ onLogin }) => {
   
   // Forgot password states
   const [forgotPasswordMode, setForgotPasswordMode] = useState(false);
-  const [resetStep, setResetStep] = useState('phone'); // 'phone', 'verify', 'reset'
+  const [resetStep, setResetStep] = useState('phone');
   const [resetPhone, setResetPhone] = useState('');
   const [resetOtp, setResetOtp] = useState(['', '', '', '', '', '']);
   const [resetNewPassword, setResetNewPassword] = useState('');
@@ -24,6 +24,11 @@ const EmployerLogin = ({ onLogin }) => {
   const [resetMessage, setResetMessage] = useState({ type: '', text: '' });
   const [resetLoading, setResetLoading] = useState(false);
   const [resetTimeLeft, setResetTimeLeft] = useState(0);
+  
+  // Reactivation modal states
+  const [reactivationModalOpen, setReactivationModalOpen] = useState(false);
+  const [reactivationLoading, setReactivationLoading] = useState(false);
+  const [pendingCredentials, setPendingCredentials] = useState(null);
   
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
@@ -50,6 +55,7 @@ const EmployerLogin = ({ onLogin }) => {
     }
   }, [resetTimeLeft]);
 
+  // Close modal on outside click
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (signupModalOpen && modalRef.current && !modalRef.current.contains(e.target)) {
@@ -96,6 +102,7 @@ const EmployerLogin = ({ onLogin }) => {
     }
   };
 
+  // Password login (with deactivation check)
   const handlePasswordLogin = async () => {
     setError('');
     setMessage('');
@@ -114,34 +121,85 @@ const EmployerLogin = ({ onLogin }) => {
         body: JSON.stringify({ phone: loginId, password })
       });
       const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Login failed');
+      if (!response.ok) {
+        if (response.status === 403 && data.code === 'account_deactivated') {
+          setPendingCredentials({ phone: loginId, password });
+          setReactivationModalOpen(true);
+          return;
+        }
+        throw new Error(data.error || 'Login failed');
+      }
       routeUser(data.user);
     } catch (err) {
       setError(err.message);
     }
   };
 
-  const handleOtpLogin = async () => {
-    setError('');
-    setMessage('');
-    const finalOtp = otp.join('');
-    try {
-      const res = await fetch(`${API_BASE_URL}/api/auth/employer/verify-otp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: loginId, otp: finalOtp })
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Authentication failed');
-      routeUser(data.user);
-    } catch (err) {
-      setError(err.message);
+// OTP login (with deactivation check)
+const handleOtpLogin = async () => {
+  setError('');
+  setMessage('');
+  const finalOtp = otp.join('');
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/auth/employer/verify-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone: loginId, otp: finalOtp })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      if (res.status === 403 && data.code === 'account_deactivated') {
+        setPendingCredentials({ phone: loginId, otp: finalOtp });
+        setReactivationModalOpen(true);
+        return;
+      }
+      throw new Error(data.error || 'Authentication failed');
     }
-  };
+    routeUser(data.user);
+  } catch (err) {
+    setError(err.message);
+  }
+};
+
+// Reactivate account and handle OTP expiry gracefully
+const handleReactivateAccount = async () => {
+  setReactivationLoading(true);
+  try {
+    const res = await fetch(`${API_BASE_URL}/api/auth/employer/reactivate-account`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ phone: loginId })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      setReactivationModalOpen(false);
+      if (pendingCredentials) {
+        if (pendingCredentials.password) {
+          // Password login – retry directly
+          await handlePasswordLogin();
+        } else if (pendingCredentials.otp) {
+          // OTP login – OTP may have expired; clear OTP and ask to resend
+          setOtp(['', '', '', '', '', '']);
+          setOtpSent(false);
+          setMessage('Account reactivated! Please request a new OTP to log in.');
+          setPendingCredentials(null);
+        }
+      } else {
+        setMessage('Account reactivated! Please log in again.');
+      }
+    } else {
+      throw new Error(data.error || 'Reactivation failed');
+    }
+  } catch (err) {
+    setError(err.message);
+  } finally {
+    setReactivationLoading(false);
+  }
+};
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (forgotPasswordMode) return; // handled separately
+    if (forgotPasswordMode) return;
     if (authMethod === 'password') {
       await handlePasswordLogin();
     } else {
@@ -153,7 +211,28 @@ const EmployerLogin = ({ onLogin }) => {
     }
   };
 
-  // ----- Forgot Password Flow -----
+  // OTP input handlers (unchanged)
+  const handleOtpChange = (index, value) => {
+    if (isNaN(value)) return;
+    const newOtp = [...otp];
+    newOtp[index] = value;
+    setOtp(newOtp);
+    if (value !== '' && index < 5) otpRefs.current[index + 1]?.focus();
+  };
+
+  const handleOtpKeyDown = (index, e) => {
+    if (e.key === 'Backspace' && !otp[index] && index > 0) {
+      otpRefs.current[index - 1]?.focus();
+    }
+  };
+
+  const handleSignupAs = (selectedRole) => {
+    setSignupModalOpen(false);
+    if (selectedRole === 'employee') navigate('/employee-registration');
+    else navigate('/employer-registration');
+  };
+
+  // ----- Forgot Password Flow (unchanged) -----
   const resetOtpRefs = useRef([]);
 
   const handleResetSendOtp = async () => {
@@ -230,7 +309,6 @@ const EmployerLogin = ({ onLogin }) => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to reset password');
       setResetMessage({ type: 'success', text: 'Password reset successfully! Please log in.' });
-      // Exit forgot password mode after 2 seconds
       setTimeout(() => {
         setForgotPasswordMode(false);
         setResetStep('phone');
@@ -261,12 +339,6 @@ const EmployerLogin = ({ onLogin }) => {
     if (e.key === 'Backspace' && !resetOtp[index] && index > 0) {
       resetOtpRefs.current[index - 1]?.focus();
     }
-  };
-
-    const handleSignupAs = (selectedRole) => {
-    setSignupModalOpen(false);
-    if (selectedRole === 'employee') navigate('/employee-registration');
-    else navigate('/employer-registration');
   };
 
   const resetForgotPassword = () => {
@@ -420,7 +492,6 @@ const EmployerLogin = ({ onLogin }) => {
   // Normal login UI
   const renderLogin = () => (
     <div className="w-full max-w-[400px] bg-white rounded-2xl py-6 px-8 shadow-[0_8px_30px_-10px_rgba(0,0,0,0.08)] border border-white/50 flex flex-col gap-5 animate-[fadeIn_0.4s_ease-out]">
-      {/* Header */}
       <div className="text-center">
         <div className="w-14 h-14 mx-auto mb-4 bg-gradient-to-br from-indigo-50 to-indigo-100 text-indigo-600 flex items-center justify-center rounded-full shadow-[0_4px_10px_rgba(79,70,229,0.1)]">
           <ShieldCheck size={24} />
@@ -429,7 +500,6 @@ const EmployerLogin = ({ onLogin }) => {
         <p className="text-sm font-medium text-slate-500">Access your RozgarDo account</p>
       </div>
 
-      {/* Auth Toggle */}
       <div className="flex gap-1 bg-slate-100 p-1 rounded-xl">
         <button 
           type="button"
@@ -456,7 +526,6 @@ const EmployerLogin = ({ onLogin }) => {
       </div>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-        {/* Phone/Email Input */}
         <div className="flex flex-col gap-1.5">
           <label className="text-sm font-semibold text-slate-700">
             {authMethod === 'otp' ? "Mobile Number" : "Mobile / Email ID"}
@@ -481,7 +550,6 @@ const EmployerLogin = ({ onLogin }) => {
           </div>
         </div>
 
-        {/* Password Input (only for password login) */}
         {authMethod === 'password' && (
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-semibold text-slate-700">Password</label>
@@ -499,7 +567,6 @@ const EmployerLogin = ({ onLogin }) => {
           </div>
         )}
 
-        {/* OTP Input (only when OTP sent) */}
         {authMethod === 'otp' && otpSent && (
           <div className="flex flex-col gap-1.5">
             <label className="text-sm font-semibold text-slate-700">Enter OTP</label>
@@ -542,7 +609,6 @@ const EmployerLogin = ({ onLogin }) => {
           </div>
         )}
 
-        {/* Messages */}
         {message && (
           <div className="py-2 px-3 rounded-lg text-sm font-medium text-center bg-emerald-50 text-emerald-700 border border-emerald-100">
             {message}
@@ -554,7 +620,6 @@ const EmployerLogin = ({ onLogin }) => {
           </div>
         )}
 
-        {/* Submit Button */}
         <button 
           type="submit" 
           className="w-full py-3 px-5 bg-gradient-to-r from-indigo-600 to-indigo-500 text-white font-semibold rounded-lg shadow-md shadow-indigo-200 hover:-translate-y-0.5 hover:shadow-lg transition-all duration-300 mt-1 active:translate-y-0"
@@ -562,7 +627,6 @@ const EmployerLogin = ({ onLogin }) => {
           {authMethod === 'otp' ? (otpSent ? 'Verify & Login' : 'Get OTP') : 'Login'}
         </button>
 
-        {/* Forgot Password Link */}
         <div className="text-center mt-2">
           <button
             type="button"
@@ -637,6 +701,29 @@ const EmployerLogin = ({ onLogin }) => {
                 </div>
                 <button onClick={() => setSignupModalOpen(false)} className="mt-6 text-sm text-gray-400 hover:text-gray-600 underline transition">
                   Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </>,
+        document.body
+      )}
+
+      {/* Reactivation Modal */}
+      {reactivationModalOpen && ReactDOM.createPortal(
+        <>
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40" />
+          <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-[90%] max-w-md">
+            <div className="bg-white rounded-2xl shadow-2xl p-6 text-center">
+              <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <RefreshCw className="text-amber-600" size={28} />
+              </div>
+              <h3 className="text-xl font-bold text-gray-800 mb-2">Account Deactivated</h3>
+              <p className="text-gray-600 mb-6">Your employer account is currently deactivated. Do you want to reactivate it and log in?</p>
+              <div className="flex gap-3">
+                <button onClick={() => setReactivationModalOpen(false)} className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition">Cancel</button>
+                <button onClick={handleReactivateAccount} disabled={reactivationLoading} className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition flex items-center justify-center gap-2">
+                  {reactivationLoading ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />} Reactivate & Login
                 </button>
               </div>
             </div>

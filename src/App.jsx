@@ -131,7 +131,7 @@ function AppContent({ user, setUser, handleLogin, handleLogout }) {
           <Route path="*" element={<Navigate to="/onboarding" replace />} />
 
 
-
+{/* 
           <Route
             path="/employee-settings"
             element={
@@ -141,9 +141,21 @@ function AppContent({ user, setUser, handleLogin, handleLogout }) {
                 <Navigate to="/login" replace />
               )
             }
-          />
+          /> */}
 
-          <Route
+
+<Route
+  path="/employee-settings"
+  element={
+    user?.role === 'employee' ? (
+      <EmployeeSettings user={user} setUser={setUser} onLogout={handleLogout} />
+    ) : (
+      <Navigate to="/login" replace />
+    )
+  }
+/>
+
+          {/* <Route
             path="/employer-settings"
             element={
               user?.role === 'employer' ? (
@@ -152,7 +164,18 @@ function AppContent({ user, setUser, handleLogin, handleLogout }) {
                 <Navigate to="/login" replace />
               )
             }
-          />
+          /> */}
+
+<Route
+  path="/employer-settings"
+  element={
+    user?.role === 'employer' ? (
+      <EmployerSettings user={user} setUser={setUser} onLogout={handleLogout} />
+    ) : (
+      <Navigate to="/login" replace />
+    )
+  }
+/>
 
 
         </Routes>
