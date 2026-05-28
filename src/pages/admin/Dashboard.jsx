@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ShieldAlert, Briefcase, Users, TrendingUp, FileText } from 'lucide-react';
 import KPICards from './components/KPICards';
 import ModerateJobs from './components/ModerateJobs';
@@ -28,19 +28,33 @@ const AdminDashboard = ({ user }) => {
   const [searchEmployee, setSearchEmployee] = useState('');
   const [jobStatusFilter, setJobStatusFilter] = useState('all');
 
+  // Refs for tab buttons (to scroll into view on mobile)
+  const tabRefs = useRef({});
+
   // Fetch all data once on mount
   useEffect(() => {
     fetchAllInitialData();
   }, []);
 
+  // Scroll selected tab into view smoothly when activeTab changes
+  useEffect(() => {
+    const tabElement = tabRefs.current[activeTab];
+    if (tabElement) {
+      tabElement.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+        inline: 'center',
+      });
+    }
+  }, [activeTab]);
+
   const fetchAllInitialData = async () => {
     setLoading(true);
     try {
-      // 1. Fetch jobs, employees, employers
       const [jobsRes, empRes, employerRes] = await Promise.all([
         fetch(`${API_BASE_URL}/api/jobs`),
-        fetch(`${API_BASE_URL}/api/auth/employees`),
-        fetch(`${API_BASE_URL}/api/auth/employers`)
+        fetch(`${API_BASE_URL}/api/auth/admin/all-employees`),
+        fetch(`${API_BASE_URL}/api/auth/admin/all-employers`)
       ]);
 
       let jobsData = [];
@@ -55,7 +69,6 @@ const AdminDashboard = ({ user }) => {
       setEmployees(employeesData);
       setEmployers(employersData);
 
-      // 2. Fetch applicants for each job (using the reliable per‑job endpoint)
       const appsByJob = {};
       const allApps = [];
 
@@ -81,6 +94,19 @@ const AdminDashboard = ({ user }) => {
       console.error('Error fetching initial data:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const refreshUsers = async () => {
+    try {
+      const [empRes, employerRes] = await Promise.all([
+        fetch(`${API_BASE_URL}/api/auth/admin/all-employees`),
+        fetch(`${API_BASE_URL}/api/auth/admin/all-employers`)
+      ]);
+      if (empRes.ok) setEmployees(await empRes.json());
+      if (employerRes.ok) setEmployers(await employerRes.json());
+    } catch (err) {
+      console.error('Error refreshing users:', err);
     }
   };
 
@@ -149,8 +175,8 @@ const AdminDashboard = ({ user }) => {
   const totalEmployers = employers.length;
   const totalEmployees = employees.length;
   const estimatedRevenue = {
-    total: approvedJobsCount * 500,
-    thisMonth: Math.floor(approvedJobsCount * 500 * 0.3),
+    total: approvedJobsCount * 0,
+    thisMonth: Math.floor(approvedJobsCount * 0 * 0.3),
   };
 
   const monthlyData = [
@@ -334,57 +360,132 @@ const AdminDashboard = ({ user }) => {
 
   if (loading) {
     return (
-      <div className="container py-8">
-        <div className="flex justify-center items-center min-h-[60vh]">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
-        </div>
+      <div className="flex justify-center items-center min-h-[60vh]">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
       </div>
     );
   }
 
   return (
-    <div className="container py-8 page-enter">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold flex items-center gap-3"><ShieldAlert className="text-primary" size={32} /> Admin Center</h1>
+    <div className="max-w-7xl mx-auto px-2 sm:px-6 py-3 sm:py-8 page-enter overflow-x-hidden">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 sm:mb-8 gap-2 sm:gap-3">
+        <h1 className="text-xl xs:text-2xl sm:text-3xl font-bold flex items-center gap-2 sm:gap-3">
+          <ShieldAlert className="text-primary" size={24} />
+          <span>Admin Center</span>
+        </h1>
       </div>
 
-      <KPICards stats={{ totalRevenue: estimatedRevenue.total, thisMonthRevenue: estimatedRevenue.thisMonth, approvedJobs: approvedJobsCount, totalEmployers }} />
+      <div className="w-full">
+        <KPICards stats={{ 
+          totalRevenue: estimatedRevenue.total, 
+          thisMonthRevenue: estimatedRevenue.thisMonth, 
+          approvedJobs: approvedJobsCount, 
+          totalEmployers 
+        }} />
+      </div>
 
-      <div className="flex gap-4 mb-8 pb-4 border-b border-gray-200">
+      {/* Responsive tab bar with scroll-into-view on selection */}
+      <div className="flex overflow-x-auto sm:overflow-visible gap-2 mb-4 sm:mb-8 pb-2 sm:pb-4 border-b border-gray-200 hide-scrollbar">
         {['jobs', 'users', 'analytics', 'reports'].map(tab => (
-          <button key={tab} onClick={() => setActiveTab(tab)} className={`px-6 py-2 rounded-full font-bold flex items-center gap-2 transition-colors ${activeTab === tab ? 'bg-indigo-100 text-primary' : 'text-gray-500 hover:bg-gray-100'}`}>
-            {tab === 'jobs' && <Briefcase size={18} />}
-            {tab === 'users' && <Users size={18} />}
-            {tab === 'analytics' && <TrendingUp size={18} />}
-            {tab === 'reports' && <FileText size={18} />}
-            {tab.charAt(0).toUpperCase() + tab.slice(1)}
+          <button
+            key={tab}
+            ref={(el) => (tabRefs.current[tab] = el)}
+            onClick={() => setActiveTab(tab)}
+            className={`flex-shrink-0 px-3 sm:px-6 py-1.5 sm:py-2 rounded-full font-bold text-xs sm:text-sm flex items-center gap-1 sm:gap-2 transition-colors ${
+              activeTab === tab ? 'bg-indigo-100 text-primary' : 'text-gray-500 hover:bg-gray-100'
+            }`}
+            style={{ minWidth: 90 }}
+          >
+            {tab === 'jobs' && <Briefcase size={16} />}
+            {tab === 'users' && <Users size={16} />}
+            {tab === 'analytics' && <TrendingUp size={16} />}
+            {tab === 'reports' && <FileText size={16} />}
+            <span>{tab.charAt(0).toUpperCase() + tab.slice(1)}</span>
           </button>
         ))}
       </div>
 
-      {activeTab === 'jobs' && (
-        <ModerateJobs jobs={jobs} onJobAction={handleJobAction} applicantsMap={applicantsMap} fetchApplicantsForJob={fetchApplicantsForJob} renderApplicantDetails={renderApplicantDetails} />
-      )}
-      {activeTab === 'users' && (
-        <ManageUsers usersTab={usersTab} setUsersTab={setUsersTab} totalEmployers={totalEmployers} totalEmployees={totalEmployees} usersData={{ employees, employers }} exportUsers={exportUsers} />
-      )}
-      {activeTab === 'analytics' && (
+      <div className="w-full">
+        {activeTab === 'jobs' && (
+          <div className="w-full">
+            <ModerateJobs
+              jobs={jobs}
+              onJobAction={handleJobAction}
+              applicantsMap={applicantsMap}
+              fetchApplicantsForJob={fetchApplicantsForJob}
+              renderApplicantDetails={renderApplicantDetails}
+            />
+          </div>
+        )}
+        {activeTab === 'users' && (
+          <div className="w-full">
+            <ManageUsers
+              usersTab={usersTab}
+              setUsersTab={setUsersTab}
+              totalEmployers={totalEmployers}
+              totalEmployees={totalEmployees}
+              usersData={{ employees, employers }}
+              exportUsers={exportUsers}
+              refreshUsers={refreshUsers}
+            />
+          </div>
+        )}
+
+        {/* {activeTab === 'analytics' && (
         <Analytics monthlyData={monthlyData} employerStats={employerStats} exportMonthlyAnalytics={exportMonthlyAnalytics} exportEmployerStats={exportEmployerStats} />
-      )}
-      {activeTab === 'reports' && (
-        <Reports
-          jobs={jobs} employees={employees} applications={applications} applicantsMap={applicantsMap} loading={false}
-          reportType={reportType} setReportType={setReportType}
-          reportDateFilterType={reportDateFilterType} setReportDateFilterType={setReportDateFilterType}
-          reportCustomStartDate={reportCustomStartDate} setReportCustomStartDate={setReportCustomStartDate}
-          reportCustomEndDate={reportCustomEndDate} setReportCustomEndDate={setReportCustomEndDate}
-          showReportCustomDatePicker={showReportCustomDatePicker} setShowReportCustomDatePicker={setShowReportCustomDatePicker}
-          jobStatusFilter={jobStatusFilter} setJobStatusFilter={setJobStatusFilter}
-          searchEmployee={searchEmployee} setSearchEmployee={setSearchEmployee}
-          exportJobsReport={exportJobsReport} exportEmployeesReport={exportEmployeesReport} exportCombinedReport={exportCombinedReport}
-          isWithinReportDateRange={isWithinReportDateRange}
-        />
-      )}
+      )} */}
+
+
+        {activeTab === 'reports' && (
+          <div className="w-full">
+            <Reports
+              jobs={jobs}
+              employees={employees}
+              applications={applications}
+              applicantsMap={applicantsMap}
+              loading={false}
+              reportType={reportType}
+              setReportType={setReportType}
+              reportDateFilterType={reportDateFilterType}
+              setReportDateFilterType={setReportDateFilterType}
+              reportCustomStartDate={reportCustomStartDate}
+              setReportCustomStartDate={setReportCustomStartDate}
+              reportCustomEndDate={reportCustomEndDate}
+              setReportCustomEndDate={setReportCustomEndDate}
+              showReportCustomDatePicker={showReportCustomDatePicker}
+              setShowReportCustomDatePicker={setShowReportCustomDatePicker}
+              jobStatusFilter={jobStatusFilter}
+              setJobStatusFilter={setJobStatusFilter}
+              searchEmployee={searchEmployee}
+              setSearchEmployee={setSearchEmployee}
+              exportJobsReport={exportJobsReport}
+              exportEmployeesReport={exportEmployeesReport}
+              exportCombinedReport={exportCombinedReport}
+              isWithinReportDateRange={isWithinReportDateRange}
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Fix for ModerateJobs action buttons: force horizontal layout on all screens */}
+      <style>{`
+        /* Make action buttons (View/Suspend) side by side even on mobile */
+        .moderate-jobs-table td:last-child > div {
+          display: flex !important;
+          flex-direction: row !important;
+          gap: 0.5rem !important;
+          align-items: center !important;
+          flex-wrap: wrap !important;
+        }
+        /* Hide scrollbar for tab bar */
+        .hide-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        .hide-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
     </div>
   );
 };
