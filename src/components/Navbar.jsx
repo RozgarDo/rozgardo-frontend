@@ -279,12 +279,12 @@ const getProfileLink = () => {
             </div>
 
             {/* Mobile Menu Toggle */}
-            {/* <button
+            <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               className="block lg:hidden text-gray-700"
             >
               {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-            </button> */}
+            </button>
           </div>
         </div>
 

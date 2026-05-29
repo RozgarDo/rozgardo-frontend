@@ -3,7 +3,7 @@ import { Navigate } from 'react-router-dom';
 import Card from '../../components/Card';
 import Input from '../../components/Input';
 import Button from '../../components/Button';
-import { Filter, MapPin, Briefcase, GraduationCap, Award, DollarSign, Phone, Mail, UserCheck, X, Users } from 'lucide-react';
+import { Filter, MapPin, Briefcase, GraduationCap, Award, DollarSign, Phone, Mail, UserCheck, X, Users, Copy } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -22,9 +22,10 @@ const ConnectEmployees = ({ user }) => {
     expectedSalaryMax: '',
     jobType: '',
   });
+  const [copiedField, setCopiedField] = useState(null); // track which field was copied
 
   // Redirect if not employer
-  if (!user) return null; // Will be handled by parent route
+  if (!user) return null;
   if (user.role !== 'employer') return <Navigate to="/employer-login" replace />;
 
   useEffect(() => {
@@ -114,8 +115,14 @@ const ConnectEmployees = ({ user }) => {
     setFilteredEmployees(employees);
   };
 
-  const handleConnect = (emp) => {
-    alert(`Connect with ${emp.full_name || emp.name}\n📞 ${emp.phone_number || emp.phone}\n📧 ${emp.email || 'N/A'}`);
+  // Copy to clipboard helper
+  const copyToClipboard = (text, fieldId) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedField(fieldId);
+      setTimeout(() => setCopiedField(null), 2000);
+    }).catch(err => {
+      console.error('Copy failed:', err);
+    });
   };
 
   if (loading) {
@@ -189,7 +196,7 @@ const ConnectEmployees = ({ user }) => {
         </Card>
       )}
 
-      {/* Results Grid */}
+      {/* Table View */}
       {filteredEmployees.length === 0 ? (
         <Card className="py-16 text-center text-gray-500">
           <Users size={48} className="mx-auto text-gray-300 mb-3" />
@@ -197,41 +204,102 @@ const ConnectEmployees = ({ user }) => {
           <p className="text-sm">Try adjusting your filters</p>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredEmployees.map(emp => (
-            <Card key={emp.id} className="hover:shadow-lg transition-shadow overflow-hidden">
-              <div className="p-5">
-                <div className="flex justify-between items-start mb-3">
-                  <h3 className="text-xl font-bold">{emp.full_name || emp.name || 'Unknown'}</h3>
-                  <span className="bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full">Available</span>
-                </div>
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center gap-2 text-gray-600"><Phone size={14} /> {emp.phone_number || emp.phone || 'N/A'}</div>
-                  <div className="flex items-center gap-2 text-gray-600"><Mail size={14} /> {emp.email || 'N/A'}</div>
-                  <div className="flex items-center gap-2 text-gray-600"><MapPin size={14} /> {emp.location || 'Not specified'}</div>
-                  <div className="flex items-center gap-2 text-gray-600"><Award size={14} /> Exp: {safeRender(emp.experience)}</div>
-                  <div className="flex items-center gap-2 text-gray-600"><GraduationCap size={14} /> Edu: {safeRender(emp.highest_qualification)}</div>
-                  <div className="flex items-center gap-2 text-gray-600"><Briefcase size={14} /> Type: {Array.isArray(emp.job_types) ? emp.job_types.join(', ') : (emp.job_types || 'Any')}</div>
-                  <div className="flex items-center gap-2 text-gray-600"><DollarSign size={14} /> ₹{emp.expected_salary?.toLocaleString() || 'Negotiable'}</div>
-                </div>
-                <div className="mt-3">
-                  <p className="text-xs font-semibold text-gray-500">Skills</p>
-                  <div className="flex flex-wrap gap-1 mt-1">
-                    {(() => {
-                      let skills = emp.skills;
-                      if (!skills) return <span className="text-gray-400 text-xs">None</span>;
-                      if (typeof skills === 'string') skills = skills.split(',');
-                      if (!Array.isArray(skills)) skills = [];
-                      return skills.map((s, i) => <span key={i} className="bg-gray-100 px-2 py-0.5 rounded text-xs">{s.trim()}</span>);
-                    })()}
-                  </div>
-                </div>
-                <Button onClick={() => handleConnect(emp)} className="w-full mt-4 bg-indigo-600 hover:bg-indigo-700 text-white">
-                  <UserCheck size={16} className="inline mr-2" /> Connect
-                </Button>
-              </div>
-            </Card>
-          ))}
+        <div className="overflow-x-auto">
+          <table className="min-w-full bg-white border border-gray-200 rounded-lg">
+            <thead className="bg-gray-100">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Location</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Experience</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Education</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Job Type</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Expected Salary</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Skills</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {filteredEmployees.map(emp => (
+                <tr key={emp.id} className="hover:bg-gray-50">
+                  {/* Name with copy */}
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{emp.full_name || emp.name || 'Unknown'}</span>
+                      <button
+                        onClick={() => copyToClipboard(emp.full_name || emp.name || '', `name-${emp.id}`)}
+                        className="text-gray-400 hover:text-indigo-600 transition"
+                        title="Copy name"
+                      >
+                        <Copy size={14} />
+                      </button>
+                      {copiedField === `name-${emp.id}` && (
+                        <span className="text-xs text-green-600">Copied!</span>
+                      )}
+                    </div>
+                  </td>
+                  {/* Phone with copy */}
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center gap-2">
+                      <span>{emp.phone_number || emp.phone || 'N/A'}</span>
+                      {(emp.phone_number || emp.phone) && (
+                        <button
+                          onClick={() => copyToClipboard(emp.phone_number || emp.phone, `phone-${emp.id}`)}
+                          className="text-gray-400 hover:text-indigo-600 transition"
+                          title="Copy phone number"
+                        >
+                          <Copy size={14} />
+                        </button>
+                      )}
+                      {copiedField === `phone-${emp.id}` && (
+                        <span className="text-xs text-green-600">Copied!</span>
+                      )}
+                    </div>
+                  </td>
+                  {/* Email with copy */}
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="flex items-center gap-2">
+                      <span>{emp.email || 'N/A'}</span>
+                      {emp.email && (
+                        <button
+                          onClick={() => copyToClipboard(emp.email, `email-${emp.id}`)}
+                          className="text-gray-400 hover:text-indigo-600 transition"
+                          title="Copy email"
+                        >
+                          <Copy size={14} />
+                        </button>
+                      )}
+                      {copiedField === `email-${emp.id}` && (
+                        <span className="text-xs text-green-600">Copied!</span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">{emp.location || 'Not specified'}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">{safeRender(emp.experience)}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">{safeRender(emp.highest_qualification)}</td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    {Array.isArray(emp.job_types) ? emp.job_types.join(', ') : (emp.job_types || 'Any')}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    ₹{emp.expected_salary?.toLocaleString() || 'Negotiable'}
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex flex-wrap gap-1">
+                      {(() => {
+                        let skills = emp.skills;
+                        if (!skills) return <span className="text-gray-400 text-xs">None</span>;
+                        if (typeof skills === 'string') skills = skills.split(',');
+                        if (!Array.isArray(skills)) skills = [];
+                        return skills.map((s, i) => (
+                          <span key={i} className="bg-gray-100 px-2 py-0.5 rounded text-xs">{s.trim()}</span>
+                        ));
+                      })()}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </div>
