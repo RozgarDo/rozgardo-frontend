@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ReactDOM from 'react-dom';
-import { ShieldCheck, UserPlus, Phone, Lock, Mail, Building2, X, KeyRound, RefreshCw, Loader2 } from 'lucide-react';
+import { ShieldCheck, UserPlus, Phone, Lock, Mail, Building2, X, KeyRound, RefreshCw, Loader2, AlertCircle } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -30,17 +30,19 @@ const EmployeeLogin = ({ onLogin }) => {
   const [resetLoading, setResetLoading] = useState(false);
   const [resetTimeLeft, setResetTimeLeft] = useState(0);
 
-  // Reactivation modal
+  // Reactivation modal (deactivated)
   const [reactivationModalOpen, setReactivationModalOpen] = useState(false);
   const [reactivationLoading, setReactivationLoading] = useState(false);
   const [pendingCredentials, setPendingCredentials] = useState(null);
+
+  // Suspended modal
+  const [suspendedModalOpen, setSuspendedModalOpen] = useState(false);
 
   const [signupModalOpen, setSignupModalOpen] = useState(false);
   const modalRef = useRef(null);
   
   const navigate = useNavigate();
 
-  // Timers
   useEffect(() => {
     if (timeLeft > 0) {
       const timerId = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
@@ -55,7 +57,6 @@ const EmployeeLogin = ({ onLogin }) => {
     }
   }, [resetTimeLeft]);
 
-  // Close modals on outside click
   useEffect(() => {
     const handleClickOutside = (e) => {
       if (signupModalOpen && modalRef.current && !modalRef.current.contains(e.target)) {
@@ -71,7 +72,7 @@ const EmployeeLogin = ({ onLogin }) => {
     navigate('/employee-dashboard');
   };
 
-  // Send OTP (normal login)
+  // Send OTP – now checks suspended/deactivated BEFORE sending
   const handleSendOtp = async () => {
     setError('');
     setMessage('');
@@ -88,6 +89,17 @@ const EmployeeLogin = ({ onLogin }) => {
         setMessage(data.message);
         setTimeLeft(30);
       } else {
+        if (res.status === 403 && data.code === 'account_deactivated') {
+          setPendingCredentials({ phone: loginId });
+          setReactivationModalOpen(true);
+          setLoading(false);
+          return;
+        }
+        if (res.status === 403 && data.code === 'account_suspended') {
+          setSuspendedModalOpen(true);
+          setLoading(false);
+          return;
+        }
         if (res.status === 404) {
           setError('Mobile number not found. Please register.');
           setSignupModalOpen(true);
@@ -103,7 +115,7 @@ const EmployeeLogin = ({ onLogin }) => {
     }
   };
 
-  // Password login (with deactivation check)
+  // Password login (with status checks)
   const handlePasswordLogin = async () => {
     setError('');
     setMessage('');
@@ -134,6 +146,11 @@ const EmployeeLogin = ({ onLogin }) => {
           setLoading(false);
           return;
         }
+        if (response.status === 403 && data.code === 'account_suspended') {
+          setSuspendedModalOpen(true);
+          setLoading(false);
+          return;
+        }
         throw new Error(data.error || 'Login failed');
       }
       routeUser(data.user);
@@ -144,7 +161,7 @@ const EmployeeLogin = ({ onLogin }) => {
     }
   };
 
-  // OTP login (with deactivation check)
+  // OTP login (status already checked during OTP send, but double‑check)
   const handleOtpLogin = async () => {
     setError('');
     setMessage('');
@@ -164,6 +181,11 @@ const EmployeeLogin = ({ onLogin }) => {
           setLoading(false);
           return;
         }
+        if (res.status === 403 && data.code === 'account_suspended') {
+          setSuspendedModalOpen(true);
+          setLoading(false);
+          return;
+        }
         throw new Error(data.error || 'Authentication failed');
       }
       routeUser(data.user);
@@ -174,7 +196,7 @@ const EmployeeLogin = ({ onLogin }) => {
     }
   };
 
-  // Reactivate account – after reactivation, if OTP was used, clear OTP and ask to resend
+  // Reactivate account (deactivated only)
   const handleReactivateAccount = async () => {
     setReactivationLoading(true);
     try {
@@ -188,13 +210,15 @@ const EmployeeLogin = ({ onLogin }) => {
         setReactivationModalOpen(false);
         if (pendingCredentials) {
           if (pendingCredentials.password) {
-            // Password login – retry directly
             await handlePasswordLogin();
           } else if (pendingCredentials.otp) {
-            // OTP login – OTP may have expired; clear OTP and ask to resend
             setOtp(['', '', '', '', '', '']);
             setOtpSent(false);
             setMessage('Account reactivated! Please request a new OTP to log in.');
+            setPendingCredentials(null);
+          } else {
+            // Only phone stored (for OTP case) – just ask to request OTP again
+            setMessage('Account reactivated! Please request a new OTP.');
             setPendingCredentials(null);
           }
         } else {
@@ -246,7 +270,7 @@ const EmployeeLogin = ({ onLogin }) => {
     else navigate('/employer-registration');
   };
 
-  // ---------- FORGOT PASSWORD ----------
+  // ---------- FORGOT PASSWORD (unchanged) ----------
   const resetOtpRefs = useRef([]);
 
   const handleResetSendOtp = async () => {
@@ -367,7 +391,7 @@ const EmployeeLogin = ({ onLogin }) => {
     setMessage('');
   };
 
-  // Forgot Password UI
+  // Forgot Password UI (unchanged)
   const renderForgotPassword = () => (
     <div className="w-full max-w-[400px] bg-white rounded-2xl py-6 px-8 shadow-[0_8px_30px_-10px_rgba(0,0,0,0.08)] border border-white/50 animate-[fadeIn_0.4s_ease-out]">
       <div className="text-center mb-6">
@@ -417,7 +441,7 @@ const EmployeeLogin = ({ onLogin }) => {
     </div>
   );
 
-  // Normal login UI
+  // Normal login UI (unchanged)
   const renderLogin = () => (
     <div className="w-full max-w-[400px] bg-white rounded-2xl py-6 px-8 shadow-[0_8px_30px_-10px_rgba(0,0,0,0.08)] border border-white/50 flex flex-col gap-5 animate-[fadeIn_0.4s_ease-out]">
       <div className="text-center">
@@ -487,11 +511,52 @@ const EmployeeLogin = ({ onLogin }) => {
         document.body
       )}
 
-      {/* Reactivation Modal */}
+      {/* Reactivation Modal (deactivated) */}
       {reactivationModalOpen && ReactDOM.createPortal(
         <>
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40" />
-          <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-[90%] max-w-md"><div className="bg-white rounded-2xl shadow-2xl p-6 text-center"><div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4"><RefreshCw className="text-amber-600" size={28} /></div><h3 className="text-xl font-bold text-gray-800 mb-2">Account Deactivated</h3><p className="text-gray-600 mb-6">Your account is currently deactivated. Do you want to reactivate it and log in?</p><div className="flex gap-3"><button onClick={() => setReactivationModalOpen(false)} className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition">Cancel</button><button onClick={handleReactivateAccount} disabled={reactivationLoading} className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition flex items-center justify-center gap-2">{reactivationLoading ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />} Reactivate & Login</button></div></div></div>
+          <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-[90%] max-w-md">
+            <div className="bg-white rounded-2xl shadow-2xl p-6 text-center">
+              <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <RefreshCw className="text-amber-600" size={28} />
+              </div>
+              <h3 className="text-xl font-bold text-gray-800 mb-2">Account Deactivated</h3>
+              <p className="text-gray-600 mb-6">Your account is currently deactivated. Do you want to reactivate it and log in?</p>
+              <div className="flex gap-3">
+                <button onClick={() => setReactivationModalOpen(false)} className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition">Cancel</button>
+                <button onClick={handleReactivateAccount} disabled={reactivationLoading} className="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition flex items-center justify-center gap-2">
+                  {reactivationLoading ? <Loader2 size={16} className="animate-spin" /> : <RefreshCw size={16} />} Reactivate & Login
+                </button>
+              </div>
+            </div>
+          </div>
+        </>,
+        document.body
+      )}
+
+      {/* Suspended Account Modal */}
+      {suspendedModalOpen && ReactDOM.createPortal(
+        <>
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40" />
+          <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-[90%] max-w-md">
+            <div className="bg-white rounded-2xl shadow-2xl p-6 text-center">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <AlertCircle className="text-red-600" size={28} />
+              </div>
+              <h3 className="text-xl font-bold text-gray-800 mb-2">Account Suspended</h3>
+              <p className="text-gray-600 mb-4">
+                Your account has been temporarily suspended.
+                <br />
+                Please contact <a href="mailto:support@rozgardo.com" className="text-indigo-600 hover:underline">support@rozgardo.com</a> for assistance.
+              </p>
+              <button
+                onClick={() => setSuspendedModalOpen(false)}
+                className="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+              >
+                Close
+              </button>
+            </div>
+          </div>
         </>,
         document.body
       )}
