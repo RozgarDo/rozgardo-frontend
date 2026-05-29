@@ -7,6 +7,8 @@ const EmployerRegistration = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
   const [formData, setFormData] = useState({
     companyName: '',
@@ -72,7 +74,15 @@ const EmployerRegistration = () => {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Registration failed');
 
-      navigate('/employer-login', { state: { message: 'Registration successful! Please log in.' } });
+      // Show success modal instead of direct navigation
+      setSuccessMessage('Registration successful! Redirecting to login...');
+      setShowSuccessModal(true);
+      
+      // Auto-close modal and navigate after 2 seconds
+      setTimeout(() => {
+        setShowSuccessModal(false);
+        navigate('/employer-login', { state: { message: 'Registration successful! Please log in.' } });
+      }, 2000);
     } catch (error) {
       console.error('Fetch error:', error);
       setErrors({ api: error.message });
@@ -240,12 +250,26 @@ const EmployerRegistration = () => {
           </div>
         </div>
       </div>
+
+      {/* Success Modal */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 text-center transform transition-all scale-100">
+            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100 mb-4">
+              <svg className="h-6 w-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">Registration Successful!</h3>
+            <p className="text-gray-600 mb-6">{successMessage}</p>
+            <div className="animate-pulse">
+              <div className="w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
-
-
-
-
 
 export default EmployerRegistration;
