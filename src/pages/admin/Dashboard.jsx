@@ -3,7 +3,7 @@ import { ShieldAlert, Briefcase, Users, TrendingUp, FileText } from 'lucide-reac
 import KPICards from './components/KPICards';
 import ModerateJobs from './components/ModerateJobs';
 import ManageUsers from './components/ManageUsers';
-import Analytics from './components/Analytics';
+// import Analytics from './components/Analytics';
 import Reports from './components/Reports';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
@@ -386,7 +386,8 @@ const AdminDashboard = ({ user }) => {
 
       {/* Responsive tab bar with scroll-into-view on selection */}
       <div className="flex overflow-x-auto sm:overflow-visible gap-2 mb-4 sm:mb-8 pb-2 sm:pb-4 border-b border-gray-200 hide-scrollbar">
-        {['jobs', 'users', 'analytics', 'reports'].map(tab => (
+        {['jobs', 'users', 'reports'].map(tab => (
+        // {['jobs', 'users', 'analytics', 'reports'].map(tab => (
           <button
             key={tab}
             ref={(el) => (tabRefs.current[tab] = el)}
@@ -398,7 +399,7 @@ const AdminDashboard = ({ user }) => {
           >
             {tab === 'jobs' && <Briefcase size={16} />}
             {tab === 'users' && <Users size={16} />}
-            {tab === 'analytics' && <TrendingUp size={16} />}
+            {/* {tab === 'analytics' && <TrendingUp size={16} />} */}
             {tab === 'reports' && <FileText size={16} />}
             <span>{tab.charAt(0).toUpperCase() + tab.slice(1)}</span>
           </button>

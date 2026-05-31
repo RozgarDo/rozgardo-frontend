@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ReactDOM from 'react-dom';
-import { ShieldCheck, UserPlus, Phone, Lock, Mail, Building2, X, KeyRound, RefreshCw, Loader2, AlertCircle } from 'lucide-react';
+import { ShieldCheck, UserPlus, Phone, Lock, Mail, Building2, X, KeyRound, RefreshCw, Loader2, AlertCircle, Eye, EyeOff } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const EmployeeLogin = ({ onLogin }) => {
   const [loginId, setLoginId] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false); // ✅ show/hide for normal password
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const otpRefs = useRef([]);
   
@@ -26,6 +27,8 @@ const EmployeeLogin = ({ onLogin }) => {
   const [resetOtp, setResetOtp] = useState(['', '', '', '', '', '']);
   const [resetNewPassword, setResetNewPassword] = useState('');
   const [resetConfirmPassword, setResetConfirmPassword] = useState('');
+  const [showNewPassword, setShowNewPassword] = useState(false);   // ✅ show/hide for new password
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false); // ✅ show/hide for confirm password
   const [resetMessage, setResetMessage] = useState({ type: '', text: '' });
   const [resetLoading, setResetLoading] = useState(false);
   const [resetTimeLeft, setResetTimeLeft] = useState(0);
@@ -43,6 +46,7 @@ const EmployeeLogin = ({ onLogin }) => {
   
   const navigate = useNavigate();
 
+  // ... (all useEffect hooks remain unchanged) ...
   useEffect(() => {
     if (timeLeft > 0) {
       const timerId = setTimeout(() => setTimeLeft(timeLeft - 1), 1000);
@@ -270,7 +274,7 @@ const EmployeeLogin = ({ onLogin }) => {
     else navigate('/employer-registration');
   };
 
-  // ---------- FORGOT PASSWORD (unchanged) ----------
+  // ---------- FORGOT PASSWORD (unchanged except added password toggles) ----------
   const resetOtpRefs = useRef([]);
 
   const handleResetSendOtp = async () => {
@@ -391,7 +395,7 @@ const EmployeeLogin = ({ onLogin }) => {
     setMessage('');
   };
 
-  // Forgot Password UI (unchanged)
+  // Forgot Password UI (with show/hide toggles)
   const renderForgotPassword = () => (
     <div className="w-full max-w-[400px] bg-white rounded-2xl py-6 px-8 shadow-[0_8px_30px_-10px_rgba(0,0,0,0.08)] border border-white/50 animate-[fadeIn_0.4s_ease-out]">
       <div className="text-center mb-6">
@@ -416,7 +420,13 @@ const EmployeeLogin = ({ onLogin }) => {
 
       {resetStep === 'phone' && (
         <div className="flex flex-col gap-4">
-          <div><label className="text-sm font-semibold text-slate-700">Mobile Number</label><div className="relative mt-1"><Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-[18px] h-[18px]" /><input type="tel" className="w-full py-3 pl-10 pr-4 border border-slate-200 rounded-lg text-sm" placeholder="9876543210" value={resetPhone} onChange={(e) => setResetPhone(e.target.value)} /></div></div>
+          <div>
+            <label className="text-sm font-semibold text-slate-700">Mobile Number</label>
+            <div className="relative mt-1">
+              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-[18px] h-[18px]" />
+              <input type="tel" className="w-full py-3 pl-10 pr-4 border border-slate-200 rounded-lg text-sm" placeholder="9876543210" value={resetPhone} onChange={(e) => setResetPhone(e.target.value)} />
+            </div>
+          </div>
           <button onClick={handleResetSendOtp} disabled={resetLoading} className="w-full py-3 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:-translate-y-0.5 transition-all">{resetLoading ? 'Sending...' : 'Send OTP'}</button>
           <button onClick={resetForgotPassword} className="text-sm text-indigo-600 hover:underline text-center">Back to Login</button>
         </div>
@@ -424,7 +434,17 @@ const EmployeeLogin = ({ onLogin }) => {
 
       {resetStep === 'verify' && (
         <div className="flex flex-col gap-4">
-          <div><label className="text-sm font-semibold text-slate-700">Enter OTP</label><div className="flex gap-2 justify-between mt-2">{resetOtp.map((digit, index) => (<input key={index} ref={el => resetOtpRefs.current[index] = el} type="text" maxLength={1} className="w-full aspect-square max-w-[45px] text-center text-xl font-bold border border-slate-200 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200" value={digit} onChange={(e) => handleResetOtpChange(index, e.target.value)} onKeyDown={(e) => handleResetOtpKeyDown(index, e)} />))}</div><div className="flex justify-end mt-2"><button type="button" className="text-xs text-indigo-600 hover:underline disabled:text-slate-400" onClick={handleResetSendOtp} disabled={resetTimeLeft > 0}>{resetTimeLeft > 0 ? `Resend in ${resetTimeLeft}s` : 'Resend OTP'}</button></div></div>
+          <div>
+            <label className="text-sm font-semibold text-slate-700">Enter OTP</label>
+            <div className="flex gap-2 justify-between mt-2">
+              {resetOtp.map((digit, index) => (
+                <input key={index} ref={el => resetOtpRefs.current[index] = el} type="text" maxLength="1" className="w-full aspect-square max-w-[45px] text-center text-xl font-bold border border-slate-200 rounded-lg focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200" value={digit} onChange={(e) => handleResetOtpChange(index, e.target.value)} onKeyDown={(e) => handleResetOtpKeyDown(index, e)} />
+              ))}
+            </div>
+            <div className="flex justify-end mt-2">
+              <button type="button" className="text-xs text-indigo-600 hover:underline disabled:text-slate-400" onClick={handleResetSendOtp} disabled={resetTimeLeft > 0}>{resetTimeLeft > 0 ? `Resend in ${resetTimeLeft}s` : 'Resend OTP'}</button>
+            </div>
+          </div>
           <button onClick={handleResetVerifyOtp} disabled={resetLoading} className="w-full py-3 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:-translate-y-0.5 transition-all">{resetLoading ? 'Verifying...' : 'Verify OTP'}</button>
           <button onClick={resetForgotPassword} className="text-sm text-indigo-600 hover:underline text-center">Back to Login</button>
         </div>
@@ -432,8 +452,26 @@ const EmployeeLogin = ({ onLogin }) => {
 
       {resetStep === 'reset' && (
         <div className="flex flex-col gap-4">
-          <div><label className="text-sm font-semibold text-slate-700">New Password</label><div className="relative mt-1"><Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-[18px] h-[18px]" /><input type="password" className="w-full py-3 pl-10 pr-4 border border-slate-200 rounded-lg text-sm" placeholder="Min. 6 characters" value={resetNewPassword} onChange={(e) => setResetNewPassword(e.target.value)} /></div></div>
-          <div><label className="text-sm font-semibold text-slate-700">Confirm Password</label><div className="relative mt-1"><Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-[18px] h-[18px]" /><input type="password" className="w-full py-3 pl-10 pr-4 border border-slate-200 rounded-lg text-sm" placeholder="Re-enter new password" value={resetConfirmPassword} onChange={(e) => setResetConfirmPassword(e.target.value)} /></div></div>
+          <div>
+            <label className="text-sm font-semibold text-slate-700">New Password</label>
+            <div className="relative mt-1">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-[18px] h-[18px]" />
+              <input type={showNewPassword ? 'text' : 'password'} className="w-full py-3 pl-10 pr-10 border border-slate-200 rounded-lg text-sm" placeholder="Min. 6 characters" value={resetNewPassword} onChange={(e) => setResetNewPassword(e.target.value)} />
+              <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600" onClick={() => setShowNewPassword(!showNewPassword)}>
+                {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+          </div>
+          <div>
+            <label className="text-sm font-semibold text-slate-700">Confirm Password</label>
+            <div className="relative mt-1">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-[18px] h-[18px]" />
+              <input type={showConfirmPassword ? 'text' : 'password'} className="w-full py-3 pl-10 pr-10 border border-slate-200 rounded-lg text-sm" placeholder="Re-enter new password" value={resetConfirmPassword} onChange={(e) => setResetConfirmPassword(e.target.value)} />
+              <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
+                {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+          </div>
           <button onClick={handleResetPassword} disabled={resetLoading} className="w-full py-3 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:-translate-y-0.5 transition-all">{resetLoading ? 'Resetting...' : 'Reset Password'}</button>
           <button onClick={resetForgotPassword} className="text-sm text-indigo-600 hover:underline text-center">Back to Login</button>
         </div>
@@ -441,7 +479,7 @@ const EmployeeLogin = ({ onLogin }) => {
     </div>
   );
 
-  // Normal login UI (unchanged)
+  // Normal login UI (with show/hide for password)
   const renderLogin = () => (
     <div className="w-full max-w-[400px] bg-white rounded-2xl py-6 px-8 shadow-[0_8px_30px_-10px_rgba(0,0,0,0.08)] border border-white/50 flex flex-col gap-5 animate-[fadeIn_0.4s_ease-out]">
       <div className="text-center">
@@ -471,7 +509,10 @@ const EmployeeLogin = ({ onLogin }) => {
             <label className="text-sm font-semibold text-slate-700">Password</label>
             <div className="relative flex items-center">
               <Lock className="absolute left-3 text-slate-400 pointer-events-none w-[18px] h-[18px]" />
-              <input type="password" className="w-full py-3 pl-10 pr-4 border border-slate-200 rounded-lg text-sm text-slate-900 bg-white transition-all focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 placeholder:text-slate-300" placeholder="Enter your password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+              <input type={showPassword ? 'text' : 'password'} className="w-full py-3 pl-10 pr-10 border border-slate-200 rounded-lg text-sm text-slate-900 bg-white transition-all focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 placeholder:text-slate-300" placeholder="Enter your password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+              <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600" onClick={() => setShowPassword(!showPassword)}>
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
             </div>
           </div>
         )}
@@ -480,7 +521,7 @@ const EmployeeLogin = ({ onLogin }) => {
           <div className="flex flex-col gap-1.5 animate-[fadeIn_0.3s_ease-out]">
             <label className="text-sm font-semibold text-slate-700">Enter OTP</label>
             <div className="flex gap-2 justify-between mt-1">
-              {otp.map((digit, index) => (<input key={index} ref={el => otpRefs.current[index] = el} type="text" maxLength={1} className="w-full aspect-square max-w-[45px] text-center text-xl font-bold border border-slate-200 rounded-lg text-slate-900 bg-white transition-all focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200" value={digit} onChange={(e) => handleOtpChange(index, e.target.value)} onKeyDown={(e) => handleOtpKeyDown(index, e)} />))}
+              {otp.map((digit, index) => (<input key={index} ref={el => otpRefs.current[index] = el} type="text" maxLength="1" className="w-full aspect-square max-w-[45px] text-center text-xl font-bold border border-slate-200 rounded-lg text-slate-900 bg-white transition-all focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200" value={digit} onChange={(e) => handleOtpChange(index, e.target.value)} onKeyDown={(e) => handleOtpKeyDown(index, e)} />))}
             </div>
             <div className="flex justify-end items-center text-xs text-slate-500 mt-1">Didn't receive OTP?<button type="button" className="text-indigo-600 font-semibold ml-1 hover:underline disabled:text-slate-400 disabled:cursor-not-allowed" onClick={handleSendOtp} disabled={timeLeft > 0}>{timeLeft > 0 ? `Resend in ${timeLeft}s` : 'Resend'}</button></div>
           </div>
@@ -502,7 +543,7 @@ const EmployeeLogin = ({ onLogin }) => {
       <style>{`@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } } @keyframes modalFadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }`}</style>
       {forgotPasswordMode ? renderForgotPassword() : renderLogin()}
 
-      {/* Signup Modal */}
+      {/* Signup Modal (unchanged) */}
       {signupModalOpen && ReactDOM.createPortal(
         <>
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40" />
@@ -511,7 +552,7 @@ const EmployeeLogin = ({ onLogin }) => {
         document.body
       )}
 
-      {/* Reactivation Modal (deactivated) */}
+      {/* Reactivation Modal (deactivated) - unchanged */}
       {reactivationModalOpen && ReactDOM.createPortal(
         <>
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40" />
@@ -534,7 +575,7 @@ const EmployeeLogin = ({ onLogin }) => {
         document.body
       )}
 
-      {/* Suspended Account Modal */}
+      {/* Suspended Account Modal - unchanged */}
       {suspendedModalOpen && ReactDOM.createPortal(
         <>
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40" />
