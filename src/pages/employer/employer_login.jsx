@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { ShieldCheck, UserPlus, Phone, Lock, Mail, Building2, X, KeyRound, RefreshCw, Loader2, AlertCircle } from 'lucide-react';
+import { ShieldCheck, UserPlus, Phone, Lock, Mail, Building2, X, KeyRound, RefreshCw, Loader2, AlertCircle, Eye, EyeOff } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const EmployerLogin = ({ onLogin }) => {
   const [loginId, setLoginId] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false); // ✅ new
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const otpRefs = useRef([]);
   
@@ -21,6 +22,8 @@ const EmployerLogin = ({ onLogin }) => {
   const [resetOtp, setResetOtp] = useState(['', '', '', '', '', '']);
   const [resetNewPassword, setResetNewPassword] = useState('');
   const [resetConfirmPassword, setResetConfirmPassword] = useState('');
+  const [showNewPassword, setShowNewPassword] = useState(false);   // ✅ new
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false); // ✅ new
   const [resetMessage, setResetMessage] = useState({ type: '', text: '' });
   const [resetLoading, setResetLoading] = useState(false);
   const [resetTimeLeft, setResetTimeLeft] = useState(0);
@@ -250,7 +253,7 @@ const EmployerLogin = ({ onLogin }) => {
     else navigate('/employer-registration');
   };
 
-  // ----- Forgot Password Flow (unchanged) -----
+  // ----- Forgot Password Flow (with show/hide toggles) -----
   const resetOtpRefs = useRef([]);
 
   const handleResetSendOtp = async () => {
@@ -371,7 +374,7 @@ const EmployerLogin = ({ onLogin }) => {
     setMessage('');
   };
 
-  // Forgot Password UI (unchanged)
+  // Forgot Password UI (with eye toggles)
   const renderForgotPassword = () => (
     <div className="w-full max-w-[400px] bg-white rounded-2xl py-6 px-8 shadow-[0_8px_30px_-10px_rgba(0,0,0,0.08)] border border-white/50 animate-[fadeIn_0.4s_ease-out]">
       <div className="text-center mb-6">
@@ -412,8 +415,26 @@ const EmployerLogin = ({ onLogin }) => {
 
       {resetStep === 'reset' && (
         <div className="flex flex-col gap-4">
-          <div><label className="text-sm font-semibold text-slate-700">New Password</label><div className="relative mt-1"><Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-[18px] h-[18px]" /><input type="password" className="w-full py-3 pl-10 pr-4 border border-slate-200 rounded-lg text-sm" placeholder="Min. 6 characters" value={resetNewPassword} onChange={(e) => setResetNewPassword(e.target.value)} /></div></div>
-          <div><label className="text-sm font-semibold text-slate-700">Confirm Password</label><div className="relative mt-1"><Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-[18px] h-[18px]" /><input type="password" className="w-full py-3 pl-10 pr-4 border border-slate-200 rounded-lg text-sm" placeholder="Re-enter new password" value={resetConfirmPassword} onChange={(e) => setResetConfirmPassword(e.target.value)} /></div></div>
+          <div>
+            <label className="text-sm font-semibold text-slate-700">New Password</label>
+            <div className="relative mt-1">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-[18px] h-[18px]" />
+              <input type={showNewPassword ? 'text' : 'password'} className="w-full py-3 pl-10 pr-10 border border-slate-200 rounded-lg text-sm" placeholder="Min. 6 characters" value={resetNewPassword} onChange={(e) => setResetNewPassword(e.target.value)} />
+              <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600" onClick={() => setShowNewPassword(!showNewPassword)}>
+                {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+          </div>
+          <div>
+            <label className="text-sm font-semibold text-slate-700">Confirm Password</label>
+            <div className="relative mt-1">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-[18px] h-[18px]" />
+              <input type={showConfirmPassword ? 'text' : 'password'} className="w-full py-3 pl-10 pr-10 border border-slate-200 rounded-lg text-sm" placeholder="Re-enter new password" value={resetConfirmPassword} onChange={(e) => setResetConfirmPassword(e.target.value)} />
+              <button type="button" className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600" onClick={() => setShowConfirmPassword(!showConfirmPassword)}>
+                {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+          </div>
           <button onClick={handleResetPassword} disabled={resetLoading} className="w-full py-3 bg-indigo-600 text-white font-semibold rounded-lg shadow-md hover:-translate-y-0.5 transition-all">{resetLoading ? 'Resetting...' : 'Reset Password'}</button>
           <button onClick={resetForgotPassword} className="text-sm text-indigo-600 hover:underline text-center">Back to Login</button>
         </div>
@@ -421,7 +442,7 @@ const EmployerLogin = ({ onLogin }) => {
     </div>
   );
 
-  // Normal login UI
+  // Normal login UI (with password toggle)
   const renderLogin = () => (
     <div className="w-full max-w-[400px] bg-white rounded-2xl py-6 px-8 shadow-[0_8px_30px_-10px_rgba(0,0,0,0.08)] border border-white/50 flex flex-col gap-5 animate-[fadeIn_0.4s_ease-out]">
       <div className="text-center">
@@ -488,13 +509,20 @@ const EmployerLogin = ({ onLogin }) => {
             <div className="relative flex items-center">
               <Lock className="absolute left-3 text-slate-400 pointer-events-none w-[18px] h-[18px]" />
               <input 
-                type="password"
-                className="w-full py-3 pl-10 pr-4 border border-slate-200 rounded-lg text-sm text-slate-900 bg-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
+                type={showPassword ? 'text' : 'password'}
+                className="w-full py-3 pl-10 pr-10 border border-slate-200 rounded-lg text-sm text-slate-900 bg-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                 placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
+              <button 
+                type="button"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
             </div>
           </div>
         )}
@@ -511,19 +539,8 @@ const EmployerLogin = ({ onLogin }) => {
                   maxLength={1}
                   className="w-full aspect-square max-w-[45px] text-center text-xl font-bold border border-slate-200 rounded-lg text-slate-900 bg-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200"
                   value={digit}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    if (isNaN(val)) return;
-                    const newOtp = [...otp];
-                    newOtp[index] = val;
-                    setOtp(newOtp);
-                    if (val !== '' && index < 5) otpRefs.current[index + 1]?.focus();
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Backspace' && !otp[index] && index > 0) {
-                      otpRefs.current[index - 1]?.focus();
-                    }
-                  }}
+                  onChange={(e) => handleOtpChange(index, e.target.value)}
+                  onKeyDown={(e) => handleOtpKeyDown(index, e)}
                 />
               ))}
             </div>

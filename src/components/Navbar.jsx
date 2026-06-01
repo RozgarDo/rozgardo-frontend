@@ -19,7 +19,7 @@ const Navbar = ({ user, onLogout }) => {
   const signupModalRef = useRef(null);
   const loginModalRef = useRef(null);
 
-  // Determine if current page is a login page (hide auth buttons)
+  // Determine if current page is a login page (hide auth buttons AND mobile toggle)
   const isLoginPage = ['/admin/login', '/employee-login', '/employer-login'].includes(location.pathname);
 
   // Close dropdowns when clicking outside
@@ -111,12 +111,12 @@ const Navbar = ({ user, onLogout }) => {
   };
 
   // Determine profile link based on role
-const getProfileLink = () => {
-  if (!user) return '/profile';
-  if (user.role === 'employee') return '/employee-profile';
-  if (user.role === 'employer') return '/employer-profile';
-  return '/profile';
-};
+  const getProfileLink = () => {
+    if (!user) return '/profile';
+    if (user.role === 'employee') return '/employee-profile';
+    if (user.role === 'employer') return '/employer-profile';
+    return '/profile';
+  };
 
   return (
     <>
@@ -219,7 +219,6 @@ const getProfileLink = () => {
                         </div>
                       </div>
 
-
                       <Link
                         to={getProfileLink()}
                         className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
@@ -227,42 +226,18 @@ const getProfileLink = () => {
                         <User size={16} className="text-gray-500" /> My Profile
                       </Link>
 
-
-                      {/* <Link
-                        to="/settings"
+                      <Link
+                        to={
+                          user?.role === 'employee'
+                            ? '/employee-settings'
+                            : user?.role === 'employer'
+                            ? '/employer-settings'
+                            : '/settings'
+                        }
                         className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
                       >
                         <Settings size={16} className="text-gray-500" /> Settings
-                      </Link> */}
-
-<Link
-  to={
-    user?.role === 'employee'
-      ? '/employee-settings'
-      : user?.role === 'employer'
-      ? '/employer-settings'
-      : '/settings'
-  }
-  className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
->
-  <Settings size={16} className="text-gray-500" /> Settings
-</Link>
-
-
-
-
-                      {/* <Link
-                        to="/security"
-                        className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
-                      >
-                        <Shield size={16} className="text-gray-500" /> Security
                       </Link>
-                      <Link
-                        to="/billing"
-                        className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
-                      >
-                        <CreditCard size={16} className="text-gray-500" /> Billing Plan
-                      </Link> */}
 
                       <div className="h-px bg-gray-100 my-1" />
 
@@ -278,18 +253,20 @@ const getProfileLink = () => {
               )}
             </div>
 
-            {/* Mobile Menu Toggle */}
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="block lg:hidden text-gray-700"
-            >
-              {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-            </button>
+            {/* Mobile Menu Toggle - HIDE ON LOGIN PAGES */}
+            {!isLoginPage && (
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="block lg:hidden text-gray-700"
+              >
+                {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+              </button>
+            )}
           </div>
         </div>
 
         {/* Mobile Menu */}
-        {mobileMenuOpen && (
+        {mobileMenuOpen && !isLoginPage && (
           <div className="lg:hidden absolute top-[72px] left-0 right-0 bg-white border-b border-gray-200 shadow-md p-6 flex flex-col gap-3 z-50">
             {!user ? (
               <>
@@ -348,7 +325,6 @@ const getProfileLink = () => {
                   </Link>
                 ))}
                 <div className="h-px bg-gray-200 my-1" />
-                {/* Conditionally route to employee-profile or profile */}
                 <Link
                   to={getProfileLink()}
                   onClick={() => setMobileMenuOpen(false)}
@@ -356,43 +332,19 @@ const getProfileLink = () => {
                 >
                   <User size={18} className="text-gray-400" /> My Profile
                 </Link>
-                {/* <Link
-                  to="/settings"
+                <Link
+                  to={
+                    user?.role === 'employee'
+                      ? '/employee-settings'
+                      : user?.role === 'employer'
+                      ? '/employer-settings'
+                      : '/settings'
+                  }
                   onClick={() => setMobileMenuOpen(false)}
                   className="flex items-center gap-2 py-2 text-sm font-medium text-gray-700"
                 >
                   <Settings size={18} className="text-gray-400" /> Settings
-                </Link> */}
-
-
-<Link
-  to={
-    user?.role === 'employee'
-      ? '/employee-settings'
-      : user?.role === 'employer'
-      ? '/employer-settings'
-      : '/settings'
-  }
-  onClick={() => setMobileMenuOpen(false)}
-  className="flex items-center gap-2 py-2 text-sm font-medium text-gray-700"
->
-  <Settings size={18} className="text-gray-400" /> Settings
-</Link>
-
-                {/* <Link
-                  to="/security"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-2 py-2 text-sm font-medium text-gray-700"
-                >
-                  <Shield size={18} className="text-gray-400" /> Security
                 </Link>
-                <Link
-                  to="/billing"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-2 py-2 text-sm font-medium text-gray-700"
-                >
-                  <CreditCard size={18} className="text-gray-400" /> Billing Plan
-                </Link> */}
                 <div className="h-px bg-gray-200 my-1" />
                 <button
                   onClick={() => {

@@ -1,13 +1,14 @@
 // src/pages/admin/AdminLogin.jsx
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShieldCheck, Mail, Lock } from 'lucide-react'; // changed Phone -> Mail
+import { ShieldCheck, Mail, Lock, Eye, EyeOff } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const AdminLogin = ({ onLogin, user }) => {
-  const [loginId, setLoginId] = useState('');        // renamed from phone
+  const [loginId, setLoginId] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false); // ✅ new
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -42,7 +43,7 @@ const AdminLogin = ({ onLogin, user }) => {
       const response = await fetch(`${API_BASE_URL}/api/auth/admin/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ loginId, password }),   // send loginId
+        body: JSON.stringify({ loginId, password }),
       });
 
       const data = await response.json();
@@ -104,13 +105,20 @@ const AdminLogin = ({ onLogin, user }) => {
             <div className="relative flex items-center">
               <Lock className="absolute left-3 text-slate-400 pointer-events-none w-[18px] h-[18px]" />
               <input
-                type="password"
-                className="w-full py-3 pl-10 pr-4 border border-slate-200 rounded-lg text-sm text-slate-900 bg-white transition-all focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 placeholder:text-slate-300"
+                type={showPassword ? 'text' : 'password'}
+                className="w-full py-3 pl-10 pr-10 border border-slate-200 rounded-lg text-sm text-slate-900 bg-white transition-all focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-200 placeholder:text-slate-300"
                 placeholder="Enter your password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
               />
+              <button
+                type="button"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
             </div>
           </div>
 
