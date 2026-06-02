@@ -8,7 +8,7 @@ import {
   AlertCircle, LayoutGrid, Award, GraduationCap,
   Users, TrendingUp, DollarSign
 } from 'lucide-react';
-// import { API_BASE_URL } from '../../config';
+
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const JobDetails = ({ user }) => {
@@ -271,18 +271,6 @@ const JobDetails = ({ user }) => {
           </div>
         </div>
       </div>
-
-      {/* Mobile Sticky CTA */}
-      {!applied && (
-        <div className="fixed bottom-0 left-0 right-0 lg:hidden bg-white border-t border-gray-100 p-4 shadow-2xl z-50">
-          <button 
-            onClick={handleApply}
-            className="w-full bg-indigo-600 text-white font-black py-4 rounded-xl shadow-lg"
-          >
-            {applying ? 'Applying...' : 'Apply for Job'}
-          </button>
-        </div>
-      )}
     </div>
   );
 };
