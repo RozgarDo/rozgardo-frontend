@@ -8,7 +8,7 @@ import {
   AlertCircle, LayoutGrid, Award, GraduationCap,
   Users, TrendingUp, DollarSign
 } from 'lucide-react';
-// import { API_BASE_URL } from '../../config';
+
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const JobDetails = ({ user }) => {
@@ -117,7 +117,7 @@ const JobDetails = ({ user }) => {
     <div className="container py-12 text-center max-w-lg mx-auto">
       <AlertCircle size={40} className="mx-auto text-red-500 mb-3" />
       <h2 className="text-xl font-bold">Job Not Found</h2>
-      <Link to="/" className="mt-6 inline-block bg-indigo-600 text-white px-6 py-2 rounded-lg font-bold">Back to Search</Link>
+      <Link to="/all-jobs" className="mt-6 inline-block bg-indigo-600 text-white px-6 py-2 rounded-lg font-bold">Back</Link>
     </div>
   );
 
@@ -136,11 +136,21 @@ const JobDetails = ({ user }) => {
       {/* Slim Header */}
       <div className="bg-white border-b border-gray-100 py-3">
         <div className="max-w-6xl mx-auto px-4 lg:px-6">
-          <Link to="/" className="text-xs font-bold text-gray-400 hover:text-indigo-600 flex items-center gap-1.5 transition-colors uppercase tracking-wider">
-            <ArrowLeft size={14} /> Back to Search
-          </Link>
+           <button
+                onClick={() => navigate('/all-jobs')}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '0.375rem',
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  color: '#4F46E5', fontWeight: 600, fontSize: '0.875rem',
+                  marginBottom: '1rem', padding: 0,
+                }}
+              >
+                <ArrowLeft size={16} /> Back to All Jobs
+              </button>
         </div>
       </div>
+
+     
 
       <div className="max-w-6xl mx-auto px-4 lg:px-6 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-8">
@@ -271,18 +281,6 @@ const JobDetails = ({ user }) => {
           </div>
         </div>
       </div>
-
-      {/* Mobile Sticky CTA */}
-      {!applied && (
-        <div className="fixed bottom-0 left-0 right-0 lg:hidden bg-white border-t border-gray-100 p-4 shadow-2xl z-50">
-          <button 
-            onClick={handleApply}
-            className="w-full bg-indigo-600 text-white font-black py-4 rounded-xl shadow-lg"
-          >
-            {applying ? 'Applying...' : 'Apply for Job'}
-          </button>
-        </div>
-      )}
     </div>
   );
 };

@@ -8,6 +8,7 @@ const Applications = ({ user }) => {
   const [apps, setApps] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedApp, setSelectedApp] = useState(null);
+  const [withdrawing, setWithdrawing] = useState(false);
 
   useEffect(() => {
     fetchApplications();
@@ -42,6 +43,38 @@ const Applications = ({ user }) => {
   const closeDrawer = useCallback(() => {
     setSelectedApp(null);
   }, []);
+
+  const withdrawApplication = async () => {
+    if (!selectedApp || withdrawing) return;
+
+    const confirmWithdraw = window.confirm('Are you sure you want to withdraw this application? This action cannot be undone.');
+    if (!confirmWithdraw) return;
+
+    setWithdrawing(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/applications/${selectedApp.id}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ employee_id: user.id })
+      });
+
+      if (res.ok) {
+        // Refresh the applications list
+        await fetchApplications();
+        // Close the drawer
+        closeDrawer();
+        alert('Application withdrawn successfully.');
+      } else {
+        const errorData = await res.json();
+        throw new Error(errorData.error || 'Failed to withdraw application');
+      }
+    } catch (err) {
+      console.error('Withdraw error:', err);
+      alert(err.message || 'Could not withdraw application. Please try again.');
+    } finally {
+      setWithdrawing(false);
+    }
+  };
 
   const formatDateTime = (dateStr) => {
     if (!dateStr) return null;
@@ -118,7 +151,6 @@ const Applications = ({ user }) => {
             );
           })}
         </div>
-        {/* Show interview date if status is interview */}
         {currentStatus === 'interview' && interviewDate && (
           <div style={{ marginTop: '1rem', textAlign: 'center' }}>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: '#EFF6FF', padding: '0.5rem 1rem', borderRadius: '2rem', fontSize: '0.75rem', fontWeight: 500, color: '#1E40AF' }}>
@@ -321,7 +353,7 @@ const Applications = ({ user }) => {
                 </div>
               </div>
 
-              {/* Footer */}
+              {/* Footer - Only Withdraw Button */}
               <div style={{
                 padding: '1.25rem 1.5rem',
                 borderTop: '1px solid #F1F5F9',
@@ -330,11 +362,23 @@ const Applications = ({ user }) => {
                 gap: '0.75rem',
                 borderBottomLeftRadius: '1rem',
               }}>
-                <button style={{ flex: 1, padding: '0.75rem', background: '#FEF2F2', color: '#DC2626', fontWeight: 700, border: '1px solid #FECACA', borderRadius: '0.5rem', fontSize: '0.875rem', cursor: 'pointer' }}>
-                  Withdraw
-                </button>
-                <button style={{ flex: 1, padding: '0.75rem', background: '#4F46E5', color: 'white', fontWeight: 700, border: 'none', borderRadius: '0.5rem', fontSize: '0.875rem', cursor: 'pointer', boxShadow: '0 4px 12px rgba(79,70,229,0.25)' }}>
-                  Contact Employer
+                <button 
+                  onClick={withdrawApplication}
+                  disabled={withdrawing}
+                  style={{ 
+                    flex: 1, 
+                    padding: '0.75rem', 
+                    background: '#FEF2F2', 
+                    color: '#DC2626', 
+                    fontWeight: 700, 
+                    border: '1px solid #FECACA', 
+                    borderRadius: '0.5rem', 
+                    fontSize: '0.875rem', 
+                    cursor: withdrawing ? 'not-allowed' : 'pointer',
+                    opacity: withdrawing ? 0.7 : 1
+                  }}
+                >
+                  {withdrawing ? 'Withdrawing...' : 'Withdraw Application'}
                 </button>
               </div>
             </div>
