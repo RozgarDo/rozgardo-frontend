@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Send, CheckCircle } from 'lucide-react';
+import { Send, CheckCircle, X } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
-const PhoneVerificationModal = ({ user, onVerified }) => {
+const PhoneVerificationModal = ({ user, onVerified, onClose }) => {
   const [step, setStep] = useState('send');
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
@@ -24,7 +24,7 @@ const PhoneVerificationModal = ({ user, onVerified }) => {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch(`${API_BASE_URL}/api/auth/employee/send-otp`, {
+      const res = await fetch(`${API_BASE_URL}/api/auth/employee/send-phone-verification-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone }),
@@ -45,15 +45,16 @@ const PhoneVerificationModal = ({ user, onVerified }) => {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch(`${API_BASE_URL}/api/auth/employee/verify-otp`, {
+      const res = await fetch(`${API_BASE_URL}/api/auth/employee/verify-phone-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone, otp }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Verification failed');
-      onVerified(data.user);
-      setMessage('Phone verified!');
+      // Merge the updated user data (phoneVerified: true)
+      const updatedUser = { ...user, phoneVerified: true };
+      onVerified(updatedUser);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -64,6 +65,7 @@ const PhoneVerificationModal = ({ user, onVerified }) => {
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[1000]" onClick={(e) => e.stopPropagation()}>
       <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl relative" onClick={(e) => e.stopPropagation()}>
+        {/* Optional close button if you want to allow closing – but requirement says cannot close until verified; we'll not include X for now */}
         <div className="text-center mb-4">
           <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-3">
             <Send className="text-indigo-600" size={28} />

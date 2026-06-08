@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ReactDOM from 'react-dom';
 import { ShieldCheck, UserPlus, Phone, Lock, Mail, Building2, X, KeyRound, RefreshCw, Loader2, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import PhoneVerificationModal from './PhoneVerificationModal'; // Import the new modal
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -43,6 +44,10 @@ const EmployeeLogin = ({ onLogin }) => {
 
   const [signupModalOpen, setSignupModalOpen] = useState(false);
   const modalRef = useRef(null);
+
+  // Phone verification modal after login (if phone not verified)
+  const [showPhoneVerificationModal, setShowPhoneVerificationModal] = useState(false);
+  const [pendingUser, setPendingUser] = useState(null);
   
   const navigate = useNavigate();
 
@@ -71,8 +76,23 @@ const EmployeeLogin = ({ onLogin }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [signupModalOpen]);
 
+  // Modified routeUser to check phone verification
   const routeUser = (user) => {
+    // If phone is not verified, show verification modal first
+    if (!user.phoneVerified) {
+      setPendingUser(user);
+      setShowPhoneVerificationModal(true);
+      return;
+    }
+    // Already verified, proceed
     if (onLogin) onLogin(user);
+    navigate('/employee-dashboard');
+  };
+
+  // Callback when phone verification is completed
+  const handlePhoneVerified = (updatedUser) => {
+    setShowPhoneVerificationModal(false);
+    if (onLogin) onLogin(updatedUser);
     navigate('/employee-dashboard');
   };
 
@@ -599,6 +619,15 @@ const EmployeeLogin = ({ onLogin }) => {
             </div>
           </div>
         </>,
+        document.body
+      )}
+
+      {/* Phone Verification Modal - shows after login if phone not verified */}
+      {showPhoneVerificationModal && pendingUser && ReactDOM.createPortal(
+        <PhoneVerificationModal
+          user={pendingUser}
+          onVerified={handlePhoneVerified}
+        />,
         document.body
       )}
     </div>
