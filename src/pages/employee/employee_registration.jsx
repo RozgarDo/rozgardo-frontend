@@ -5,6 +5,7 @@ import {
   Lock, Eye, EyeOff, ArrowLeft, Shield,
   Plus, X, Check, Briefcase, Award, Search, Users, Smartphone, Globe
 } from 'lucide-react';
+import PhoneVerificationModal from './PhoneVerificationModal';
 
 const EmployeeRegistration = () => {
   const navigate = useNavigate();
@@ -12,10 +13,12 @@ const EmployeeRegistration = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
+
+  const [showPhoneVerificationModal, setShowPhoneVerificationModal] = useState(false);
+  const [registeredUser, setRegisteredUser] = useState(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
 
-  // Custom input toggles
   const [showCustomJobInput, setShowCustomJobInput] = useState(false);
   const [customJobInput, setCustomJobInput] = useState('');
   const [showCustomLangInput, setShowCustomLangInput] = useState(false);
@@ -43,7 +46,6 @@ const EmployeeRegistration = () => {
     if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
   };
 
-  // ----- Job Types handlers (chips + remove) -----
   const toggleJobType = (job) => {
     setFormData(prev => ({
       ...prev,
@@ -81,7 +83,6 @@ const EmployeeRegistration = () => {
     }
   };
 
-  // ----- Language handlers (chips + remove) -----
   const toggleLanguage = (lang) => {
     setFormData(prev => ({
       ...prev,
@@ -119,7 +120,6 @@ const EmployeeRegistration = () => {
     }
   };
 
-  // ----- Validation -----
   const validateForm = () => {
     const newErrors = {};
     if (!formData.fullName.trim()) newErrors.fullName = 'Full name is required';
@@ -135,6 +135,16 @@ const EmployeeRegistration = () => {
     else if (formData.password.length < 6) newErrors.password = 'Password must be at least 6 characters';
     if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Passwords do not match';
     return newErrors;
+  };
+
+  const handlePhoneVerified = (verifiedUser) => {
+    setShowPhoneVerificationModal(false);
+    setSuccessMessage('Registration and phone verification successful! Redirecting to login...');
+    setShowSuccessModal(true);
+    setTimeout(() => {
+      setShowSuccessModal(false);
+      navigate('/employee-login', { state: { message: 'Registration successful! Please log in.' } });
+    }, 2000);
   };
 
   const handleSubmit = async (e) => {
@@ -171,15 +181,18 @@ const EmployeeRegistration = () => {
         throw new Error(data.error || 'Registration failed');
       }
 
-      // Show success modal
-      setSuccessMessage('Registration successful! Redirecting to login...');
-      setShowSuccessModal(true);
+      // Construct a user object that definitely has a 'phone' field
+      // Use the returned user from backend if available, but override phone with the registered number
+      const backendUser = data.user || data.employee || {};
+      const userForVerification = {
+        ...backendUser,
+        phone: formData.phoneNumber,  // ensure phone field exists
+        phoneNumber: formData.phoneNumber, // also keep for compatibility
+      };
+
+      setRegisteredUser(userForVerification);
+      setShowPhoneVerificationModal(true);
       
-      // Auto-close modal and navigate after 2 seconds
-      setTimeout(() => {
-        setShowSuccessModal(false);
-        navigate('/employee-login', { state: { message: 'Registration successful! Please log in.' } });
-      }, 2000);
     } catch (error) {
       setErrors({ api: error.message });
     } finally {
@@ -199,7 +212,7 @@ const EmployeeRegistration = () => {
 
         <div className="bg-white rounded-[32px] shadow-2xl shadow-indigo-100/50 overflow-hidden border border-slate-100">
           <div className="grid md:grid-cols-12 gap-0">
-            {/* LEFT COLUMN - Branded Sidebar (unchanged) */}
+            {/* LEFT COLUMN - Branded Sidebar */}
             <div className="md:col-span-5 bg-[#F1F4FF] p-10 lg:p-12 border-r border-slate-100">
               <div className="flex items-center gap-2 mb-10">
                 <div className="bg-indigo-600 p-1.5 rounded-lg text-white">
@@ -244,7 +257,6 @@ const EmployeeRegistration = () => {
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Name, Phone, Email, Location, Qualification fields (unchanged) */}
                 <div className="grid sm:grid-cols-2 gap-6">
                   <div className="space-y-1.5">
                     <label className="text-sm font-semibold text-slate-700 ml-1">Full Name *</label>
@@ -294,7 +306,7 @@ const EmployeeRegistration = () => {
                   {errors.highestQualification && <p className="text-red-500 text-xs">{errors.highestQualification}</p>}
                 </div>
 
-                {/* ===== JOB TYPES SECTION (with chips) ===== */}
+                {/* Job Types Section */}
                 <div className="space-y-3">
                   <label className="block text-sm font-medium text-slate-700 mb-2">Job Types Looking For *</label>
                   <div className="flex flex-wrap gap-2 mb-2">
@@ -356,7 +368,7 @@ const EmployeeRegistration = () => {
                   {errors.jobTypes && <p className="text-red-500 text-xs mt-1">{errors.jobTypes}</p>}
                 </div>
 
-                {/* ===== PREFERRED LANGUAGES SECTION (with chips) ===== */}
+                {/* Preferred Languages Section */}
                 <div className="space-y-3">
                   <label className="block text-sm font-medium text-slate-700 mb-2">Preferred Languages *</label>
                   <div className="flex flex-wrap gap-2 mb-2">
@@ -418,7 +430,7 @@ const EmployeeRegistration = () => {
                   {errors.preferredLanguages && <p className="text-red-500 text-xs mt-1">{errors.preferredLanguages}</p>}
                 </div>
 
-                {/* Passwords (unchanged) */}
+                {/* Passwords */}
                 <div className="grid sm:grid-cols-2 gap-6 pt-4 border-t border-slate-100">
                   <div className="space-y-1.5">
                     <label className="text-sm font-semibold text-slate-700 ml-1">Password *</label>
@@ -451,6 +463,14 @@ const EmployeeRegistration = () => {
         </div>
       </div>
 
+      {/* Phone Verification Modal */}
+      {showPhoneVerificationModal && registeredUser && (
+        <PhoneVerificationModal
+          user={registeredUser}
+          onVerified={handlePhoneVerified}
+        />
+      )}
+
       {/* Success Modal */}
       {showSuccessModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
@@ -460,7 +480,7 @@ const EmployeeRegistration = () => {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">Registration Successful!</h3>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">Registration & Verification Successful!</h3>
             <p className="text-gray-600 mb-6">{successMessage}</p>
             <div className="animate-pulse">
               <div className="w-8 h-8 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto"></div>

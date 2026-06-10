@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Send, CheckCircle, X } from 'lucide-react';
+import { Send, CheckCircle } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -10,7 +10,8 @@ const PhoneVerificationModal = ({ user, onVerified, onClose }) => {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
 
-  const phone = user?.phone;
+  // Extract phone number from user object (support both 'phone' and 'phoneNumber')
+  const phone = user?.phone || user?.phoneNumber;
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -21,6 +22,10 @@ const PhoneVerificationModal = ({ user, onVerified, onClose }) => {
   }, []);
 
   const handleSendOtp = async () => {
+    if (!phone) {
+      setError('Phone number is missing. Please contact support.');
+      return;
+    }
     setLoading(true);
     setError('');
     try {
@@ -42,6 +47,7 @@ const PhoneVerificationModal = ({ user, onVerified, onClose }) => {
 
   const handleVerifyOtp = async () => {
     if (!otp) return setError('Please enter OTP');
+    if (!phone) return setError('Phone number is missing');
     setLoading(true);
     setError('');
     try {
@@ -65,7 +71,6 @@ const PhoneVerificationModal = ({ user, onVerified, onClose }) => {
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[1000]" onClick={(e) => e.stopPropagation()}>
       <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl relative" onClick={(e) => e.stopPropagation()}>
-        {/* Optional close button if you want to allow closing – but requirement says cannot close until verified; we'll not include X for now */}
         <div className="text-center mb-4">
           <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mx-auto mb-3">
             <Send className="text-indigo-600" size={28} />
@@ -73,13 +78,13 @@ const PhoneVerificationModal = ({ user, onVerified, onClose }) => {
           <h2 className="text-2xl font-bold text-gray-900">Verify Your Phone</h2>
           <p className="text-gray-500 text-sm mt-1">
             Please verify your mobile number to continue:<br />
-            <strong className="text-indigo-600">{phone}</strong>
+            <strong className="text-indigo-600">{phone || 'Not provided'}</strong>
           </p>
           <p className="text-xs text-gray-400 mt-2">You cannot close this dialog until verification is complete.</p>
         </div>
 
         {step === 'send' ? (
-          <button onClick={handleSendOtp} disabled={loading}
+          <button onClick={handleSendOtp} disabled={loading || !phone}
             className="w-full bg-indigo-600 text-white font-semibold py-2.5 rounded-xl hover:bg-indigo-700 disabled:opacity-50 transition">
             {loading ? 'Sending...' : 'Send OTP'}
           </button>
