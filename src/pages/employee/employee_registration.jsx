@@ -5,7 +5,7 @@ import {
   Lock, Eye, EyeOff, ArrowLeft, Shield,
   Plus, X, Check, Briefcase, Award, Search, Users, Smartphone, Globe
 } from 'lucide-react';
-import PhoneVerificationModal from './PhoneVerificationModal';
+import EmployeePhoneVerificationModal from './EmployeePhoneVerificationModal';
 
 const EmployeeRegistration = () => {
   const navigate = useNavigate();
@@ -465,7 +465,7 @@ const EmployeeRegistration = () => {
 
       {/* Phone Verification Modal */}
       {showPhoneVerificationModal && registeredUser && (
-        <PhoneVerificationModal
+        <EmployeePhoneVerificationModal
           user={registeredUser}
           onVerified={handlePhoneVerified}
         />

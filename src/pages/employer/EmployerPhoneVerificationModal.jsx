@@ -3,15 +3,15 @@ import { Send, CheckCircle } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
-const PhoneVerificationModal = ({ user, onVerified, onClose }) => {
+const EmployerPhoneVerificationModal = ({ user, onVerified, onClose }) => {
   const [step, setStep] = useState('send');
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
 
-  // Extract phone number from user object (support both 'phone' and 'phoneNumber')
-  const phone = user?.phone || user?.phoneNumber;
+  // Phone can be under 'phone' or 'contactNumber'
+  const phone = user?.phone || user?.contactNumber;
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -29,7 +29,7 @@ const PhoneVerificationModal = ({ user, onVerified, onClose }) => {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch(`${API_BASE_URL}/api/auth/employee/send-phone-verification-otp`, {
+      const res = await fetch(`${API_BASE_URL}/api/auth/employer/send-phone-verification-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone }),
@@ -51,15 +51,14 @@ const PhoneVerificationModal = ({ user, onVerified, onClose }) => {
     setLoading(true);
     setError('');
     try {
-      const res = await fetch(`${API_BASE_URL}/api/auth/employee/verify-phone-otp`, {
+      const res = await fetch(`${API_BASE_URL}/api/auth/employer/verify-phone-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone, otp }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Verification failed');
-      // Merge the updated user data (phoneVerified: true)
-      const updatedUser = { ...user, phoneVerified: true };
+      const updatedUser = { ...user, ...data.user, phoneVerified: true };
       onVerified(updatedUser);
     } catch (err) {
       setError(err.message);
@@ -110,4 +109,4 @@ const PhoneVerificationModal = ({ user, onVerified, onClose }) => {
   );
 };
 
-export default PhoneVerificationModal;
+export default EmployerPhoneVerificationModal;

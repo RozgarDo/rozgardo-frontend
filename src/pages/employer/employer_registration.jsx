@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import EmployerPhoneVerificationModal from './EmployerPhoneVerificationModal';
 
 const EmployerRegistration = () => {
   const navigate = useNavigate();
@@ -9,6 +10,10 @@ const EmployerRegistration = () => {
   const [errors, setErrors] = useState({});
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+
+  // New states for phone verification
+  const [showPhoneVerificationModal, setShowPhoneVerificationModal] = useState(false);
+  const [registeredUser, setRegisteredUser] = useState(null);
 
   const [formData, setFormData] = useState({
     companyName: '',
@@ -43,6 +48,16 @@ const EmployerRegistration = () => {
     return newErrors;
   };
 
+  const handlePhoneVerified = (verifiedUser) => {
+    setShowPhoneVerificationModal(false);
+    setSuccessMessage('Registration and phone verification successful! Redirecting to login...');
+    setShowSuccessModal(true);
+    setTimeout(() => {
+      setShowSuccessModal(false);
+      navigate('/employer-login', { state: { message: 'Registration successful! Please log in.' } });
+    }, 2000);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const validationErrors = validateForm();
@@ -74,15 +89,18 @@ const EmployerRegistration = () => {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Registration failed');
 
-      // Show success modal instead of direct navigation
-      setSuccessMessage('Registration successful! Redirecting to login...');
-      setShowSuccessModal(true);
-      
-      // Auto-close modal and navigate after 2 seconds
-      setTimeout(() => {
-        setShowSuccessModal(false);
-        navigate('/employer-login', { state: { message: 'Registration successful! Please log in.' } });
-      }, 2000);
+      // Build user object for phone verification
+      const userForVerification = {
+        id: data.user?.id,
+        phone: formData.contactNumber,
+        contactNumber: formData.contactNumber,
+        phoneVerified: false,
+        name: `${formData.hrFirstName} ${formData.hrLastName}`,
+        companyName: formData.companyName,
+        role: 'employer'
+      };
+      setRegisteredUser(userForVerification);
+      setShowPhoneVerificationModal(true);
     } catch (error) {
       console.error('Fetch error:', error);
       setErrors({ api: error.message });
@@ -91,7 +109,7 @@ const EmployerRegistration = () => {
     }
   };
 
-  // ---------- Icons (same as original) ----------
+  // ---------- Icons (unchanged from original) ----------
   const Icon = ({ path, size = 18, className = "" }) => (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
       {path}
@@ -122,7 +140,7 @@ const EmployerRegistration = () => {
 
         <div className="bg-white rounded-[32px] shadow-2xl shadow-indigo-100/50 overflow-hidden border border-slate-100">
           <div className="grid md:grid-cols-12 gap-0">
-            {/* LEFT COLUMN - Branding */}
+            {/* LEFT COLUMN - Branding (unchanged) */}
             <div className="md:col-span-5 bg-[#F1F4FF] p-10 lg:p-12 border-r border-slate-100">
               <div className="flex items-center gap-2 mb-10">
                 <div className="bg-indigo-600 p-1.5 rounded-lg text-white"><Icon path={paths.shield} size={22} className="fill-current" /></div>
@@ -251,7 +269,7 @@ const EmployerRegistration = () => {
         </div>
       </div>
 
-      {/* Success Modal */}
+      {/* Success Modal (unchanged) */}
       {showSuccessModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 text-center transform transition-all scale-100">
@@ -267,6 +285,14 @@ const EmployerRegistration = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Phone Verification Modal */}
+      {showPhoneVerificationModal && registeredUser && (
+        <EmployerPhoneVerificationModal
+          user={registeredUser}
+          onVerified={handlePhoneVerified}
+        />
       )}
     </div>
   );
