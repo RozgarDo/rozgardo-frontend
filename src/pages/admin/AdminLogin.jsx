@@ -8,7 +8,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL;
 const AdminLogin = ({ onLogin, user }) => {
   const [loginId, setLoginId] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false); // ✅ new
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -52,7 +52,23 @@ const AdminLogin = ({ onLogin, user }) => {
         throw new Error(data.error || data.message || 'Login failed');
       }
 
+      // ✅ Store the JWT token in localStorage
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+        console.log('✅ Admin token stored');
+      } else {
+        console.warn('⚠️ No token received from backend');
+      }
+
+      // Store user info if needed (optional)
+      if (data.user) {
+        localStorage.setItem('admin_user', JSON.stringify(data.user));
+      }
+
+      // Call parent callback with user data
       if (onLogin) onLogin(data.user);
+      
+      // Navigate to admin dashboard
       navigate('/admin');
     } catch (err) {
       console.error('Admin login error:', err);

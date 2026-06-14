@@ -31,6 +31,15 @@ const AdminDashboard = ({ user }) => {
   // Refs for tab buttons (to scroll into view on mobile)
   const tabRefs = useRef({});
 
+  // ✅ Helper to get auth headers with token
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem('token');
+    return {
+      'Content-Type': 'application/json',
+      ...(token && { 'Authorization': `Bearer ${token}` })
+    };
+  };
+
   // Fetch all data once on mount
   useEffect(() => {
     fetchAllInitialData();
@@ -51,10 +60,11 @@ const AdminDashboard = ({ user }) => {
   const fetchAllInitialData = async () => {
     setLoading(true);
     try {
+      const headers = getAuthHeaders();
       const [jobsRes, empRes, employerRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/api/jobs`),
-        fetch(`${API_BASE_URL}/api/auth/admin/all-employees`),
-        fetch(`${API_BASE_URL}/api/auth/admin/all-employers`)
+        fetch(`${API_BASE_URL}/api/jobs`, { headers }),
+        fetch(`${API_BASE_URL}/api/auth/admin/all-employees`, { headers }),
+        fetch(`${API_BASE_URL}/api/auth/admin/all-employers`, { headers })
       ]);
 
       let jobsData = [];
@@ -74,7 +84,7 @@ const AdminDashboard = ({ user }) => {
 
       for (const job of jobsData) {
         try {
-          const appsRes = await fetch(`${API_BASE_URL}/api/applications/job/${job.id}`);
+          const appsRes = await fetch(`${API_BASE_URL}/api/applications/job/${job.id}`, { headers });
           if (appsRes.ok) {
             const jobApps = await appsRes.json();
             appsByJob[job.id] = jobApps;
@@ -99,9 +109,10 @@ const AdminDashboard = ({ user }) => {
 
   const refreshUsers = async () => {
     try {
+      const headers = getAuthHeaders();
       const [empRes, employerRes] = await Promise.all([
-        fetch(`${API_BASE_URL}/api/auth/admin/all-employees`),
-        fetch(`${API_BASE_URL}/api/auth/admin/all-employers`)
+        fetch(`${API_BASE_URL}/api/auth/admin/all-employees`, { headers }),
+        fetch(`${API_BASE_URL}/api/auth/admin/all-employers`, { headers })
       ]);
       if (empRes.ok) setEmployees(await empRes.json());
       if (employerRes.ok) setEmployers(await employerRes.json());
@@ -114,7 +125,8 @@ const AdminDashboard = ({ user }) => {
     if (applicantsMap[jobId]) return;
     setLoadingApplicants(prev => ({ ...prev, [jobId]: true }));
     try {
-      const res = await fetch(`${API_BASE_URL}/api/applications/job/${jobId}`);
+      const headers = getAuthHeaders();
+      const res = await fetch(`${API_BASE_URL}/api/applications/job/${jobId}`, { headers });
       if (res.ok) {
         const data = await res.json();
         setApplicantsMap(prev => ({ ...prev, [jobId]: data }));
@@ -132,16 +144,23 @@ const AdminDashboard = ({ user }) => {
 
   const handleJobAction = async (id, status) => {
     try {
+      const headers = getAuthHeaders();
       const res = await fetch(`${API_BASE_URL}/api/jobs/${id}/status`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ status })
       });
       if (res.ok) {
-        setJobs(jobs.map(job => job.id === id ? { ...job, status } : job));
+        const updated = await res.json();
+        setJobs(jobs.map(job => job.id === id ? updated.job : job));
+        alert(`✅ Job ${status} successfully!`);
+      } else {
+        const error = await res.json();
+        alert(`❌ Error: ${error.error || 'Failed to update job status'}`);
       }
     } catch (err) {
       console.error(err);
+      alert('Network error while updating job status');
     }
   };
 
@@ -387,7 +406,6 @@ const AdminDashboard = ({ user }) => {
       {/* Responsive tab bar with scroll-into-view on selection */}
       <div className="flex overflow-x-auto sm:overflow-visible gap-2 mb-4 sm:mb-8 pb-2 sm:pb-4 border-b border-gray-200 hide-scrollbar">
         {['jobs', 'users', 'reports'].map(tab => (
-        // {['jobs', 'users', 'analytics', 'reports'].map(tab => (
           <button
             key={tab}
             ref={(el) => (tabRefs.current[tab] = el)}
@@ -399,7 +417,6 @@ const AdminDashboard = ({ user }) => {
           >
             {tab === 'jobs' && <Briefcase size={16} />}
             {tab === 'users' && <Users size={16} />}
-            {/* {tab === 'analytics' && <TrendingUp size={16} />} */}
             {tab === 'reports' && <FileText size={16} />}
             <span>{tab.charAt(0).toUpperCase() + tab.slice(1)}</span>
           </button>
@@ -431,11 +448,6 @@ const AdminDashboard = ({ user }) => {
             />
           </div>
         )}
-
-        {/* {activeTab === 'analytics' && (
-        <Analytics monthlyData={monthlyData} employerStats={employerStats} exportMonthlyAnalytics={exportMonthlyAnalytics} exportEmployerStats={exportEmployerStats} />
-      )} */}
-
 
         {activeTab === 'reports' && (
           <div className="w-full">
