@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ReactDOM from 'react-dom';
 import { ShieldCheck, UserPlus, Phone, Lock, Mail, Building2, X, KeyRound, RefreshCw, Loader2, AlertCircle, Eye, EyeOff } from 'lucide-react';
-import PhoneVerificationModal from './PhoneVerificationModal';
+import EmployeePhoneVerificationModal from './EmployeePhoneVerificationModal';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -602,7 +602,7 @@ const EmployeeLogin = ({ onLogin }) => {
       )}
 
       {showPhoneVerificationModal && pendingUser && ReactDOM.createPortal(
-        <PhoneVerificationModal
+        <EmployeePhoneVerificationModal
           user={pendingUser}
           onVerified={handlePhoneVerified}
         />,

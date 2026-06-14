@@ -2,38 +2,36 @@ import React, { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { ShieldCheck, UserPlus, Phone, Lock, Mail, Building2, X, KeyRound, RefreshCw, Loader2, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import EmployerPhoneVerificationModal from './EmployerPhoneVerificationModal';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const EmployerLogin = ({ onLogin }) => {
   const [loginId, setLoginId] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false); // ✅ new
+  const [showPassword, setShowPassword] = useState(false);
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const otpRefs = useRef([]);
   
   const [authMethod, setAuthMethod] = useState('otp');
   const [otpSent, setOtpSent] = useState(false);
   
-  // Forgot password states
   const [forgotPasswordMode, setForgotPasswordMode] = useState(false);
   const [resetStep, setResetStep] = useState('phone');
   const [resetPhone, setResetPhone] = useState('');
   const [resetOtp, setResetOtp] = useState(['', '', '', '', '', '']);
   const [resetNewPassword, setResetNewPassword] = useState('');
   const [resetConfirmPassword, setResetConfirmPassword] = useState('');
-  const [showNewPassword, setShowNewPassword] = useState(false);   // ✅ new
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false); // ✅ new
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [resetMessage, setResetMessage] = useState({ type: '', text: '' });
   const [resetLoading, setResetLoading] = useState(false);
   const [resetTimeLeft, setResetTimeLeft] = useState(0);
   
-  // Reactivation modal states (deactivated)
   const [reactivationModalOpen, setReactivationModalOpen] = useState(false);
   const [reactivationLoading, setReactivationLoading] = useState(false);
   const [pendingCredentials, setPendingCredentials] = useState(null);
   
-  // Suspended modal
   const [suspendedModalOpen, setSuspendedModalOpen] = useState(false);
   
   const [error, setError] = useState('');
@@ -42,6 +40,10 @@ const EmployerLogin = ({ onLogin }) => {
   
   const [signupModalOpen, setSignupModalOpen] = useState(false);
   const modalRef = useRef(null);
+  
+  // Phone verification states
+  const [showPhoneVerificationModal, setShowPhoneVerificationModal] = useState(false);
+  const [pendingUser, setPendingUser] = useState(null);
   
   const navigate = useNavigate();
 
@@ -70,13 +72,27 @@ const EmployerLogin = ({ onLogin }) => {
   }, [signupModalOpen]);
 
   const routeUser = (user) => {
+    // Check if phone is verified
+    if (!user.phoneVerified) {
+      setPendingUser(user);
+      setShowPhoneVerificationModal(true);
+      return;
+    }
     if (onLogin) onLogin(user);
     if (user.role === 'admin') navigate('/admin');
     else if (user.role === 'employer') navigate('/employer');
     else navigate(user.name ? '/' : '/profile-setup');
   };
 
-  // Send OTP – now checks suspended/deactivated BEFORE sending
+  const handlePhoneVerified = (updatedUser) => {
+    setShowPhoneVerificationModal(false);
+    if (onLogin) onLogin(updatedUser);
+    if (updatedUser.role === 'admin') navigate('/admin');
+    else if (updatedUser.role === 'employer') navigate('/employer');
+    else navigate(updatedUser.name ? '/' : '/profile-setup');
+  };
+
+  // Send OTP
   const handleSendOtp = async () => {
     setError('');
     setMessage('');
@@ -114,7 +130,7 @@ const EmployerLogin = ({ onLogin }) => {
     }
   };
 
-  // Password login (with status checks)
+  // Password login
   const handlePasswordLogin = async () => {
     setError('');
     setMessage('');
@@ -151,7 +167,7 @@ const EmployerLogin = ({ onLogin }) => {
     }
   };
 
-  // OTP login (with status checks)
+  // OTP login
   const handleOtpLogin = async () => {
     setError('');
     setMessage('');
@@ -181,7 +197,6 @@ const EmployerLogin = ({ onLogin }) => {
     }
   };
 
-  // Reactivate account (deactivated only)
   const handleReactivateAccount = async () => {
     setReactivationLoading(true);
     try {
@@ -232,7 +247,6 @@ const EmployerLogin = ({ onLogin }) => {
     }
   };
 
-  // OTP input handlers
   const handleOtpChange = (index, value) => {
     if (isNaN(value)) return;
     const newOtp = [...otp];
@@ -253,7 +267,7 @@ const EmployerLogin = ({ onLogin }) => {
     else navigate('/employer-registration');
   };
 
-  // ----- Forgot Password Flow (with show/hide toggles) -----
+  // Forgot Password Flow
   const resetOtpRefs = useRef([]);
 
   const handleResetSendOtp = async () => {
@@ -374,7 +388,6 @@ const EmployerLogin = ({ onLogin }) => {
     setMessage('');
   };
 
-  // Forgot Password UI (with eye toggles)
   const renderForgotPassword = () => (
     <div className="w-full max-w-[400px] bg-white rounded-2xl py-6 px-8 shadow-[0_8px_30px_-10px_rgba(0,0,0,0.08)] border border-white/50 animate-[fadeIn_0.4s_ease-out]">
       <div className="text-center mb-6">
@@ -442,7 +455,6 @@ const EmployerLogin = ({ onLogin }) => {
     </div>
   );
 
-  // Normal login UI (with password toggle)
   const renderLogin = () => (
     <div className="w-full max-w-[400px] bg-white rounded-2xl py-6 px-8 shadow-[0_8px_30px_-10px_rgba(0,0,0,0.08)] border border-white/50 flex flex-col gap-5 animate-[fadeIn_0.4s_ease-out]">
       <div className="text-center">
@@ -601,7 +613,7 @@ const EmployerLogin = ({ onLogin }) => {
       <style>{`@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } } @keyframes modalFadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }`}</style>
       {forgotPasswordMode ? renderForgotPassword() : renderLogin()}
 
-      {/* Signup Modal (unchanged) */}
+      {/* Signup Modal */}
       {signupModalOpen && ReactDOM.createPortal(
         <>
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40" />
@@ -648,7 +660,7 @@ const EmployerLogin = ({ onLogin }) => {
         document.body
       )}
 
-      {/* Reactivation Modal (deactivated) */}
+      {/* Reactivation Modal */}
       {reactivationModalOpen && ReactDOM.createPortal(
         <>
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40" />
@@ -696,6 +708,14 @@ const EmployerLogin = ({ onLogin }) => {
           </div>
         </>,
         document.body
+      )}
+
+      {/* Phone Verification Modal */}
+      {showPhoneVerificationModal && pendingUser && (
+        <EmployerPhoneVerificationModal
+          user={pendingUser}
+          onVerified={handlePhoneVerified}
+        />
       )}
     </div>
   );
