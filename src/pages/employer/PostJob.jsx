@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Card from '../../components/Card';
 import Input from '../../components/Input';
 import Button from '../../components/Button';
-// import { API_BASE_URL } from '../../config';
+
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const PostJob = ({ user }) => {
@@ -13,11 +13,12 @@ const PostJob = ({ user }) => {
     salary: '',
     location: '',
     description: '',
-    job_type: 'Full-time',        // <-- NEW: job type with default
+    job_type: 'Full-time',
     required_experience: '',
     education: '',
     technical_skills: '',
-    vacancies: ''
+    vacancies: '',
+    apply_deadline: ''        // <-- NEW: last date to apply
   });
   const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
@@ -90,7 +91,6 @@ const PostJob = ({ user }) => {
                 </select>
              </div>
 
-             {/* NEW: Job Type selection */}
              <div>
                 <label className="text-sm font-medium text-gray-800 mb-1 block">Job Type</label>
                 <select 
@@ -118,7 +118,6 @@ const PostJob = ({ user }) => {
                 />
              </div>
 
-             {/* --- New Fields Section --- */}
              <div>
                 <label className="text-sm font-medium text-gray-800 mb-1 block">Required Experience</label>
                 <textarea 
@@ -161,6 +160,25 @@ const PostJob = ({ user }) => {
                value={formData.vacancies}
                onChange={handleChange}
              />
+
+             {/* NEW: Application Deadline Date Picker */}
+             <div>
+                <label className="text-sm font-medium text-gray-800 mb-1 block">
+                   Last Date to Apply <span className="text-muted text-xs">(optional)</span>
+                </label>
+                <input
+                   type="date"
+                   name="apply_deadline"
+                   className="w-full p-2.5 rounded-md border border-gray-300 outline-none focus:border-primary bg-white"
+                   value={formData.apply_deadline}
+                   onChange={handleChange}
+                   min={new Date().toISOString().split('T')[0]}  // prevent past dates
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                   After this date, the job will no longer appear to candidates.
+                   You can later extend the deadline or reactivate the job from your dashboard.
+                </p>
+             </div>
 
              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                  <Input 

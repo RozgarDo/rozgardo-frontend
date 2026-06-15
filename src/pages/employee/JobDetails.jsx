@@ -3,10 +3,9 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { 
   ArrowLeft, MapPin, IndianRupee, Briefcase, 
   CheckCircle, Clock, ShieldCheck, 
-  Share2, Bookmark, BookmarkCheck, Star, 
-  BriefcaseBusiness, Info,
-  AlertCircle, LayoutGrid, Award, GraduationCap,
-  Users, TrendingUp, DollarSign
+  Share2, Bookmark, Star, 
+  Info, AlertCircle, LayoutGrid, Award, GraduationCap,
+  Users, TrendingUp, DollarSign, Calendar
 } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
@@ -18,8 +17,6 @@ const JobDetails = ({ user }) => {
   const [loading, setLoading] = useState(true);
   const [applying, setApplying] = useState(false);
   const [applied, setApplied] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);
-  
   const [employerInfo, setEmployerInfo] = useState(null);
 
   useEffect(() => {
@@ -39,7 +36,7 @@ const JobDetails = ({ user }) => {
       }
     } catch (err) {
       console.error(err);
-      // Fallback mock data
+      // Fallback mock data (optional)
       const mockJob = { 
         id: id, 
         title: 'Experienced Logistics Driver', 
@@ -55,7 +52,9 @@ const JobDetails = ({ user }) => {
         education: '10th Pass',
         technical_skills: 'Heavy Vehicle License, GPS, Mumbai Routes',
         vacancies: 5,
-        employer_id: 'sample-employer'
+        employer_id: 'sample-employer',
+        apply_deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        jobs_serial_number: 'RZD-26001A'   // mock serial
       };
       setJob(mockJob);
       fetchExtraContent(mockJob);
@@ -92,7 +91,6 @@ const JobDetails = ({ user }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ job_id: job.id, employee_id: user?.id })
       });
-      
       if (res.ok) {
         setApplied(true);
       } else {
@@ -106,6 +104,20 @@ const JobDetails = ({ user }) => {
       setApplying(false);
     }
   };
+
+  const isDeadlinePassed = () => {
+    if (!job?.apply_deadline) return false;
+    const today = new Date().toISOString().split('T')[0];
+    return job.apply_deadline < today;
+  };
+
+  const formatDeadline = (dateStr) => {
+    if (!dateStr) return null;
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+  };
+
+  const isJobExpired = isDeadlinePassed();
 
   if (loading) return (
     <div className="flex items-center justify-center min-h-[60vh]">
@@ -122,8 +134,6 @@ const JobDetails = ({ user }) => {
   );
 
   const postedText = job.created_at ? `${Math.floor((new Date() - new Date(job.created_at)) / (1000 * 60 * 60 * 24))} days ago` : 'Recently';
-
-  // Map backend fields to display values
   const experienceValue = job.required_experience || job.experience || 'Not specified';
   const educationValue = job.education || 'Not specified';
   const skillsValue = job.technical_skills || job.skills || 'Not specified';
@@ -133,35 +143,26 @@ const JobDetails = ({ user }) => {
 
   return (
     <div className="bg-gray-50 min-h-screen pb-20">
-      {/* Slim Header */}
+      {/* Header with back button */}
       <div className="bg-white border-b border-gray-100 py-3">
         <div className="max-w-6xl mx-auto px-4 lg:px-6">
-           <button
-                onClick={() => navigate('/all-jobs')}
-                style={{
-                  display: 'inline-flex', alignItems: 'center', gap: '0.375rem',
-                  background: 'none', border: 'none', cursor: 'pointer',
-                  color: '#4F46E5', fontWeight: 600, fontSize: '0.875rem',
-                  marginBottom: '1rem', padding: 0,
-                }}
-              >
-                <ArrowLeft size={16} /> Back to All Jobs
-              </button>
+          <button
+            onClick={() => navigate('/all-jobs')}
+            className="inline-flex items-center gap-1.5 bg-none border-0 cursor-pointer text-indigo-600 font-semibold text-sm mb-4 p-0"
+          >
+            <ArrowLeft size={16} /> Back to All Jobs
+          </button>
         </div>
       </div>
-
-     
 
       <div className="max-w-6xl mx-auto px-4 lg:px-6 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-8">
           
           {/* LEFT COLUMN */}
           <div className="space-y-8">
-            {/* Main Header */}
             <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-4">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-indigo-50 text-indigo-700">{job.category}</span>
-
                 <span className="text-[10px] font-bold text-gray-400">Posted {postedText}</span>
               </div>
               <h1 className="text-2xl lg:text-3xl font-black text-gray-900 leading-tight">{job.title}</h1>
@@ -179,8 +180,8 @@ const JobDetails = ({ user }) => {
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <button className="p-2.5 rounded-lg bg-gray-50 text-gray-400 hover:text-indigo-600 transition-colors"><Bookmark size={18} /></button>
-                  <button className="p-2.5 rounded-lg bg-gray-50 text-gray-400 hover:text-indigo-600 transition-colors"><Share2 size={18} /></button>
+                  <button className="p-2.5 rounded-lg bg-gray-50 text-gray-400 hover:text-indigo-600"><Bookmark size={18} /></button>
+                  <button className="p-2.5 rounded-lg bg-gray-50 text-gray-400 hover:text-indigo-600"><Share2 size={18} /></button>
                 </div>
               </div>
             </div>
@@ -189,9 +190,7 @@ const JobDetails = ({ user }) => {
             <div className="space-y-4">
               <SectionHeader icon={<Info size={16} />} title="Job Description" />
               <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                <div className="text-sm text-gray-600 leading-relaxed whitespace-pre-line prose prose-indigo max-w-none">
-                  {job.description}
-                </div>
+                <div className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">{job.description}</div>
               </div>
             </div>
 
@@ -249,9 +248,37 @@ const JobDetails = ({ user }) => {
                 <p className="text-xl font-black text-amber-800">{vacanciesCount}</p>
               </div>
 
+              {/* NEW: Job Serial Number (Job ID) */}
+              {job.jobs_serial_number && (
+                <div className="text-center bg-gray-50 rounded-lg p-3 border border-gray-200">
+                  <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Job ID</p>
+                  <p className="text-sm font-mono font-bold text-gray-800 mt-1">{job.jobs_serial_number}</p>
+                </div>
+              )}
+
+              {/* Deadline */}
+              {job.apply_deadline && (
+                <div className={`text-center rounded-lg p-3 border ${isJobExpired ? 'bg-red-50 border-red-200' : 'bg-blue-50 border-blue-100'}`}>
+                  <p className="text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-1">
+                    <Calendar size={12} /> 
+                    <span className={isJobExpired ? 'text-red-700' : 'text-blue-700'}>
+                      {isJobExpired ? 'Application Closed' : 'Last Date to Apply'}
+                    </span>
+                  </p>
+                  <p className={`text-sm font-black mt-1 ${isJobExpired ? 'text-red-800' : 'text-blue-800'}`}>
+                    {formatDeadline(job.apply_deadline)}
+                  </p>
+                </div>
+              )}
+
+              {/* Apply Button */}
               {applied ? (
                 <div className="w-full py-4 bg-green-50 text-green-700 font-bold rounded-xl flex items-center justify-center gap-2 border border-green-100">
                   <CheckCircle size={20} /> Application Sent
+                </div>
+              ) : isJobExpired ? (
+                <div className="w-full py-4 bg-gray-100 text-gray-500 font-bold rounded-xl flex items-center justify-center gap-2 border border-gray-200 cursor-not-allowed">
+                  <AlertCircle size={20} /> Applications Closed
                 </div>
               ) : (
                 <button 
@@ -285,7 +312,7 @@ const JobDetails = ({ user }) => {
   );
 };
 
-// Helper Components
+// Helper Components (same as before)
 const SectionHeader = ({ icon, title }) => (
   <h2 className="text-base font-black text-gray-800 uppercase tracking-widest flex items-center gap-2">
     <div className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg">{icon}</div>
@@ -301,8 +328,8 @@ const BenefitItem = ({ icon, text }) => (
 );
 
 const RequirementItem = ({ icon, title, value }) => (
-  <div className="p-5 rounded-xl border border-gray-100 bg-white shadow-sm flex flex-col gap-2 group hover:bg-indigo-50/50 hover:border-indigo-200 hover:shadow-md transition-all duration-200">
-    <div className="text-indigo-600 group-hover:text-indigo-700 transition-colors">{icon}</div>
+  <div className="p-5 rounded-xl border border-gray-100 bg-white shadow-sm flex flex-col gap-2 group hover:bg-indigo-50/50 hover:border-indigo-200 hover:shadow-md transition-all">
+    <div className="text-indigo-600 group-hover:text-indigo-700">{icon}</div>
     <div>
       <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">{title}</p>
       <p className="text-sm font-black text-gray-900 leading-tight">{value || 'N/A'}</p>
