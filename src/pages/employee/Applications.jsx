@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import Card from '../../components/Card';
-import { IndianRupee, MapPin, X, Briefcase, Calendar, Clock, AlertCircle, CheckCircle, Users, UserCheck } from 'lucide-react';
+import { IndianRupee, MapPin, X, Briefcase, Calendar, Clock, AlertCircle, CheckCircle, Users, UserCheck, Hash } from 'lucide-react';
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const Applications = ({ user }) => {
@@ -46,10 +46,8 @@ const Applications = ({ user }) => {
 
   const withdrawApplication = async () => {
     if (!selectedApp || withdrawing) return;
-
     const confirmWithdraw = window.confirm('Are you sure you want to withdraw this application? This action cannot be undone.');
     if (!confirmWithdraw) return;
-
     setWithdrawing(true);
     try {
       const res = await fetch(`${API_BASE_URL}/api/applications/${selectedApp.id}`, {
@@ -57,11 +55,8 @@ const Applications = ({ user }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ employee_id: user.id })
       });
-
       if (res.ok) {
-        // Refresh the applications list
         await fetchApplications();
-        // Close the drawer
         closeDrawer();
         alert('Application withdrawn successfully.');
       } else {
@@ -205,8 +200,13 @@ const Applications = ({ user }) => {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '1rem', flexWrap: 'wrap' }}>
                     <div style={{ flex: 1 }}>
                       <h3 style={{ fontSize: '1.125rem', fontWeight: 700, marginBottom: '0.25rem' }}>{app.jobs?.title}</h3>
-                      <p style={{ fontSize: '0.875rem', fontWeight: 500, color: '#4B5563', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                      <p style={{ fontSize: '0.875rem', fontWeight: 500, color: '#4B5563', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.375rem', flexWrap: 'wrap' }}>
                         <Briefcase size={14} /> {app.jobs?.employer_name}
+                        {app.jobs?.jobs_serial_number && (
+                          <span style={{ fontFamily: 'monospace', fontSize: '0.6rem', background: '#F3F4F6', padding: '0.125rem 0.5rem', borderRadius: '0.375rem', color: '#4B5563', fontWeight: 700, marginLeft: '0.25rem' }}>
+                            <Hash size={10} style={{ display: 'inline', verticalAlign: 'middle' }} /> {app.jobs.jobs_serial_number}
+                          </span>
+                        )}
                       </p>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', fontSize: '0.75rem', color: '#6B7280', fontWeight: 500, flexWrap: 'wrap' }}>
                         <span style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}><MapPin size={14} /> {app.jobs?.location}</span>
@@ -273,8 +273,13 @@ const Applications = ({ user }) => {
                 gap: '1rem',
               }}>
                 <div>
-                  <div style={{ fontSize: '0.625rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#4338CA', background: '#EEF2FF', padding: '0.25rem 0.5rem', borderRadius: '0.375rem', display: 'inline-block', marginBottom: '0.75rem' }}>
-                    {selectedApp.jobs?.category || 'Active Job'}
+                  <div style={{ fontSize: '0.625rem', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', color: '#4338CA', background: '#EEF2FF', padding: '0.25rem 0.5rem', borderRadius: '0.375rem', display: 'inline-flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                    <span>{selectedApp.jobs?.category || 'Active Job'}</span>
+                    {selectedApp.jobs?.jobs_serial_number && (
+                      <span style={{ fontFamily: 'monospace', background: '#F3F4F6', color: '#374151', padding: '0.125rem 0.5rem', borderRadius: '0.375rem', fontSize: '0.6rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }}>
+                        <Hash size={10} /> {selectedApp.jobs.jobs_serial_number}
+                      </span>
+                    )}
                   </div>
                   <h2 style={{ fontSize: '1.375rem', fontWeight: 800, color: '#0F172A', lineHeight: 1.3, marginBottom: '0.5rem' }}>{selectedApp.jobs?.title}</h2>
                   <p style={{ color: '#64748B', fontWeight: 500, fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
@@ -339,7 +344,6 @@ const Applications = ({ user }) => {
                     {selectedApp.jobs?.description || `We are actively hiring a reliable ${selectedApp.jobs?.title} to join ${selectedApp.jobs?.employer_name}. Immediate joiners preferred. Location: ${selectedApp.jobs?.location}.`}
                   </p>
                   
-                  {/* Show requirements from job object if available */}
                   {(selectedApp.jobs?.required_experience || selectedApp.jobs?.education || selectedApp.jobs?.technical_skills) && (
                     <>
                       <h4 style={{ fontWeight: 700, color: '#1E293B', fontSize: '0.875rem', marginBottom: '0.75rem' }}>Requirements:</h4>
@@ -353,7 +357,7 @@ const Applications = ({ user }) => {
                 </div>
               </div>
 
-              {/* Footer - Only Withdraw Button */}
+              {/* Footer */}
               <div style={{
                 padding: '1.25rem 1.5rem',
                 borderTop: '1px solid #F1F5F9',
