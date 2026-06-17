@@ -1,30 +1,14 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Shield, Briefcase, Users, Zap, IndianRupee, ArrowRight, Star } from 'lucide-react';
-import handshakeImg from '../assets/handshake.png';
+import handshakeImg from '../../assets/handshake.png';
 
-import TrustedEmployers from './legal/TrustedEmployeers';
+import TrustedEmployers from './TrustedEmployeers';
 
 
 
 const Landing = ({ user }) => {
   const navigate = useNavigate();
-
-  // const handleFindJobs = () => {
-  //   if (user) {
-  //     navigate(user.role === 'employee' ? '/all-jobs' : '/jobs');
-  //   } else {
-  //     navigate('/login');
-  //   }
-  // };
-
-  // const handlePostJob = () => {
-  //   if (user) {
-  //     navigate(user.role === 'employer' ? '/post-job' : '/become-employer');
-  //   } else {
-  //     navigate('/login');
-  //   }
-  // };
 
 const handleFindJobs = () => {
   navigate('/employee-registration');

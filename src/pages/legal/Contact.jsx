@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Mail, Phone, MapPin, Clock, Send, CheckCircle2, ChevronDown, Users } from 'lucide-react';
-import laptopImg from '../assets/laptop.jpeg';
+import laptopImg from '../../assets/laptop.jpeg';
 
 const Contact = () => {
   const [formData, setFormData] = useState({

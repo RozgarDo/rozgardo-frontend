@@ -1,33 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
-import Login from './pages/Login';
+
 import EmployeeHome from './pages/employee/Home';
-import Profile from './pages/Profile';
+
 import JobDetails from './pages/employee/JobDetails';
 import Applications from './pages/employee/Applications';
 import AllJobs from './pages/employee/AllJobs';
 import EmployerDashboard from './pages/employer/Dashboard';
 import PostJob from './pages/employer/PostJob';
 import AdminDashboard from './pages/admin/Dashboard';
-import Landing from './pages/Landing';
-import Settings from './pages/Settings';
+import Landing from './pages/legal/Landing';
+
 import Onboarding from './pages/onboarding/Onboarding';
 import Registration from './pages/registration/Registration';
 import ScrollToTop from './components/ScrollToTop';
 import Footer from './components/Footer';
 import TermsOfService from './pages/legal/TermsOfService';
 import PrivacyPolicy from './pages/legal/PrivacyPolicy';
-import Contact from './pages/Contact';
+import Contact from './pages/legal/Contact';
 import EmployeeRegistration from './pages/employee/employee_registration';
 import EmployerRegistration from './pages/employer/employer_registration';
 
 import EmployeeLogin from './pages/employee/employee_login';
 import EmployerLogin from './pages/employer/employer_login';
+import AdminLogin from './pages/admin/AdminLogin';
 
 import TrustedEmployers from './pages/legal/TrustedEmployeers';
 
-import AdminLogin from './pages/admin/AdminLogin';
 
 import EmployeeProfile from './pages/employee/EmployeeProfile';
 import EmployerProfile from './pages/employer/EmployerProfile';
@@ -36,19 +36,31 @@ import ConnectEmployees from './pages/employer/ConnectEmployees';
 
 import EmployeeSettings from './pages/employee/EmployeeSettings';
 import EmployerSettings from './pages/employer/EmployerSettings';
+import AdminSettings from './pages/admin/AdminSettings';
+
+const PrivateRoute = ({ children, user, requiredRole }) => {
+  // if (!user) {
+  //   return <Navigate to="/login" replace />;
+  // }
+  if (requiredRole && user.role !== requiredRole) {
+    return <Navigate to="/" replace />;
+  }
+  return children;
+};
+
+
 
 function AppContent({ user, setUser, handleLogin, handleLogout }) {
   const location = useLocation();
-  const hideNavbar = location.pathname === '/login';////////////////////////Check
+  // const hideNavbar = location.pathname === '/login';////////////////////////Check
 
   return (
     <div className="flex flex-col min-h-screen">
-      {/* Navbar – sticky at top while scrolling, no layout shift */}
-      {!hideNavbar && (
+      {/* {!hideNavbar && ( */}
         <div className="sticky top-0 z-20">
           <Navbar user={user} onLogout={handleLogout} />
         </div>
-      )}
+      {/* )} */}
 
       {/* Main content – grows to push footer down */}
       <main className="flex-1">
@@ -69,7 +81,6 @@ function AppContent({ user, setUser, handleLogin, handleLogout }) {
           />
           <Route path="/terms" element={<TermsOfService />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
-          {/* <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login onLogin={handleLogin} />} /> */}
           <Route path="/register" element={<Registration />} />
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/employee-registration" element={<EmployeeRegistration />} />
@@ -77,20 +88,20 @@ function AppContent({ user, setUser, handleLogin, handleLogout }) {
           <Route path="/employee-profile" element={<EmployeeProfile user={user} setUser={setUser} />} />
           <Route path="/employer-profile" element={<EmployerProfile user={user} setUser={setUser} />} />
 
-<Route
-  path="/employer/connect-employees"
-  element={
-    user === undefined ? (
-      <div className="flex justify-center items-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
-      </div>
-    ) : user?.role === 'employer' ? (
-      <ConnectEmployees user={user} />
-    ) : (
-      <Navigate to="/employer-login" replace />
-    )
-  }
-/>
+          <Route
+            path="/employer/connect-employees"
+            element={
+              user === undefined ? (
+                <div className="flex justify-center items-center min-h-[60vh]">
+                  <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
+                </div>
+              ) : user?.role === 'employer' ? (
+                <ConnectEmployees user={user} />
+              ) : (
+                <Navigate to="/employer-login" replace />
+              )
+            }
+          />
           
 
           
@@ -100,20 +111,15 @@ function AppContent({ user, setUser, handleLogin, handleLogout }) {
 
           <Route path="/trusted-employers" element={<TrustedEmployers />} />
 
-          <Route path="/home" element={user?.role === 'employee' ? <EmployeeHome user={user} /> : <Navigate to="/login" />} />
           <Route path="/jobs/:id" element={<JobDetails user={user} />} />
           <Route path="/applications" element={<Applications user={user} />} />
           <Route path="/all-jobs" element={<AllJobs user={user} />} />
           <Route path="/contact" element={<Contact />} />
-          <Route path="/profile" element={<Profile user={user} setUser={handleLogin} />} />
-          <Route path="/profile-setup" element={<Profile user={user} setUser={handleLogin} />} />
-          <Route path="/settings" element={<Settings user={user} />} />
 
           <Route path="/employer" element={user?.role === 'employer' ? <EmployerDashboard user={user} /> : <Navigate to="/employer-login" />} />
-          <Route path="/employer/post-job" element={user?.role === 'employer' ? <PostJob user={user} /> : <Navigate to="/login" />} /> //////////////////////check
-          {/* <Route path="/admin" element={user?.role === 'admin' ? <AdminDashboard user={user} /> : <Navigate to="/login" />} /> */}
-          {/* <Route path="/admin/login" element={<AdminLogin onLogin={handleLogin} />} /> */}
 
+          <Route path="/employer/post-job" element={user?.role === 'employer' ? <PostJob user={user} /> : <Navigate to="/" />} /> {/*//check */}
+          
           <Route path="/admin/login"  element={<AdminLogin onLogin={handleLogin} user={user} />} />
 
           <Route
@@ -127,56 +133,40 @@ function AppContent({ user, setUser, handleLogin, handleLogout }) {
             }
           />
 
-
           <Route path="*" element={<Navigate to="/onboarding" replace />} />
 
-
-{/* 
           <Route
             path="/employee-settings"
             element={
               user?.role === 'employee' ? (
-                <EmployeeSettings user={user} setUser={setUser} />
+                <EmployeeSettings user={user} setUser={setUser} onLogout={handleLogout} />
               ) : (
-                <Navigate to="/login" replace />
+                <Navigate to="/" replace />//check
               )
             }
-          /> */}
+          />
 
 
-<Route
-  path="/employee-settings"
-  element={
-    user?.role === 'employee' ? (
-      <EmployeeSettings user={user} setUser={setUser} onLogout={handleLogout} />
-    ) : (
-      <Navigate to="/login" replace />
-    )
-  }
-/>
-
-          {/* <Route
+          <Route
             path="/employer-settings"
             element={
               user?.role === 'employer' ? (
-                <EmployerSettings user={user} setUser={setUser} />
+                <EmployerSettings user={user} setUser={setUser} onLogout={handleLogout} />
               ) : (
-                <Navigate to="/login" replace />
+                <Navigate to="/" replace />//check
               )
             }
-          /> */}
+          />
 
-<Route
-  path="/employer-settings"
-  element={
-    user?.role === 'employer' ? (
-      <EmployerSettings user={user} setUser={setUser} onLogout={handleLogout} />
-    ) : (
-      <Navigate to="/login" replace />
-    )
-  }
-/>
 
+          <Route
+            path="/admin-settings"
+            element={
+              <PrivateRoute user={user} requiredRole="admin">
+                <AdminSettings user={user} />
+              </PrivateRoute>
+            }
+          />
 
         </Routes>
         <Footer />
@@ -219,7 +209,7 @@ function App() {
       <ScrollToTop />
       <AppContent
         user={user}
-        setUser={setUser}               // ← add this line
+        setUser={setUser}
         handleLogin={handleLogin}
         handleLogout={handleLogout}
       />
