@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { ShieldAlert, Briefcase, Users, TrendingUp, FileText } from 'lucide-react';
+import { ShieldAlert, Briefcase, Users, FileText } from 'lucide-react';
 import KPICards from './components/KPICards';
 import ModerateJobs from './components/ModerateJobs';
 import ManageUsers from './components/ManageUsers';
-// import Analytics from './components/Analytics';
 import Reports from './components/Reports';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
@@ -28,7 +27,6 @@ const AdminDashboard = ({ user }) => {
   const [searchEmployee, setSearchEmployee] = useState('');
   const [jobStatusFilter, setJobStatusFilter] = useState('all');
 
-  // Refs for tab buttons (to scroll into view on mobile)
   const tabRefs = useRef({});
 
   // ✅ Helper to get auth headers with token
@@ -40,12 +38,10 @@ const AdminDashboard = ({ user }) => {
     };
   };
 
-  // Fetch all data once on mount
   useEffect(() => {
     fetchAllInitialData();
   }, []);
 
-  // Scroll selected tab into view smoothly when activeTab changes
   useEffect(() => {
     const tabElement = tabRefs.current[activeTab];
     if (tabElement) {
@@ -57,6 +53,7 @@ const AdminDashboard = ({ user }) => {
     }
   }, [activeTab]);
 
+  // ✅ OPTIMIZED: fetch only jobs, employees, employers – NO applicants pre‑fetch
   const fetchAllInitialData = async () => {
     setLoading(true);
     try {
@@ -79,27 +76,8 @@ const AdminDashboard = ({ user }) => {
       setEmployees(employeesData);
       setEmployers(employersData);
 
-      const appsByJob = {};
-      const allApps = [];
-
-      for (const job of jobsData) {
-        try {
-          const appsRes = await fetch(`${API_BASE_URL}/api/applications/job/${job.id}`, { headers });
-          if (appsRes.ok) {
-            const jobApps = await appsRes.json();
-            appsByJob[job.id] = jobApps;
-            allApps.push(...jobApps);
-          } else {
-            appsByJob[job.id] = [];
-          }
-        } catch (err) {
-          console.error(`Failed to fetch applicants for job ${job.id}:`, err);
-          appsByJob[job.id] = [];
-        }
-      }
-
-      setApplicantsMap(appsByJob);
-      setApplications(allApps);
+      // ✅ Do NOT fetch applicants here – they will be lazy‑loaded when needed.
+      // This reduces initial load time from O(N) API calls to just 3 calls.
     } catch (err) {
       console.error('Error fetching initial data:', err);
     } finally {
@@ -121,8 +99,9 @@ const AdminDashboard = ({ user }) => {
     }
   };
 
+  // ✅ Lazy load applicants when a job is expanded – only then
   const fetchApplicantsForJob = async (jobId) => {
-    if (applicantsMap[jobId]) return;
+    if (applicantsMap[jobId]) return; // already loaded
     setLoadingApplicants(prev => ({ ...prev, [jobId]: true }));
     try {
       const headers = getAuthHeaders();
@@ -164,6 +143,7 @@ const AdminDashboard = ({ user }) => {
     }
   };
 
+  // (All report functions remain exactly as before – keep them unchanged)
   const isWithinReportDateRange = (createdAt) => {
     if (!createdAt) return false;
     const date = new Date(createdAt);
@@ -332,6 +312,9 @@ const AdminDashboard = ({ user }) => {
 
   const renderApplicantDetails = (jobId) => {
     const applicants = applicantsMap[jobId] || [];
+    if (loadingApplicants[jobId]) {
+      return <p className="text-center py-4 text-gray-500">Loading applicants...</p>;
+    }
     if (!applicants.length) return <p className="text-center py-4 text-gray-500">No applicants yet.</p>;
     const counts = {
       applied: applicants.filter(a => a.status === 'applied').length,
@@ -480,24 +463,9 @@ const AdminDashboard = ({ user }) => {
         )}
       </div>
 
-      {/* Fix for ModerateJobs action buttons: force horizontal layout on all screens */}
       <style>{`
-        /* Make action buttons (View/Suspend) side by side even on mobile */
-        .moderate-jobs-table td:last-child > div {
-          display: flex !important;
-          flex-direction: row !important;
-          gap: 0.5rem !important;
-          align-items: center !important;
-          flex-wrap: wrap !important;
-        }
-        /* Hide scrollbar for tab bar */
-        .hide-scrollbar::-webkit-scrollbar {
-          display: none;
-        }
-        .hide-scrollbar {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-        }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
     </div>
   );
