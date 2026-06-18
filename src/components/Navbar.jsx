@@ -110,12 +110,21 @@ const Navbar = ({ user, onLogout }) => {
     return user.role;
   };
 
-  // Determine profile link based on role
+  // Determine profile link based on role (only for non-admin)
   const getProfileLink = () => {
     if (!user) return '/profile';
     if (user.role === 'employee') return '/employee-profile';
     if (user.role === 'employer') return '/employer-profile';
-    return '/profile';
+    return '/profile'; // fallback (but admin won't see this)
+  };
+
+  // Determine settings link based on role
+  const getSettingsLink = () => {
+    if (!user) return '/settings';
+    if (user.role === 'employee') return '/employee-settings';
+    if (user.role === 'employer') return '/employer-settings';
+    if (user.role === 'admin') return '/admin-settings';
+    return '/settings';
   };
 
   return (
@@ -219,21 +228,18 @@ const Navbar = ({ user, onLogout }) => {
                         </div>
                       </div>
 
-                      <Link
-                        to={getProfileLink()}
-                        className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
-                      >
-                        <User size={16} className="text-gray-500" /> My Profile
-                      </Link>
+                      {/* ✅ Show My Profile only for non-admin */}
+                      {user.role !== 'admin' && (
+                        <Link
+                          to={getProfileLink()}
+                          className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
+                        >
+                          <User size={16} className="text-gray-500" /> My Profile
+                        </Link>
+                      )}
 
                       <Link
-                        to={
-                          user?.role === 'employee'
-                            ? '/employee-settings'
-                            : user?.role === 'employer'
-                            ? '/employer-settings'
-                            : '/settings'
-                        }
+                        to={getSettingsLink()}
                         className="flex items-center gap-3 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
                       >
                         <Settings size={16} className="text-gray-500" /> Settings
@@ -325,26 +331,26 @@ const Navbar = ({ user, onLogout }) => {
                   </Link>
                 ))}
                 <div className="h-px bg-gray-200 my-1" />
+
+                {/* ✅ Show My Profile only for non-admin */}
+                {user.role !== 'admin' && (
+                  <Link
+                    to={getProfileLink()}
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center gap-2 py-2 text-sm font-medium text-gray-700"
+                  >
+                    <User size={18} className="text-gray-400" /> My Profile
+                  </Link>
+                )}
+
                 <Link
-                  to={getProfileLink()}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex items-center gap-2 py-2 text-sm font-medium text-gray-700"
-                >
-                  <User size={18} className="text-gray-400" /> My Profile
-                </Link>
-                <Link
-                  to={
-                    user?.role === 'employee'
-                      ? '/employee-settings'
-                      : user?.role === 'employer'
-                      ? '/employer-settings'
-                      : '/settings'
-                  }
+                  to={getSettingsLink()}
                   onClick={() => setMobileMenuOpen(false)}
                   className="flex items-center gap-2 py-2 text-sm font-medium text-gray-700"
                 >
                   <Settings size={18} className="text-gray-400" /> Settings
                 </Link>
+
                 <div className="h-px bg-gray-200 my-1" />
                 <button
                   onClick={() => {
