@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import Button from '../../components/Button';
-import { MapPin, IndianRupee, Briefcase, Search, X, ArrowLeft, Calendar, Hash } from 'lucide-react';
+import { MapPin, IndianRupee, Briefcase, Search, X, ArrowLeft, Calendar, Hash, CheckCircle, AlertCircle } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -13,13 +12,23 @@ const AllJobs = ({ user }) => {
   const [categoryFilter, setCategoryFilter] = useState('');
   const navigate = useNavigate();
 
+  // State for applied jobs and loading per job
+  const [appliedJobIds, setAppliedJobIds] = useState(new Set());
+  const [applyingMap, setApplyingMap] = useState({});
+
   useEffect(() => {
     fetchJobs();
   }, []);
 
+  useEffect(() => {
+    // Fetch user's applications if logged in
+    if (user?.id) {
+      fetchApplications();
+    }
+  }, [user]);
+
   const fetchJobs = async () => {
     try {
-      // Backend filters: is_active=true AND (deadline IS NULL OR deadline >= today)
       const res = await fetch(`${API_BASE_URL}/api/jobs?status=approved`);
       if (res.ok) {
         const data = await res.json();
@@ -35,18 +44,63 @@ const AllJobs = ({ user }) => {
     }
   };
 
-  // Extract unique locations and categories for filter dropdowns
+  const fetchApplications = async () => {
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/applications/employee/${user.id}`);
+      if (res.ok) {
+        const apps = await res.json();
+        const appliedIds = new Set(apps.map(app => app.job_id));
+        setAppliedJobIds(appliedIds);
+      }
+    } catch (err) {
+      console.warn('Could not fetch applications', err);
+    }
+  };
+
+  const handleApply = async (jobId, e) => {
+    e.stopPropagation(); // prevent any accidental navigation
+    if (!user) {
+      alert('Please login to apply for jobs.');
+      return;
+    }
+    if (appliedJobIds.has(jobId)) return;
+
+    // Set loading for this job
+    setApplyingMap(prev => ({ ...prev, [jobId]: true }));
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/applications`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ job_id: jobId, employee_id: user.id }),
+      });
+
+      if (res.ok) {
+        setAppliedJobIds(prev => new Set(prev).add(jobId));
+      } else {
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to apply');
+      }
+    } catch (err) {
+      console.error('Apply Error:', err);
+      alert('Error: ' + (err.message || 'Could not submit application.'));
+    } finally {
+      setApplyingMap(prev => ({ ...prev, [jobId]: false }));
+    }
+  };
+
+  // Extracted unique locations & categories for filters
   const locations = useMemo(() => [...new Set(jobs.map(j => j.location).filter(Boolean))].sort(), [jobs]);
   const categories = useMemo(() => [...new Set(jobs.map(j => j.category).filter(Boolean))].sort(), [jobs]);
 
-  // Filtered jobs – now also searches by job serial number
+  // Filtered jobs
   const filteredJobs = useMemo(() => {
     return jobs.filter(job => {
       const query = searchQuery.toLowerCase().trim();
       const matchesSearch = !query ||
         job.title?.toLowerCase().includes(query) ||
         job.employer_name?.toLowerCase().includes(query) ||
-        (job.jobs_serial_number && job.jobs_serial_number.toLowerCase().includes(query)); // ✅ added serial search
+        (job.jobs_serial_number && job.jobs_serial_number.toLowerCase().includes(query));
       const matchesLocation = !locationFilter || job.location === locationFilter;
       const matchesCategory = !categoryFilter || job.category === categoryFilter;
       return matchesSearch && matchesLocation && matchesCategory;
@@ -58,6 +112,13 @@ const AllJobs = ({ user }) => {
     setSearchQuery('');
     setLocationFilter('');
     setCategoryFilter('');
+  };
+
+  // Helper: check if deadline passed
+  const isDeadlinePassed = (deadline) => {
+    if (!deadline) return false;
+    const today = new Date().toISOString().split('T')[0];
+    return deadline < today;
   };
 
   return (
@@ -120,15 +181,18 @@ const AllJobs = ({ user }) => {
             const initial = job.employer_name ? job.employer_name.charAt(0).toUpperCase() : 'C';
             const deadline = job.apply_deadline ? new Date(job.apply_deadline).toLocaleDateString() : null;
             const isDeadlineSoon = deadline && new Date(job.apply_deadline) < new Date(Date.now() + 7 * 86400000);
+            const expired = isDeadlinePassed(job.apply_deadline);
+            const isApplied = appliedJobIds.has(job.id);
+            const isApplying = applyingMap[job.id] || false;
+
             return (
               <div
                 key={job.id}
-                onClick={() => navigate(`/jobs/${job.id}`)}
                 style={{
                   background: 'white', borderRadius: '1rem', padding: '1.5rem',
                   border: '1px solid #E5E7EB', boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-                  cursor: 'pointer', transition: 'transform 0.2s, box-shadow 0.2s, border-color 0.2s',
-                  display: 'flex', flexDirection: 'column', justifyContent: 'space-between'
+                  display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+                  transition: 'transform 0.2s, box-shadow 0.2s, border-color 0.2s',
                 }}
                 onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.1)'; e.currentTarget.style.borderColor = '#4F46E5'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)'; e.currentTarget.style.borderColor = '#E5E7EB'; }}
@@ -198,6 +262,18 @@ const AllJobs = ({ user }) => {
                         <Calendar size={12} /> Apply by {deadline}
                       </span>
                     )}
+                    {expired && (
+                      <span style={{
+                        marginLeft: '0.5rem',
+                        background: '#FEE2E2',
+                        color: '#DC2626',
+                        fontSize: '0.7rem', fontWeight: 600,
+                        padding: '0.3rem 0.65rem', borderRadius: '0.375rem',
+                        display: 'inline-flex', alignItems: 'center', gap: '0.25rem'
+                      }}>
+                        <AlertCircle size={12} /> Closed
+                      </span>
+                    )}
                   </div>
                 </div>
                 <div>
@@ -213,22 +289,69 @@ const AllJobs = ({ user }) => {
                       <IndianRupee size={15} /> {job.salary}
                     </span>
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', paddingTop: '0.75rem', borderTop: '1px solid #F1F5F9' }} onClick={(e) => e.stopPropagation()}>
-                    <Link to={`/jobs/${job.id}`} style={{ textDecoration: 'none' }}>
-                      <button style={{ width: '100%', padding: '0.6rem', background: 'white', color: '#334155', border: '1px solid #E2E8F0', borderRadius: '0.5rem', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}>
-                        View Details
-                      </button>
-                    </Link>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', paddingTop: '0.75rem', borderTop: '1px solid #F1F5F9' }}>
+                    {/* View Details - navigates */}
                     <Link to={`/jobs/${job.id}`} style={{ textDecoration: 'none' }}>
                       <button style={{
                         width: '100%', padding: '0.6rem',
-                        background: 'linear-gradient(to right, #4F46E5, #6366F1)',
-                        color: 'white', border: 'none', borderRadius: '0.5rem',
-                        fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit'
-                      }}>
-                        Apply Now
+                        background: 'white', color: '#334155',
+                        border: '1px solid #E2E8F0', borderRadius: '0.5rem',
+                        fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer',
+                        fontFamily: 'inherit', transition: 'background 0.2s',
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.background = '#F8FAFC'}
+                      onMouseLeave={(e) => e.currentTarget.style.background = 'white'}
+                      >
+                        View Details
                       </button>
                     </Link>
+
+                    {/* Apply / Applied / Closed */}
+                    {expired ? (
+                      <button
+                        disabled
+                        style={{
+                          width: '100%', padding: '0.6rem',
+                          background: '#E5E7EB', color: '#9CA3AF',
+                          border: 'none', borderRadius: '0.5rem',
+                          fontSize: '0.8rem', fontWeight: 700,
+                          cursor: 'not-allowed', fontFamily: 'inherit',
+                        }}
+                      >
+                        Closed
+                      </button>
+                    ) : isApplied ? (
+                      <button
+                        disabled
+                        style={{
+                          width: '100%', padding: '0.6rem',
+                          background: '#D1FAE5', color: '#065F46',
+                          border: 'none', borderRadius: '0.5rem',
+                          fontSize: '0.8rem', fontWeight: 700,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem',
+                          cursor: 'default', fontFamily: 'inherit',
+                        }}
+                      >
+                        <CheckCircle size={16} /> Applied
+                      </button>
+                    ) : (
+                      <button
+                        onClick={(e) => handleApply(job.id, e)}
+                        disabled={isApplying}
+                        style={{
+                          width: '100%', padding: '0.6rem',
+                          background: isApplying ? '#A5B4FC' : 'linear-gradient(to right, #4F46E5, #6366F1)',
+                          color: 'white',
+                          border: 'none', borderRadius: '0.5rem',
+                          fontSize: '0.8rem', fontWeight: 700,
+                          cursor: isApplying ? 'not-allowed' : 'pointer',
+                          fontFamily: 'inherit',
+                          transition: 'opacity 0.2s',
+                        }}
+                      >
+                        {isApplying ? 'Applying...' : 'Apply Now'}
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

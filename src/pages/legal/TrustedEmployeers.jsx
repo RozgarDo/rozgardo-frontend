@@ -1,14 +1,43 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 
-// Direct imports from your assets folder
+// Import your logos (keep your paths)
 import flurysImg from '../../assets/flurys.png';
 import barbequeNationImg from '../../assets/barbeque_nation.png';
 import sixDowntownImg from '../../assets/6downtown.png';
+import chaiBreakImg from '../../assets/chai_break.png';
+import absoluteBarbequeImg from '../../assets/absolute_barbeque.png';
+import theBeerCafeImg from '../../assets/the_beer_cafe.png';
 
 const TrustedEmployers = () => {
+  const logos = [
+    { src: flurysImg, alt: 'Flurys', height: 'h-14 md:h-16' },
+    { src: barbequeNationImg, alt: 'Barbeque Nation', height: 'h-16 md:h-20' },
+    { src: sixDowntownImg, alt: '6 Downtown', height: 'h-14 md:h-16' },
+    { src: chaiBreakImg, alt: 'Chai Break', height: 'h-14 md:h-16' },
+    { src: absoluteBarbequeImg, alt: 'Absolute Barbeque', height: 'h-14 md:h-16' },
+    { src: theBeerCafeImg, alt: 'The Beer Cafe', height: 'h-14 md:h-16' },
+  ];
+
+  const [duration, setDuration] = useState('28s');
+
+  useEffect(() => {
+    const updateDuration = () => {
+      const width = window.innerWidth;
+      if (width < 640) {
+        setDuration('15s'); // faster on mobile
+      } else {
+        setDuration('28s'); // slightly faster on desktop
+      }
+    };
+
+    updateDuration();
+    window.addEventListener('resize', updateDuration);
+    return () => window.removeEventListener('resize', updateDuration);
+  }, []);
+
   return (
     <div className="mt-8 bg-white rounded-2xl shadow-sm border border-slate-100 p-8 relative">
-      {/* Badge Header */}
+      {/* Badge – untouched */}
       <div className="absolute -top-3 left-0 right-0 flex justify-center">
         <div className="bg-slate-50 px-6 py-1 rounded-full border border-slate-100 flex items-center gap-3">
           <div className="w-1.5 h-1.5 rounded-full bg-indigo-500"></div>
@@ -19,62 +48,27 @@ const TrustedEmployers = () => {
         </div>
       </div>
 
-      {/* Logos Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-center">
-        
-        {/* Flurys */}
-        <div className="flex justify-center items-center h-24 bg-slate-50/40 rounded-xl border border-transparent hover:border-slate-200 transition-all group">
-          <img 
-            src={flurysImg} 
-            alt="Flurys" 
-            className="h-14 md:h-16 w-auto object-contain transition-transform duration-300 group-hover:scale-105" 
-          />
-        </div>
-
-        {/* Barbeque Nation */}
-        <div className="flex justify-center items-center h-24 bg-slate-50/40 rounded-xl border border-transparent hover:border-slate-200 transition-all group">
-          <img 
-            src={barbequeNationImg} 
-            alt="Barbeque Nation" 
-            className="h-16 md:h-20 w-auto object-contain transition-transform duration-300 group-hover:scale-105" 
-          />
-        </div>
-
-        {/* 6 Downtown */}
-        <div className="flex justify-center items-center h-24 bg-slate-50/40 rounded-xl border border-transparent hover:border-slate-200 transition-all group">
-          <img 
-            src={sixDowntownImg} 
-            alt="6 Downtown" 
-            className="h-14 md:h-16 w-auto object-contain transition-transform duration-300 group-hover:scale-105" 
-          />
-        </div>
-
-        {/* Placeholder / Many More */}
-        <div className="flex items-center gap-4 px-6 h-24 bg-indigo-50/40 rounded-xl border border-indigo-100/50 group cursor-default">
-          <div className="bg-white p-3 rounded-xl shadow-sm border border-indigo-50">
-            <svg 
-              width="24" 
-              height="24" 
-              viewBox="0 0 24 24" 
-              fill="none" 
-              stroke="currentColor" 
-              strokeWidth="2" 
-              strokeLinecap="round" 
-              strokeLinejoin="round" 
-              className="text-indigo-600"
+      {/* Responsive marquee – now faster */}
+      <div className="overflow-hidden w-full">
+        <div
+          className="flex flex-nowrap gap-4 sm:gap-8 animate-scroll-left will-change-transform"
+          style={{ animationDuration: duration }}
+          onMouseEnter={(e) => (e.currentTarget.style.animationPlayState = 'paused')}
+          onMouseLeave={(e) => (e.currentTarget.style.animationPlayState = 'running')}
+        >
+          {[...logos, ...logos].map((logo, index) => (
+            <div
+              key={index}
+              className="flex-shrink-0 flex justify-center items-center h-24 min-w-[120px] sm:min-w-[180px] bg-slate-50/40 rounded-xl border border-transparent hover:border-slate-200 transition-all group"
             >
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-              <circle cx="9" cy="7" r="4" />
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-            </svg>
-          </div>
-          <div className="flex flex-col">
-            <span className="text-sm font-bold text-slate-700 leading-tight">And many more</span>
-            <span className="text-xs text-slate-500">trusted partners...</span>
-          </div>
+              <img
+                src={logo.src}
+                alt={logo.alt}
+                className={`${logo.height} w-auto object-contain transition-transform duration-300 group-hover:scale-105`}
+              />
+            </div>
+          ))}
         </div>
-
       </div>
     </div>
   );

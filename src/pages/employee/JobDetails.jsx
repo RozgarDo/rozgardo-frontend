@@ -5,7 +5,7 @@ import {
   CheckCircle, Clock, ShieldCheck, 
   Share2, Bookmark, Star, 
   Info, AlertCircle, LayoutGrid, Award, GraduationCap,
-  Users, TrendingUp, DollarSign, Calendar
+  Users, TrendingUp, DollarSign, Calendar, X, Copy, Mail
 } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
@@ -18,6 +18,10 @@ const JobDetails = ({ user }) => {
   const [applying, setApplying] = useState(false);
   const [applied, setApplied] = useState(false);
   const [employerInfo, setEmployerInfo] = useState(null);
+  
+  // Share Modal State
+  const [isShareOpen, setIsShareOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     fetchJobDetails();
@@ -36,7 +40,6 @@ const JobDetails = ({ user }) => {
       }
     } catch (err) {
       console.error(err);
-      // Fallback mock data (optional)
       const mockJob = { 
         id: id, 
         title: 'Experienced Logistics Driver', 
@@ -54,7 +57,7 @@ const JobDetails = ({ user }) => {
         vacancies: 5,
         employer_id: 'sample-employer',
         apply_deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        jobs_serial_number: 'RZD-26001A'   // mock serial
+        jobs_serial_number: 'RZD-26001A'
       };
       setJob(mockJob);
       fetchExtraContent(mockJob);
@@ -119,6 +122,16 @@ const JobDetails = ({ user }) => {
 
   const isJobExpired = isDeadlinePassed();
 
+  // Share helpers
+  const currentUrl = window.location.href;
+  const shareText = `Check out this job opening for ${job?.title} at ${job?.employer_name || 'RozgarDo'}: `;
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(currentUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   if (loading) return (
     <div className="flex items-center justify-center min-h-[60vh]">
       <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-600"></div>
@@ -180,8 +193,13 @@ const JobDetails = ({ user }) => {
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <button className="p-2.5 rounded-lg bg-gray-50 text-gray-400 hover:text-indigo-600"><Bookmark size={18} /></button>
-                  <button className="p-2.5 rounded-lg bg-gray-50 text-gray-400 hover:text-indigo-600"><Share2 size={18} /></button>
+                  {/* Click handler added to open modal */}
+                  <button 
+                    onClick={() => setIsShareOpen(true)}
+                    className="p-2.5 rounded-lg bg-gray-50 text-gray-400 hover:text-indigo-600 transition-colors"
+                  >
+                    <Share2 size={18} />
+                  </button>
                 </div>
               </div>
             </div>
@@ -201,17 +219,6 @@ const JobDetails = ({ user }) => {
                 <RequirementItem icon={<Award size={16} />} title="Experience" value={experienceValue} />
                 <RequirementItem icon={<GraduationCap size={16} />} title="Education" value={educationValue} />
                 <RequirementItem icon={<LayoutGrid size={16} />} title="Technical Skills" value={skillsValue} />
-              </div>
-            </div>
-
-            {/* Benefits */}
-            <div className="space-y-4">
-              <SectionHeader icon={<Star size={16} />} title="Company Benefits" />
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <BenefitItem icon={<Clock size={16}/>} text="Flexible working hours & night shift options" />
-                <BenefitItem icon={<DollarSign size={16}/>} text="Weekly payouts with performance bonuses" />
-                <BenefitItem icon={<TrendingUp size={16}/>} text="High potential for role growth & promotions" />
-                <BenefitItem icon={<ShieldCheck size={16}/>} text="Safe working environment & medical coverage" />
               </div>
             </div>
 
@@ -248,7 +255,7 @@ const JobDetails = ({ user }) => {
                 <p className="text-xl font-black text-amber-800">{vacanciesCount}</p>
               </div>
 
-              {/* NEW: Job Serial Number (Job ID) */}
+              {/* Job Serial Number (Job ID) */}
               {job.jobs_serial_number && (
                 <div className="text-center bg-gray-50 rounded-lg p-3 border border-gray-200">
                   <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Job ID</p>
@@ -308,11 +315,109 @@ const JobDetails = ({ user }) => {
           </div>
         </div>
       </div>
+
+      {/* SHARE MODAL POPUP */}
+      {isShareOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-black/60 backdrop-blur-xs"
+            onClick={() => setIsShareOpen(false)}
+          ></div>
+          
+          {/* Content Box */}
+          <div className="bg-white rounded-2xl w-full max-w-md p-6 relative z-10 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-4 border-b border-gray-100">
+              <h3 className="text-lg font-black text-gray-900">Share Job Opening</h3>
+              <button 
+                onClick={() => setIsShareOpen(false)}
+                className="p-1 rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-700 transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Horizontal Grid of Share Actions */}
+            <div className="grid grid-cols-4 gap-4 py-6 text-center">
+              {/* WhatsApp */}
+              <a 
+                href={`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + currentUrl)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex flex-col items-center gap-2 group"
+              >
+                <div className="w-12 h-12 rounded-full bg-green-50 text-green-600 flex items-center justify-center shadow-xs border border-green-100 group-hover:bg-green-600 group-hover:text-white transition-all">
+                  <svg className="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397 0 11.948 0c3.179.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.907-11.893 11.907-2.01-.001-3.986-.51-5.742-1.477L0 24zm6.59-4.846c1.63.967 3.225 1.478 4.783 1.479 5.349 0 9.701-4.34 9.704-9.677a9.534 9.534 0 0 0-2.83-6.844A9.557 9.557 0 0 0 11.947 1.3c-5.356 0-9.716 4.34-9.719 9.678a9.604 9.604 0 0 0 1.432 4.974l-.993 3.623 3.71-.973zm13.067-5.863c-.325-.163-1.926-.949-2.223-1.058-.297-.109-.514-.162-.73.163-.217.324-.838 1.056-1.026 1.274-.188.217-.377.243-.702.08-1.748-.874-2.883-1.442-4.034-2.42-.3-.254-.04-.239.26-.54.237-.238.324-.405.486-.73.162-.324.081-.609-.04-.852-.122-.244-1.026-2.473-1.406-3.385-.369-.888-.744-.768-1.026-.782-.265-.014-.569-.016-.873-.016a1.677 1.677 0 0 0-1.218.541c-.417.417-1.596 1.558-1.596 3.8a4.674 4.674 0 0 0 .974 2.533c.108.143 1.812 2.766 4.39 3.879 2.148.924 2.586.741 3.046.699.46-.042 1.926-.788 2.197-1.514.27-.726.27-1.35.19-1.473-.08-.122-.297-.184-.622-.347z"/></svg>
+                </div>
+                <span className="text-[11px] font-bold text-gray-600">WhatsApp</span>
+              </a>
+
+              {/* LinkedIn */}
+              <a 
+                href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(currentUrl)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex flex-col items-center gap-2 group"
+              >
+                <div className="w-12 h-12 rounded-full bg-blue-50 text-blue-700 flex items-center justify-center shadow-xs border border-blue-100 group-hover:bg-blue-700 group-hover:text-white transition-all">
+                  <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/></svg>
+                </div>
+                <span className="text-[11px] font-bold text-gray-600">LinkedIn</span>
+              </a>
+
+              {/* Facebook */}
+              <a 
+                href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(currentUrl)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex flex-col items-center gap-2 group"
+              >
+                <div className="w-12 h-12 rounded-full bg-indigo-50 text-indigo-700 flex items-center justify-center shadow-xs border border-indigo-100 group-hover:bg-indigo-700 group-hover:text-white transition-all">
+                  <svg className="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M22.675 0h-21.35c-.732 0-1.325.593-1.325 1.325v21.351c0 .731.593 1.324 1.325 1.324h11.495v-9.294h-3.128v-3.622h3.128v-2.671c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.795.143v3.24l-1.918.001c-1.504 0-1.795.715-1.795 1.763v2.313h3.587l-.467 3.622h-3.12v9.293h6.116c.73 0 1.323-.593 1.323-1.325v-21.35c0-.732-.593-1.325-1.323-1.325z"/></svg>
+                </div>
+                <span className="text-[11px] font-bold text-gray-600">Facebook</span>
+              </a>
+
+              {/* Email */}
+              <a 
+                href={`mailto:?subject=${encodeURIComponent('Job Opening Opportunity')}&body=${encodeURIComponent(shareText + currentUrl)}`}
+                className="flex flex-col items-center gap-2 group"
+              >
+                <div className="w-12 h-12 rounded-full bg-red-50 text-red-600 flex items-center justify-center shadow-xs border border-red-100 group-hover:bg-red-600 group-hover:text-white transition-all">
+                  <Mail size={20} />
+                </div>
+                <span className="text-[11px] font-bold text-gray-600">Email</span>
+              </a>
+            </div>
+
+            {/* Link Copier Bar */}
+            <div className="flex items-center gap-2 p-2 bg-gray-50 border border-gray-200 rounded-xl">
+              <input 
+                type="text" 
+                readOnly 
+                value={currentUrl} 
+                className="bg-transparent text-xs text-gray-500 font-mono flex-1 pl-2 outline-hidden select-all truncate"
+              />
+              <button 
+                onClick={copyToClipboard}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black transition-all ${
+                  copied 
+                  ? 'bg-green-600 text-white' 
+                  : 'bg-indigo-600 text-white hover:bg-indigo-700'
+                }`}
+              >
+                {copied ? <CheckCircle size={14} /> : <Copy size={14} />}
+                {copied ? 'Copied' : 'Copy'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-// Helper Components (same as before)
+// Helper Components
 const SectionHeader = ({ icon, title }) => (
   <h2 className="text-base font-black text-gray-800 uppercase tracking-widest flex items-center gap-2">
     <div className="p-1.5 bg-indigo-50 text-indigo-600 rounded-lg">{icon}</div>
