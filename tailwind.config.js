@@ -25,6 +25,21 @@ export default {
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
       },
+      // 🔽 ADD THIS SECTION 🔽
+      keyframes: {
+        scrollLeft: {
+          '0%': { transform: 'translateX(0)' },
+          '100%': { transform: 'translateX(-50%)' }
+        },
+        scrollRight: {
+          '0%': { transform: 'translateX(-50%)' },
+          '100%': { transform: 'translateX(0)' }
+        }
+      },
+      animation: {
+        'scroll-left': 'scrollLeft linear infinite',
+        'scroll-right': 'scrollRight linear infinite'
+      }
     },
   },
   plugins: [],

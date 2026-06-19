@@ -82,6 +82,8 @@ function AppContent({ user, setUser, handleLogin, handleLogout }) {
           <Route path="/terms" element={<TermsOfService />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/register" element={<Registration />} />
+          <Route path="/contact" element={<Contact />} />
+          <Route path="/trusted-employers" element={<TrustedEmployers />} />
           <Route path="/onboarding" element={<Onboarding />} />
           <Route path="/employee-registration" element={<EmployeeRegistration />} />
           <Route path="/employer-registration" element={<EmployerRegistration />} />
@@ -109,12 +111,44 @@ function AppContent({ user, setUser, handleLogin, handleLogout }) {
           <Route path="/employee-login" element={user ? <Navigate to="/" replace /> : <EmployeeLogin onLogin={handleLogin} />} />
           <Route path="/employer-login" element={user ? <Navigate to="/" replace /> : <EmployerLogin onLogin={handleLogin} />} />
 
-          <Route path="/trusted-employers" element={<TrustedEmployers />} />
+          
 
-          <Route path="/jobs/:id" element={<JobDetails user={user} />} />
-          <Route path="/applications" element={<Applications user={user} />} />
-          <Route path="/all-jobs" element={<AllJobs user={user} />} />
-          <Route path="/contact" element={<Contact />} />
+          <Route 
+            path="/jobs/:id" 
+            element={
+              user?.role === 'employee' ? (
+                <JobDetails user={user} />
+              ) : (
+                <Navigate to="/employee-login" replace />
+              )
+            } 
+          />
+          <Route 
+            path="/applications" 
+            element={
+              user?.role === 'employee' ? (
+                <Applications user={user} />
+              ) : (
+                <Navigate to="/employee-login" replace />
+              )
+            } 
+          />
+          <Route 
+            path="/all-jobs" 
+            element={
+              user?.role === 'employee' ? (
+                <AllJobs user={user} />
+              ) : (
+                <Navigate to="/employee-login" replace />
+              )
+            } 
+          />
+
+
+          {/* <Route path="/jobs/:id" element={<JobDetails user={user} />} /> */}
+          {/* <Route path="/applications" element={<Applications user={user} />} /> */}
+          {/* <Route path="/all-jobs" element={<AllJobs user={user} />} /> */}
+          
 
           <Route path="/employer" element={user?.role === 'employer' ? <EmployerDashboard user={user} /> : <Navigate to="/employer-login" />} />
 
