@@ -127,6 +127,18 @@ const Navbar = ({ user, onLogout }) => {
     return '/settings';
   };
 
+  // Helper to get user display name
+  const getUserDisplayName = () => {
+    if (!user) return '';
+    return user.name || user.phone || 'User';
+  };
+
+  // Helper to get user initial
+  const getUserInitial = () => {
+    const name = getUserDisplayName();
+    return name.charAt(0).toUpperCase();
+  };
+
   return (
     <>
       <nav className="sticky top-0 z-100 bg-white/95 backdrop-blur-md border-b border-gray-100 shadow-sm">
@@ -198,11 +210,20 @@ const Navbar = ({ user, onLogout }) => {
                         : 'bg-gray-50 border-gray-200 hover:bg-indigo-50 hover:border-indigo-200'
                     }`}
                   >
-                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-indigo-600 to-indigo-500 text-white flex items-center justify-center font-bold text-xs">
-                      {(user.name || user.phone || 'U').charAt(0).toUpperCase()}
+                    {/* Avatar with photo support */}
+                    <div className="w-7 h-7 rounded-full overflow-hidden bg-gradient-to-br from-indigo-600 to-indigo-500 text-white flex items-center justify-center font-bold text-xs flex-shrink-0">
+                      {user.photo_url ? (
+                        <img 
+                          src={user.photo_url} 
+                          alt={getUserDisplayName()} 
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        getUserInitial()
+                      )}
                     </div>
                     <span className="text-sm font-semibold text-gray-800">
-                      {user.name || user.phone}
+                      {getUserDisplayName()}
                     </span>
                     <ChevronDown
                       size={14}
@@ -215,12 +236,21 @@ const Navbar = ({ user, onLogout }) => {
                   {profileDropdownOpen && (
                     <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl border border-gray-200 shadow-xl z-50 animate-[dropdownFade_150ms_ease-out]">
                       <div className="flex items-center gap-3 p-3 border-b border-gray-100">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-600 to-indigo-500 text-white flex items-center justify-center font-bold">
-                          {(user.name || user.phone || 'U').charAt(0).toUpperCase()}
+                        {/* Avatar with photo support in dropdown */}
+                        <div className="w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-indigo-600 to-indigo-500 text-white flex items-center justify-center font-bold flex-shrink-0">
+                          {user.photo_url ? (
+                            <img 
+                              src={user.photo_url} 
+                              alt={getUserDisplayName()} 
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            getUserInitial()
+                          )}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="font-bold text-sm text-gray-900 truncate">
-                            {user.name || user.phone}
+                            {getUserDisplayName()}
                           </div>
                           <div className="text-xs text-gray-500 font-medium">
                             {getRoleLabel()}

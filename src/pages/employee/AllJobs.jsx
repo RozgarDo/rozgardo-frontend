@@ -12,20 +12,63 @@ const AllJobs = ({ user }) => {
   const [categoryFilter, setCategoryFilter] = useState('');
   const navigate = useNavigate();
 
-  // State for applied jobs and loading per job
+  // Applied jobs state
   const [appliedJobIds, setAppliedJobIds] = useState(new Set());
   const [applyingMap, setApplyingMap] = useState({});
+
+  // Employer photo cache: { employerId: photoUrl }
+  const [employerPhotoMap, setEmployerPhotoMap] = useState({});
+  const [fetchingPhotos, setFetchingPhotos] = useState(false);
 
   useEffect(() => {
     fetchJobs();
   }, []);
 
   useEffect(() => {
-    // Fetch user's applications if logged in
     if (user?.id) {
       fetchApplications();
     }
   }, [user]);
+
+  // Fetch employer photos when jobs change
+  useEffect(() => {
+    if (jobs.length === 0) return;
+
+    const uniqueEmployerIds = [...new Set(jobs.map(job => job.employer_id).filter(Boolean))];
+    const missingIds = uniqueEmployerIds.filter(id => !employerPhotoMap[id]);
+
+    if (missingIds.length === 0) return;
+
+    const fetchPhotos = async () => {
+      setFetchingPhotos(true);
+      try {
+        const promises = missingIds.map(async (id) => {
+          try {
+            const res = await fetch(`${API_BASE_URL}/api/auth/profile/${id}`);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+            return { id, photoUrl: data.user?.photo_url || null };
+          } catch (err) {
+            console.warn(`Could not fetch photo for employer ${id}:`, err);
+            return { id, photoUrl: null };
+          }
+        });
+
+        const results = await Promise.all(promises);
+        const newMap = { ...employerPhotoMap };
+        results.forEach(({ id, photoUrl }) => {
+          if (photoUrl) newMap[id] = photoUrl;
+        });
+        setEmployerPhotoMap(newMap);
+      } catch (err) {
+        console.error('Error fetching employer photos:', err);
+      } finally {
+        setFetchingPhotos(false);
+      }
+    };
+
+    fetchPhotos();
+  }, [jobs]);
 
   const fetchJobs = async () => {
     try {
@@ -58,14 +101,13 @@ const AllJobs = ({ user }) => {
   };
 
   const handleApply = async (jobId, e) => {
-    e.stopPropagation(); // prevent any accidental navigation
+    e.stopPropagation();
     if (!user) {
       alert('Please login to apply for jobs.');
       return;
     }
     if (appliedJobIds.has(jobId)) return;
 
-    // Set loading for this job
     setApplyingMap(prev => ({ ...prev, [jobId]: true }));
 
     try {
@@ -89,11 +131,9 @@ const AllJobs = ({ user }) => {
     }
   };
 
-  // Extracted unique locations & categories for filters
   const locations = useMemo(() => [...new Set(jobs.map(j => j.location).filter(Boolean))].sort(), [jobs]);
   const categories = useMemo(() => [...new Set(jobs.map(j => j.category).filter(Boolean))].sort(), [jobs]);
 
-  // Filtered jobs
   const filteredJobs = useMemo(() => {
     return jobs.filter(job => {
       const query = searchQuery.toLowerCase().trim();
@@ -114,7 +154,6 @@ const AllJobs = ({ user }) => {
     setCategoryFilter('');
   };
 
-  // Helper: check if deadline passed
   const isDeadlinePassed = (deadline) => {
     if (!deadline) return false;
     const today = new Date().toISOString().split('T')[0];
@@ -184,6 +223,7 @@ const AllJobs = ({ user }) => {
             const expired = isDeadlinePassed(job.apply_deadline);
             const isApplied = appliedJobIds.has(job.id);
             const isApplying = applyingMap[job.id] || false;
+            const employerPhoto = employerPhotoMap[job.employer_id];
 
             return (
               <div
@@ -197,162 +237,169 @@ const AllJobs = ({ user }) => {
                 onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.1)'; e.currentTarget.style.borderColor = '#4F46E5'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)'; e.currentTarget.style.borderColor = '#E5E7EB'; }}
               >
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', marginBottom: '1rem' }}>
-                    <div style={{
-                      width: '44px', height: '44px', borderRadius: '50%',
-                      background: 'linear-gradient(135deg, #EEF2FF, #E0E7FF)',
-                      color: '#4F46E5', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontWeight: 800, fontSize: '1.1rem', flexShrink: 0,
-                      border: '1px solid rgba(79,70,229,0.1)'
-                    }}>
-                      {initial}
-                    </div>
-                    <div style={{ minWidth: 0, flex: 1 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-                        <h3 style={{
-                          fontSize: '1.05rem', fontWeight: 700, color: '#0F172A', lineHeight: 1.35,
-                          display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
-                          minHeight: '2.8rem', flex: 1
-                        }}>
-                          {job.title}
-                        </h3>
-                        {job.jobs_serial_number && (
-                          <span style={{
-                            background: '#F3F4F6',
-                            color: '#4B5563',
-                            fontSize: '0.6rem',
-                            fontWeight: 700,
-                            padding: '0.15rem 0.5rem',
-                            borderRadius: '0.375rem',
-                            border: '1px solid #E5E7EB',
-                            whiteSpace: 'nowrap',
-                            fontFamily: 'monospace',
-                            letterSpacing: '0.5px',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '0.25rem'
-                          }}>
-                            <Hash size={10} /> {job.jobs_serial_number}
-                          </span>
-                        )}
-                      </div>
-                      <p style={{ color: '#64748B', fontSize: '0.8rem', fontWeight: 500, marginTop: '0.25rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        {job.employer_name}
-                      </p>
-                    </div>
-                  </div>
-                  <div style={{ marginBottom: '1rem' }}>
-                    <span style={{
-                      background: '#F8FAFC', color: '#475569', fontSize: '0.7rem', fontWeight: 700,
-                      padding: '0.3rem 0.65rem', borderRadius: '0.375rem', textTransform: 'uppercase',
-                      border: '1px solid #E2E8F0', display: 'inline-block'
-                    }}>
-                      {job.category}
-                    </span>
-                    {deadline && (
-                      <span style={{
-                        marginLeft: '0.5rem',
-                        background: isDeadlineSoon ? '#FEF3C7' : '#F3F4F6',
-                        color: isDeadlineSoon ? '#D97706' : '#6B7280',
-                        fontSize: '0.7rem', fontWeight: 600,
-                        padding: '0.3rem 0.65rem', borderRadius: '0.375rem',
-                        display: 'inline-flex', alignItems: 'center', gap: '0.25rem'
-                      }}>
-                        <Calendar size={12} /> Apply by {deadline}
-                      </span>
+                {/* ----- TOP SECTION: Logo + Title + Employer ----- */}
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                  <div style={{
+                    width: '44px', height: '44px', borderRadius: '50%',
+                    overflow: 'hidden', flexShrink: 0,
+                    border: '1px solid rgba(79,70,229,0.1)',
+                    background: employerPhoto ? 'transparent' : 'linear-gradient(135deg, #EEF2FF, #E0E7FF)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center'
+                  }}>
+                    {employerPhoto ? (
+                      <img src={employerPhoto} alt={job.employer_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      <span style={{ color: '#4F46E5', fontWeight: 800, fontSize: '1.1rem' }}>{initial}</span>
                     )}
-                    {expired && (
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <h3 style={{
+                      fontSize: '1.05rem', fontWeight: 700, color: '#0F172A', lineHeight: 1.35,
+                      display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                      marginBottom: '0.2rem'
+                    }}>
+                      {job.title}
+                    </h3>
+                    <p style={{ color: '#64748B', fontSize: '0.8rem', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {job.employer_name}
+                    </p>
+                  </div>
+                </div>
+
+                {/* ----- SINGLE ROW: Job ID + Deadline (category removed) ----- */}
+                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.4rem 0.6rem', marginBottom: '0.75rem' }}>
+                  {job.jobs_serial_number && (
+                    <span style={{
+                      background: '#F3F4F6',
+                      color: '#4B5563',
+                      fontSize: '0.65rem',
+                      fontWeight: 700,
+                      padding: '0.2rem 0.6rem',
+                      borderRadius: '0.375rem',
+                      border: '1px solid #E5E7EB',
+                      fontFamily: 'monospace',
+                      letterSpacing: '0.5px',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.25rem'
+                    }}>
+                      <Hash size={12} /> {job.jobs_serial_number}
+                    </span>
+                  )}
+                  {deadline ? (
+                    <span style={{
+                      background: expired ? '#FEE2E2' : (isDeadlineSoon ? '#FEF3C7' : '#F3F4F6'),
+                      color: expired ? '#DC2626' : (isDeadlineSoon ? '#D97706' : '#6B7280'),
+                      fontSize: '0.7rem', fontWeight: 600,
+                      padding: '0.3rem 0.65rem', borderRadius: '0.375rem',
+                      display: 'inline-flex', alignItems: 'center', gap: '0.25rem'
+                    }}>
+                      <Calendar size={12} /> {expired ? 'Closed' : `Apply by ${deadline}`}
+                    </span>
+                  ) : (
+                    expired && (
                       <span style={{
-                        marginLeft: '0.5rem',
-                        background: '#FEE2E2',
-                        color: '#DC2626',
+                        background: '#FEE2E2', color: '#DC2626',
                         fontSize: '0.7rem', fontWeight: 600,
                         padding: '0.3rem 0.65rem', borderRadius: '0.375rem',
                         display: 'inline-flex', alignItems: 'center', gap: '0.25rem'
                       }}>
                         <AlertCircle size={12} /> Closed
                       </span>
-                    )}
-                  </div>
+                    )
+                  )}
                 </div>
-                <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 0', borderTop: '1px solid #F1F5F9' }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: '#475569', fontSize: '0.8rem', fontWeight: 600 }}>
-                      <MapPin size={15} color="#94A3B8" /> {job.location}
-                    </span>
-                    <span style={{
-                      display: 'flex', alignItems: 'center', gap: '0.15rem',
-                      fontWeight: 800, color: '#059669', fontSize: '0.95rem',
-                      background: '#ECFDF5', padding: '0.25rem 0.6rem', borderRadius: '0.375rem'
-                    }}>
-                      <IndianRupee size={15} /> {job.salary}
-                    </span>
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', paddingTop: '0.75rem', borderTop: '1px solid #F1F5F9' }}>
-                    {/* View Details - navigates */}
-                    <Link to={`/jobs/${job.id}`} style={{ textDecoration: 'none' }}>
-                      <button style={{
-                        width: '100%', padding: '0.6rem',
-                        background: 'white', color: '#334155',
-                        border: '1px solid #E2E8F0', borderRadius: '0.5rem',
-                        fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer',
-                        fontFamily: 'inherit', transition: 'background 0.2s',
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.background = '#F8FAFC'}
-                      onMouseLeave={(e) => e.currentTarget.style.background = 'white'}
-                      >
-                        View Details
-                      </button>
-                    </Link>
 
-                    {/* Apply / Applied / Closed */}
-                    {expired ? (
-                      <button
-                        disabled
-                        style={{
-                          width: '100%', padding: '0.6rem',
-                          background: '#E5E7EB', color: '#9CA3AF',
-                          border: 'none', borderRadius: '0.5rem',
-                          fontSize: '0.8rem', fontWeight: 700,
-                          cursor: 'not-allowed', fontFamily: 'inherit',
-                        }}
-                      >
-                        Closed
-                      </button>
-                    ) : isApplied ? (
-                      <button
-                        disabled
-                        style={{
-                          width: '100%', padding: '0.6rem',
-                          background: '#D1FAE5', color: '#065F46',
-                          border: 'none', borderRadius: '0.5rem',
-                          fontSize: '0.8rem', fontWeight: 700,
-                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem',
-                          cursor: 'default', fontFamily: 'inherit',
-                        }}
-                      >
-                        <CheckCircle size={16} /> Applied
-                      </button>
-                    ) : (
-                      <button
-                        onClick={(e) => handleApply(job.id, e)}
-                        disabled={isApplying}
-                        style={{
-                          width: '100%', padding: '0.6rem',
-                          background: isApplying ? '#A5B4FC' : 'linear-gradient(to right, #4F46E5, #6366F1)',
-                          color: 'white',
-                          border: 'none', borderRadius: '0.5rem',
-                          fontSize: '0.8rem', fontWeight: 700,
-                          cursor: isApplying ? 'not-allowed' : 'pointer',
-                          fontFamily: 'inherit',
-                          transition: 'opacity 0.2s',
-                        }}
-                      >
-                        {isApplying ? 'Applying...' : 'Apply Now'}
-                      </button>
-                    )}
-                  </div>
+                {/* ----- LOCATION | CATEGORY | SALARY (three columns) ----- */}
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  padding: '0.5rem 0',
+                  borderTop: '1px solid #F1F5F9',
+                  borderBottom: '1px solid #F1F5F9',
+                  marginBottom: '0.75rem'
+                }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: '#475569', fontSize: '0.8rem', fontWeight: 600 }}>
+                    <MapPin size={15} color="#94A3B8" /> {job.location}
+                  </span>
+                  <span style={{
+                    background: '#F8FAFC',
+                    color: '#475569',
+                    fontSize: '0.7rem',
+                    fontWeight: 700,
+                    padding: '0.25rem 0.6rem',
+                    borderRadius: '0.375rem',
+                    textTransform: 'uppercase',
+                    border: '1px solid #E2E8F0'
+                  }}>
+                    {job.category}
+                  </span>
+                  <span style={{
+                    display: 'flex', alignItems: 'center', gap: '0.15rem',
+                    fontWeight: 800, color: '#059669', fontSize: '0.95rem',
+                    background: '#ECFDF5', padding: '0.25rem 0.6rem', borderRadius: '0.375rem'
+                  }}>
+                    <IndianRupee size={15} /> {job.salary}
+                  </span>
+                </div>
+
+                {/* ----- ACTION BUTTONS ----- */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                  <Link to={`/jobs/${job.id}`} style={{ textDecoration: 'none' }}>
+                    <button style={{
+                      width: '100%', padding: '0.6rem',
+                      background: 'white', color: '#334155',
+                      border: '1px solid #E2E8F0', borderRadius: '0.5rem',
+                      fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer',
+                      fontFamily: 'inherit', transition: 'background 0.2s',
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.background = '#F8FAFC'}
+                    onMouseLeave={(e) => e.currentTarget.style.background = 'white'}
+                    >
+                      View Details
+                    </button>
+                  </Link>
+
+                  {expired ? (
+                    <button disabled style={{
+                      width: '100%', padding: '0.6rem',
+                      background: '#E5E7EB', color: '#9CA3AF',
+                      border: 'none', borderRadius: '0.5rem',
+                      fontSize: '0.8rem', fontWeight: 700,
+                      cursor: 'not-allowed', fontFamily: 'inherit',
+                    }}>
+                      Closed
+                    </button>
+                  ) : isApplied ? (
+                    <button disabled style={{
+                      width: '100%', padding: '0.6rem',
+                      background: '#D1FAE5', color: '#065F46',
+                      border: 'none', borderRadius: '0.5rem',
+                      fontSize: '0.8rem', fontWeight: 700,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.3rem',
+                      cursor: 'default', fontFamily: 'inherit',
+                    }}>
+                      <CheckCircle size={16} /> Applied
+                    </button>
+                  ) : (
+                    <button
+                      onClick={(e) => handleApply(job.id, e)}
+                      disabled={isApplying}
+                      style={{
+                        width: '100%', padding: '0.6rem',
+                        background: isApplying ? '#A5B4FC' : 'linear-gradient(to right, #4F46E5, #6366F1)',
+                        color: 'white',
+                        border: 'none', borderRadius: '0.5rem',
+                        fontSize: '0.8rem', fontWeight: 700,
+                        cursor: isApplying ? 'not-allowed' : 'pointer',
+                        fontFamily: 'inherit',
+                        transition: 'opacity 0.2s',
+                      }}
+                    >
+                      {isApplying ? 'Applying...' : 'Apply Now'}
+                    </button>
+                  )}
                 </div>
               </div>
             );
