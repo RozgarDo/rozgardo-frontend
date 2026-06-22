@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Button from '../../components/Button';
-import { Zap, CheckCircle2, ShieldCheck, MapPin, IndianRupee, ChevronRight, UserPlus, FileText, CheckCircle, Calendar, Hash } from 'lucide-react';
+import { Zap, CheckCircle2, ShieldCheck, MapPin, IndianRupee, ChevronRight, UserPlus, FileText, CheckCircle, Calendar, Hash, AlertCircle } from 'lucide-react';
 import TrustedEmployers from '../legal/TrustedEmployeers';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
@@ -11,8 +11,12 @@ const Home = ({ user }) => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
+  // Applied jobs state
   const [appliedJobIds, setAppliedJobIds] = useState(new Set());
   const [applyingMap, setApplyingMap] = useState({});
+
+  // Employer photo cache: { employerId: photoUrl }
+  const [employerPhotoMap, setEmployerPhotoMap] = useState({});
 
   useEffect(() => {
     fetchJobs();
@@ -23,6 +27,43 @@ const Home = ({ user }) => {
       fetchApplications();
     }
   }, [user]);
+
+  // Fetch employer photos when jobs change
+  useEffect(() => {
+    if (jobs.length === 0) return;
+
+    const uniqueEmployerIds = [...new Set(jobs.map(job => job.employer_id).filter(Boolean))];
+    const missingIds = uniqueEmployerIds.filter(id => !employerPhotoMap[id]);
+
+    if (missingIds.length === 0) return;
+
+    const fetchPhotos = async () => {
+      try {
+        const promises = missingIds.map(async (id) => {
+          try {
+            const res = await fetch(`${API_BASE_URL}/api/auth/profile/${id}`);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const data = await res.json();
+            return { id, photoUrl: data.user?.photo_url || null };
+          } catch (err) {
+            console.warn(`Could not fetch photo for employer ${id}:`, err);
+            return { id, photoUrl: null };
+          }
+        });
+
+        const results = await Promise.all(promises);
+        const newMap = { ...employerPhotoMap };
+        results.forEach(({ id, photoUrl }) => {
+          if (photoUrl) newMap[id] = photoUrl;
+        });
+        setEmployerPhotoMap(newMap);
+      } catch (err) {
+        console.error('Error fetching employer photos:', err);
+      }
+    };
+
+    fetchPhotos();
+  }, [jobs]);
 
   const fetchJobs = async () => {
     try {
@@ -182,6 +223,8 @@ const Home = ({ user }) => {
                   const deadline = job.apply_deadline ? new Date(job.apply_deadline).toLocaleDateString() : null;
                   const isDeadlineSoon = deadline && new Date(job.apply_deadline) < new Date(Date.now() + 7 * 86400000);
 
+                  const employerPhoto = employerPhotoMap[job.employer_id];
+
                   return (
                     <div
                       key={job.id}
@@ -189,76 +232,88 @@ const Home = ({ user }) => {
                     >
                       {/* Header: logo + title + employer */}
                       <div className="flex items-start gap-3 mb-3">
-                        <div className="w-11 h-11 rounded-full bg-gradient-to-br from-indigo-50 to-indigo-100 text-indigo-600 flex items-center justify-center font-extrabold text-lg border border-indigo-100/50 flex-shrink-0">
-                          {companyInitial}
+                        <div className="w-11 h-11 rounded-full overflow-hidden flex-shrink-0 border border-indigo-100/50">
+                          {employerPhoto ? (
+                            <img
+                              src={employerPhoto}
+                              alt={job.employer_name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gradient-to-br from-indigo-50 to-indigo-100 text-indigo-600 flex items-center justify-center font-extrabold text-lg">
+                              {companyInitial}
+                            </div>
+                          )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <h3 className="text-lg font-bold text-slate-900 leading-tight line-clamp-2 min-h-[2.8rem]">
-                              {job.title}
-                            </h3>
-                            {job.jobs_serial_number && (
-                              <span className="bg-slate-100 text-slate-600 text-[0.6rem] font-bold px-2 py-0.5 rounded border border-slate-200 whitespace-nowrap font-mono tracking-wide flex items-center gap-1">
-                                <Hash size={10} /> {job.jobs_serial_number}
-                              </span>
-                            )}
-                          </div>
+                          {/* Job title - fully displayed, wraps naturally */}
+                          <h3 className="text-lg font-bold text-slate-900 leading-tight break-words whitespace-normal">
+                            {job.title}
+                          </h3>
+                          {/* Employer name - truncated with ellipsis */}
                           <p className="text-slate-500 text-sm font-medium truncate">{job.employer_name}</p>
                         </div>
                       </div>
 
-                      {/* Badges: category + deadline */}
-                      <div className="flex flex-wrap items-center gap-2 mb-3">
-                        <span className="bg-slate-50 text-slate-600 text-[0.7rem] font-bold px-2.5 py-1 rounded border border-slate-200 uppercase">
-                          {job.category}
-                        </span>
+                      {/* Single row: Job ID + Deadline (category removed) */}
+                      <div className="flex flex-wrap items-center gap-1.5 mb-3">
+                        {job.jobs_serial_number && (
+                          <span className="bg-slate-100 text-slate-600 text-[0.6rem] font-bold px-2 py-0.5 rounded border border-slate-200 whitespace-nowrap font-mono tracking-wide flex items-center gap-1">
+                            <Hash size={10} /> {job.jobs_serial_number}
+                          </span>
+                        )}
                         {deadline && (
-                          <span className={`text-[0.7rem] font-semibold px-2.5 py-1 rounded flex items-center gap-1 ${
+                          <span className={`text-[0.7rem] font-semibold px-2.5 py-0.5 rounded flex items-center gap-1 ${
                             expired ? 'bg-red-50 text-red-600' :
                             isDeadlineSoon ? 'bg-amber-50 text-amber-600' : 'bg-slate-100 text-slate-600'
                           }`}>
                             <Calendar size={12} /> {expired ? 'Closed' : `Apply by ${deadline}`}
                           </span>
                         )}
+                        {expired && !deadline && (
+                          <span className="bg-red-50 text-red-600 text-[0.7rem] font-semibold px-2.5 py-0.5 rounded flex items-center gap-1">
+                            <AlertCircle size={12} /> Closed
+                          </span>
+                        )}
                       </div>
 
-                      {/* Bottom: location, salary, buttons */}
-                      <div className="mt-auto">
-                        {/* Location & Salary */}
-                        <div className="flex justify-between items-center py-3 border-t border-slate-100">
-                          <span className="flex items-center gap-1.5 text-slate-600 font-semibold text-sm">
-                            <MapPin size={15} className="text-slate-400" /> {job.location}
-                          </span>
-                          <span className="flex items-center gap-0.5 font-extrabold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded">
-                            <IndianRupee size={15} /> {job.salary}
-                          </span>
-                        </div>
+                      {/* LOCATION | CATEGORY | SALARY (three columns) */}
+                      <div className="flex justify-between items-center py-2.5 border-t border-slate-100">
+                        <span className="flex items-center gap-1.5 text-slate-600 font-semibold text-sm">
+                          <MapPin size={15} className="text-slate-400" /> {job.location}
+                        </span>
+                        <span className="bg-slate-50 text-slate-600 text-[0.7rem] font-bold px-2.5 py-0.5 rounded border border-slate-200 uppercase">
+                          {job.category}
+                        </span>
+                        <span className="flex items-center gap-0.5 font-extrabold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded">
+                          <IndianRupee size={15} /> {job.salary}
+                        </span>
+                      </div>
 
-                        {/* Buttons */}
-                        <div className="grid grid-cols-2 gap-2 pt-3 border-t border-slate-100" onClick={(e) => e.stopPropagation()}>
-                          <Link to={`/jobs/${job.id}`} className="w-full">
-                            <button className="w-full py-2 bg-white text-slate-700 border border-slate-200 rounded-lg text-sm font-bold hover:bg-slate-50 transition-colors">
-                              View Details
-                            </button>
-                          </Link>
-                          {expired ? (
-                            <button className="w-full py-2 bg-slate-200 text-slate-400 rounded-lg text-sm font-bold cursor-not-allowed" disabled>
-                              Closed
-                            </button>
-                          ) : isApplied ? (
-                            <button className="w-full py-2 bg-green-100 text-green-700 rounded-lg text-sm font-bold flex items-center justify-center gap-1 cursor-default" disabled>
-                              <CheckCircle size={16} /> Applied
-                            </button>
-                          ) : (
-                            <button
-                              className="w-full py-2 bg-gradient-to-r from-indigo-600 to-indigo-500 text-white rounded-lg text-sm font-bold hover:opacity-90 transition-opacity disabled:opacity-70"
-                              onClick={(e) => handleApply(job.id, e)}
-                              disabled={isApplying}
-                            >
-                              {isApplying ? 'Applying...' : 'Apply Now'}
-                            </button>
-                          )}
-                        </div>
+                      {/* ACTION BUTTONS */}
+                      <div className="grid grid-cols-2 gap-2 pt-3 border-t border-slate-100 mt-auto" onClick={(e) => e.stopPropagation()}>
+                        <Link to={`/jobs/${job.id}`} className="w-full">
+                          <button className="w-full py-2 bg-white text-slate-700 border border-slate-200 rounded-lg text-sm font-bold hover:bg-slate-50 transition-colors">
+                            View Details
+                          </button>
+                        </Link>
+                        {expired ? (
+                          <button className="w-full py-2 bg-slate-200 text-slate-400 rounded-lg text-sm font-bold cursor-not-allowed" disabled>
+                            Closed
+                          </button>
+                        ) : isApplied ? (
+                          <button className="w-full py-2 bg-green-100 text-green-700 rounded-lg text-sm font-bold flex items-center justify-center gap-1 cursor-default" disabled>
+                            <CheckCircle size={16} /> Applied
+                          </button>
+                        ) : (
+                          <button
+                            className="w-full py-2 bg-gradient-to-r from-indigo-600 to-indigo-500 text-white rounded-lg text-sm font-bold hover:opacity-90 transition-opacity disabled:opacity-70"
+                            onClick={(e) => handleApply(job.id, e)}
+                            disabled={isApplying}
+                          >
+                            {isApplying ? 'Applying...' : 'Apply Now'}
+                          </button>
+                        )}
                       </div>
                     </div>
                   );

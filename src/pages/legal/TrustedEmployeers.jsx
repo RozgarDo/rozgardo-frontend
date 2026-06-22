@@ -4,9 +4,9 @@ import React, { useState, useEffect } from 'react';
 import flurysImg from '../../assets/flurys.png';
 import barbequeNationImg from '../../assets/barbeque_nation.png';
 import sixDowntownImg from '../../assets/6downtown.png';
-import chaiBreakImg from '../../assets/chai_break.png';
-import absoluteBarbequeImg from '../../assets/absolute_barbeque.png';
-import theBeerCafeImg from '../../assets/the_beer_cafe.png';
+import chaiBreakImg from '../../assets/chai_break.jpeg';
+import absoluteBarbequeImg from '../../assets/absolute_barbeque.jpeg';
+import theBeerCafeImg from '../../assets/the_beer_cafe.jpeg';
 
 const TrustedEmployers = () => {
   const logos = [

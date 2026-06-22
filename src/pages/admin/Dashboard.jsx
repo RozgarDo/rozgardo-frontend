@@ -1,3 +1,4 @@
+// src/pages/admin/AdminDashboard.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { ShieldAlert, Briefcase, Users, FileText } from 'lucide-react';
 import KPICards from './components/KPICards';
@@ -53,31 +54,42 @@ const AdminDashboard = ({ user }) => {
     }
   }, [activeTab]);
 
-  // ✅ OPTIMIZED: fetch only jobs, employees, employers – NO applicants pre‑fetch
+  // ✅ FETCH ALL DATA: jobs, employees, employers, AND applications
   const fetchAllInitialData = async () => {
     setLoading(true);
     try {
       const headers = getAuthHeaders();
-      const [jobsRes, empRes, employerRes] = await Promise.all([
+      const [jobsRes, empRes, employerRes, appsRes] = await Promise.all([
         fetch(`${API_BASE_URL}/api/jobs`, { headers }),
         fetch(`${API_BASE_URL}/api/auth/admin/all-employees`, { headers }),
-        fetch(`${API_BASE_URL}/api/auth/admin/all-employers`, { headers })
+        fetch(`${API_BASE_URL}/api/auth/admin/all-employers`, { headers }),
+        fetch(`${API_BASE_URL}/api/auth/admin/applications`, { headers }) // NEW ROUTE
       ]);
 
       let jobsData = [];
       let employeesData = [];
       let employersData = [];
+      let applicationsData = [];
 
       if (jobsRes.ok) jobsData = await jobsRes.json();
       if (empRes.ok) employeesData = await empRes.json();
       if (employerRes.ok) employersData = await employerRes.json();
+      if (appsRes.ok) applicationsData = await appsRes.json();
 
       setJobs(jobsData);
       setEmployees(employeesData);
       setEmployers(employersData);
+      setApplications(applicationsData);
 
-      // ✅ Do NOT fetch applicants here – they will be lazy‑loaded when needed.
-      // This reduces initial load time from O(N) API calls to just 3 calls.
+      // Build applicantsMap: group applications by job_id
+      const map = {};
+      applicationsData.forEach(app => {
+        const jobId = app.job_id;
+        if (!map[jobId]) map[jobId] = [];
+        map[jobId].push(app);
+      });
+      setApplicantsMap(map);
+
     } catch (err) {
       console.error('Error fetching initial data:', err);
     } finally {
@@ -99,7 +111,7 @@ const AdminDashboard = ({ user }) => {
     }
   };
 
-  // ✅ Lazy load applicants when a job is expanded – only then
+  // ✅ Lazy load applicants for a job (if not already loaded)
   const fetchApplicantsForJob = async (jobId) => {
     if (applicantsMap[jobId]) return; // already loaded
     setLoadingApplicants(prev => ({ ...prev, [jobId]: true }));
@@ -108,6 +120,7 @@ const AdminDashboard = ({ user }) => {
       const res = await fetch(`${API_BASE_URL}/api/applications/job/${jobId}`, { headers });
       if (res.ok) {
         const data = await res.json();
+        // Update the map and applications array
         setApplicantsMap(prev => ({ ...prev, [jobId]: data }));
         setApplications(prev => [...prev, ...data]);
       } else {
@@ -143,7 +156,7 @@ const AdminDashboard = ({ user }) => {
     }
   };
 
-  // (All report functions remain exactly as before – keep them unchanged)
+  // ---------- Report helper functions (unchanged) ----------
   const isWithinReportDateRange = (createdAt) => {
     if (!createdAt) return false;
     const date = new Date(createdAt);
@@ -454,9 +467,6 @@ const AdminDashboard = ({ user }) => {
               setJobStatusFilter={setJobStatusFilter}
               searchEmployee={searchEmployee}
               setSearchEmployee={setSearchEmployee}
-              exportJobsReport={exportJobsReport}
-              exportEmployeesReport={exportEmployeesReport}
-              exportCombinedReport={exportCombinedReport}
               isWithinReportDateRange={isWithinReportDateRange}
             />
           </div>

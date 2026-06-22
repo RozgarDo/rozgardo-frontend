@@ -38,6 +38,8 @@ import EmployeeSettings from './pages/employee/EmployeeSettings';
 import EmployerSettings from './pages/employer/EmployerSettings';
 import AdminSettings from './pages/admin/AdminSettings';
 
+const API_BASE_URL = import.meta.env.VITE_API_URL;
+
 const PrivateRoute = ({ children, user, requiredRole }) => {
   // if (!user) {
   //   return <Navigate to="/login" replace />;
@@ -47,8 +49,6 @@ const PrivateRoute = ({ children, user, requiredRole }) => {
   }
   return children;
 };
-
-
 
 function AppContent({ user, setUser, handleLogin, handleLogout }) {
   const location = useLocation();
@@ -105,13 +105,8 @@ function AppContent({ user, setUser, handleLogin, handleLogout }) {
             }
           />
           
-
-          
-          
           <Route path="/employee-login" element={user ? <Navigate to="/" replace /> : <EmployeeLogin onLogin={handleLogin} />} />
           <Route path="/employer-login" element={user ? <Navigate to="/" replace /> : <EmployerLogin onLogin={handleLogin} />} />
-
-          
 
           <Route 
             path="/jobs/:id" 
@@ -144,15 +139,8 @@ function AppContent({ user, setUser, handleLogin, handleLogout }) {
             } 
           />
 
-
-          {/* <Route path="/jobs/:id" element={<JobDetails user={user} />} /> */}
-          {/* <Route path="/applications" element={<Applications user={user} />} /> */}
-          {/* <Route path="/all-jobs" element={<AllJobs user={user} />} /> */}
-          
-
           <Route path="/employer" element={user?.role === 'employer' ? <EmployerDashboard user={user} /> : <Navigate to="/employer-login" />} />
-
-          <Route path="/employer/post-job" element={user?.role === 'employer' ? <PostJob user={user} /> : <Navigate to="/" />} /> {/*//check */}
+          <Route path="/employer/post-job" element={user?.role === 'employer' ? <PostJob user={user} /> : <Navigate to="/" />} />
           
           <Route path="/admin/login"  element={<AdminLogin onLogin={handleLogin} user={user} />} />
 
@@ -175,11 +163,10 @@ function AppContent({ user, setUser, handleLogin, handleLogout }) {
               user?.role === 'employee' ? (
                 <EmployeeSettings user={user} setUser={setUser} onLogout={handleLogout} />
               ) : (
-                <Navigate to="/" replace />//check
+                <Navigate to="/" replace />
               )
             }
           />
-
 
           <Route
             path="/employer-settings"
@@ -187,11 +174,10 @@ function AppContent({ user, setUser, handleLogin, handleLogout }) {
               user?.role === 'employer' ? (
                 <EmployerSettings user={user} setUser={setUser} onLogout={handleLogout} />
               ) : (
-                <Navigate to="/" replace />//check
+                <Navigate to="/" replace />
               )
             }
           />
-
 
           <Route
             path="/admin-settings"
@@ -213,7 +199,66 @@ function App() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // 🔐 Token validation function (new)
+  const validateToken = async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      // No token – clear any stale user data
+      localStorage.removeItem('user');
+      setUser(null);
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/auth/me`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (res.status === 401) {
+        console.warn('🔐 Token invalid – logging out');
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        setUser(null);
+      } else if (res.ok) {
+        // Token is valid – keep the existing user data from localStorage
+        const storedUser = localStorage.getItem('user');
+        if (storedUser) {
+          try {
+            setUser(JSON.parse(storedUser));
+          } catch {
+            setUser(null);
+          }
+        } else {
+          setUser(null);
+        }
+      } else {
+        // Other error – treat as invalid
+        console.error('Token validation error:', await res.text());
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        setUser(null);
+      }
+    } catch (err) {
+      console.error('Network error during token validation:', err);
+      // Don't clear on network error – might be temporary
+      // Keep existing user and token
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        try {
+          setUser(JSON.parse(storedUser));
+        } catch {
+          setUser(null);
+        }
+      } else {
+        setUser(null);
+      }
+    }
+    setLoading(false);
+  };
+
   useEffect(() => {
+    // First, load user from localStorage quickly
     const loggedInUser = localStorage.getItem('user');
     if (loggedInUser) {
       try {
@@ -223,20 +268,26 @@ function App() {
         localStorage.removeItem('user');
       }
     }
-    setLoading(false);
+    // Then validate the token asynchronously
+    validateToken();
   }, []);
 
   const handleLogin = (userData) => {
     setUser(userData);
     localStorage.setItem('user', JSON.stringify(userData));
+    // Token is already stored by the login component
   };
 
   const handleLogout = () => {
     setUser(null);
     localStorage.removeItem('user');
+    localStorage.removeItem('token'); // ✅ Also clear token
   };
 
-  if (loading) return null;
+  if (loading) {
+    // Show nothing or a loading spinner while validating
+    return null;
+  }
 
   return (
     <Router>
