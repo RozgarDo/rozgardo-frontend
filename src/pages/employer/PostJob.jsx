@@ -83,11 +83,16 @@ const PostJob = ({ user }) => {
                    required
                 >
                    <option value="">Select a category</option>
-                   <option value="Driver">Driver</option>
-                   <option value="Cook">Cook</option>
-                   <option value="Cleaner">Cleaner</option>
-                   <option value="Helper">Helper</option>
-                   <option value="Security">Security</option>
+                   <option value="Food & Beverage Service">Food & Beverage Service</option>
+                   <option value="Kitchen Operations">Kitchen Operations</option>
+                   <option value="Front Office">Front Office</option>
+                   <option value="Housekeeping">Housekeeping</option>
+                   <option value="Stewarding & Utility">Stewarding & Utility</option>
+                   <option value="Cashier & Counter Operations">Cashier & Counter Operations</option>
+                   <option value="Retail Operations">Retail Operations</option>
+                   <option value="Logistics & Delivery">Logistics & Delivery</option>
+                   <option value="Manufacturing & Production">Manufacturing & Production</option>
+                   <option value="Others">Others</option>
                 </select>
              </div>
 

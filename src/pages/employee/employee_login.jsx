@@ -165,6 +165,12 @@ const EmployeeLogin = ({ onLogin }) => {
         }
         throw new Error(data.error || 'Login failed');
       }
+
+      // ✅ Store the JWT token
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+      }
+
       routeUser(data.user);
     } catch (err) {
       setError(err.message);
@@ -199,6 +205,12 @@ const EmployeeLogin = ({ onLogin }) => {
         }
         throw new Error(data.error || 'Authentication failed');
       }
+
+      // ✅ Store the JWT token
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+      }
+
       routeUser(data.user);
     } catch (err) {
       setError(err.message);

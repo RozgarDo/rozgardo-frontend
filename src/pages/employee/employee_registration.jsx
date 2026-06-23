@@ -36,7 +36,7 @@ const EmployeeRegistration = () => {
     confirmPassword: ''
   });
 
-  const jobTypesList = ['Driver', 'Delivery Boy / Rider', 'Chef / Cook','Housekeeping Staff', 'Cleaner', 'Kitchen Helper', 'Electrician', 'Waiter / Steward', 'Security', 'Telecaller'];
+  const jobTypesList = ['Food & Beverage Service', 'Kitchen Operations', 'Front Office', 'Housekeeping', 'Stewarding & Utility', 'Cashier & Counter Operations', 'Retail Operations', 'Logistics & Delivery', 'Manufacturing & Production'];
   const languagesList = ['Hindi', 'English', 'Bengali', 'Nepali', 'Kannada'];
   const qualificationsList = ['Select qualification', 'No Formal Education', 'Below 10th', '10th Pass', '12th Pass', 'ITI', 'Diploma', 'Graduate', 'Post Graduate'];
 
