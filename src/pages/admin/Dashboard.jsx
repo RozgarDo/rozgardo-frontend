@@ -30,7 +30,7 @@ const AdminDashboard = ({ user }) => {
 
   const tabRefs = useRef({});
 
-  // ✅ Helper to get auth headers with token
+  // Helper to get auth headers with token
   const getAuthHeaders = () => {
     const token = localStorage.getItem('token');
     return {
@@ -54,7 +54,7 @@ const AdminDashboard = ({ user }) => {
     }
   }, [activeTab]);
 
-  // ✅ FETCH ALL DATA: jobs, employees, employers, AND applications
+  // Fetch all data
   const fetchAllInitialData = async () => {
     setLoading(true);
     try {
@@ -63,7 +63,7 @@ const AdminDashboard = ({ user }) => {
         fetch(`${API_BASE_URL}/api/jobs`, { headers }),
         fetch(`${API_BASE_URL}/api/auth/admin/all-employees`, { headers }),
         fetch(`${API_BASE_URL}/api/auth/admin/all-employers`, { headers }),
-        fetch(`${API_BASE_URL}/api/auth/admin/applications`, { headers }) // NEW ROUTE
+        fetch(`${API_BASE_URL}/api/auth/admin/applications`, { headers })
       ]);
 
       let jobsData = [];
@@ -81,7 +81,7 @@ const AdminDashboard = ({ user }) => {
       setEmployers(employersData);
       setApplications(applicationsData);
 
-      // Build applicantsMap: group applications by job_id
+      // Build applicantsMap
       const map = {};
       applicationsData.forEach(app => {
         const jobId = app.job_id;
@@ -111,16 +111,15 @@ const AdminDashboard = ({ user }) => {
     }
   };
 
-  // ✅ Lazy load applicants for a job (if not already loaded)
+  // Lazy load applicants for a job
   const fetchApplicantsForJob = async (jobId) => {
-    if (applicantsMap[jobId]) return; // already loaded
+    if (applicantsMap[jobId]) return;
     setLoadingApplicants(prev => ({ ...prev, [jobId]: true }));
     try {
       const headers = getAuthHeaders();
       const res = await fetch(`${API_BASE_URL}/api/applications/job/${jobId}`, { headers });
       if (res.ok) {
         const data = await res.json();
-        // Update the map and applications array
         setApplicantsMap(prev => ({ ...prev, [jobId]: data }));
         setApplications(prev => [...prev, ...data]);
       } else {
@@ -373,10 +372,16 @@ const AdminDashboard = ({ user }) => {
     );
   };
 
+  // ================================================================
+  // FULL-SCREEN OVERLAY LOADER – hides navbar while loading
+  // ================================================================
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-[60vh]">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
+      <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-white/95 backdrop-blur-sm">
+        <div className="flex flex-col items-center gap-3">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
+          <p className="text-gray-500 text-sm font-medium">Loading...</p>
+        </div>
       </div>
     );
   }
@@ -399,7 +404,7 @@ const AdminDashboard = ({ user }) => {
         }} />
       </div>
 
-      {/* Responsive tab bar with scroll-into-view on selection */}
+      {/* Tab bar */}
       <div className="flex overflow-x-auto sm:overflow-visible gap-2 mb-4 sm:mb-8 pb-2 sm:pb-4 border-b border-gray-200 hide-scrollbar">
         {['jobs', 'users', 'reports'].map(tab => (
           <button
@@ -444,7 +449,6 @@ const AdminDashboard = ({ user }) => {
             />
           </div>
         )}
-
         {activeTab === 'reports' && (
           <div className="w-full">
             <Reports

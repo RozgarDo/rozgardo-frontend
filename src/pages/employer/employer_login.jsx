@@ -130,7 +130,7 @@ const EmployerLogin = ({ onLogin }) => {
     }
   };
 
-  // Password login
+  // Password login (UPDATED: store token)
   const handlePasswordLogin = async () => {
     setError('');
     setMessage('');
@@ -161,13 +161,17 @@ const EmployerLogin = ({ onLogin }) => {
         }
         throw new Error(data.error || 'Login failed');
       }
+      // ✅ Store JWT token
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+      }
       routeUser(data.user);
     } catch (err) {
       setError(err.message);
     }
   };
 
-  // OTP login
+  // OTP login (UPDATED: store token)
   const handleOtpLogin = async () => {
     setError('');
     setMessage('');
@@ -190,6 +194,10 @@ const EmployerLogin = ({ onLogin }) => {
           return;
         }
         throw new Error(data.error || 'Authentication failed');
+      }
+      // ✅ Store JWT token
+      if (data.token) {
+        localStorage.setItem('token', data.token);
       }
       routeUser(data.user);
     } catch (err) {

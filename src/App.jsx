@@ -183,7 +183,7 @@ function AppContent({ user, setUser, handleLogin, handleLogout }) {
             path="/admin-settings"
             element={
               <PrivateRoute user={user} requiredRole="admin">
-                <AdminSettings user={user} />
+                <AdminSettings user={user} setUser={setUser} />
               </PrivateRoute>
             }
           />
@@ -284,9 +284,16 @@ function App() {
     localStorage.removeItem('token'); // ✅ Also clear token
   };
 
+  // ✅ Show loading spinner during token validation
   if (loading) {
-    // Show nothing or a loading spinner while validating
-    return null;
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="flex flex-col items-center gap-3">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-600"></div>
+          <p className="text-gray-500 text-sm">Loading...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
