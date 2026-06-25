@@ -74,7 +74,7 @@ const ModerateJobs = ({ jobs, onJobAction, applicantsMap, fetchApplicantsForJob,
                 <div><p className="font-semibold">Experience</p><p>{job.required_experience || '-'}</p></div>
                 <div><p className="font-semibold">Education</p><p>{job.education || '-'}</p></div>
                 <div><p className="font-semibold">Skills</p><p>{job.technical_skills || '-'}</p></div>
-                <div className="col-span-2"><p className="font-semibold">Description</p><p>{job.description}</p></div>
+                <div className="col-span-2"><p className="font-semibold">Description</p><div className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">{job.description}</div></div>
                 {job.apply_deadline && <div><p className="font-semibold">Deadline</p><p>{new Date(job.apply_deadline).toLocaleDateString()}</p></div>}
               </div>
               <hr className="my-4" />

@@ -394,7 +394,7 @@ const StatusDropdown = ({ currentStatus, onChange, isLoading }) => {
   const statusOptions = [
     { label: "Applied", value: "applied" },
     { label: "Shortlist", value: "shortlisted" },
-    { label: "Call for Interview", value: "interview" },
+    { label: "Interview", value: "interview" },
     { label: "Select & Hire", value: "selected" },
     { label: "Reject", value: "rejected" },
   ];

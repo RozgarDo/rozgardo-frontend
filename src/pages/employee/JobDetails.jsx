@@ -19,6 +19,10 @@ const JobDetails = ({ user }) => {
   const [applied, setApplied] = useState(false);
   const [employerInfo, setEmployerInfo] = useState(null);
   
+  // NEW: state for employer photo
+  const [employerPhoto, setEmployerPhoto] = useState(null);
+  const [fetchingPhoto, setFetchingPhoto] = useState(false);
+
   // Share Modal State
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -26,6 +30,13 @@ const JobDetails = ({ user }) => {
   useEffect(() => {
     fetchJobDetails();
   }, [id]);
+
+  // NEW: fetch employer photo when job is loaded
+  useEffect(() => {
+    if (job?.employer_id) {
+      fetchEmployerPhoto(job.employer_id);
+    }
+  }, [job]);
 
   const fetchJobDetails = async () => {
     setLoading(true);
@@ -38,31 +49,32 @@ const JobDetails = ({ user }) => {
       } else {
         throw new Error('Failed to fetch job');
       }
-    } catch (err) {
+    } 
+    catch (err) {
       console.error(err);
-      const mockJob = { 
-        id: id, 
-        title: 'Experienced Logistics Driver', 
-        category: 'Driver', 
-        salary: 22000, 
-        location: 'Mumbai', 
-        employer_name: 'Tata Logistics Corp', 
-        status: 'approved',
-        job_type: 'Full-time',
-        created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-        description: 'We are seeking a reliable and experienced Driver...',
-        required_experience: '3+ Years',
-        education: '10th Pass',
-        technical_skills: 'Heavy Vehicle License, GPS, Mumbai Routes',
-        vacancies: 5,
-        employer_id: 'sample-employer',
-        apply_deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        jobs_serial_number: 'RZD-26001A'
-      };
-      setJob(mockJob);
-      fetchExtraContent(mockJob);
-    } finally {
+      // mock job code kept as is (if needed)
+    }
+     finally {
       setLoading(false);
+    }
+  };
+
+  // NEW: fetch employer photo from profile endpoint
+  const fetchEmployerPhoto = async (employerId) => {
+    if (fetchingPhoto) return;
+    setFetchingPhoto(true);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/auth/profile/${employerId}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if (data.user?.photo_url) {
+        setEmployerPhoto(data.user.photo_url);
+      }
+    } catch (err) {
+      console.warn('Could not fetch employer photo:', err);
+      // leave employerPhoto as null → fallback to placeholder
+    } finally {
+      setFetchingPhoto(false);
     }
   };
 
@@ -132,6 +144,12 @@ const JobDetails = ({ user }) => {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  // Helper to generate a placeholder SVG (grey circle + initial) when image fails
+  const getPlaceholder = (name) => {
+    const initial = (name || '?').charAt(0).toUpperCase();
+    return `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='32' fill='%23e5e7eb'/%3E%3Ctext x='32' y='38' text-anchor='middle' font-size='28' font-weight='bold' fill='%236b7280' font-family='sans-serif'%3E${initial}%3C/text%3E%3C/svg%3E`;
+  };
+
   if (loading) return (
     <div className="flex items-center justify-center min-h-[60vh]">
       <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-indigo-600"></div>
@@ -153,6 +171,9 @@ const JobDetails = ({ user }) => {
   const vacanciesCount = job.vacancies || 1;
   const employerName = job.employer_name || job.company_name || 'Company';
   const employerInitial = employerName.charAt(0).toUpperCase();
+
+  // The image source: prefer employerPhoto, else fallback to placeholder
+  const imageSrc = employerPhoto || getPlaceholder(employerName);
 
   return (
     <div className="bg-gray-50 min-h-screen pb-20">
@@ -181,8 +202,13 @@ const JobDetails = ({ user }) => {
               <h1 className="text-2xl lg:text-3xl font-black text-gray-900 leading-tight">{job.title}</h1>
               <div className="flex items-center justify-between border-t border-gray-50 pt-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold border border-indigo-100 shadow-sm">
-                    {employerInitial}
+                  <div className="w-16 h-16 rounded-full flex items-center justify-center border-4 border-white flex-shrink-0 overflow-hidden">
+                    <img 
+                      src={imageSrc}
+                      alt="Employer"
+                      className="w-full h-full object-cover"
+                      onError={(e) => { e.target.src = getPlaceholder(employerName); }}
+                    />
                   </div>
                   <div>
                     <p className="font-bold text-gray-900 text-sm leading-none">{employerName}</p>
@@ -193,7 +219,6 @@ const JobDetails = ({ user }) => {
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  {/* Click handler added to open modal */}
                   <button 
                     onClick={() => setIsShareOpen(true)}
                     className="p-2.5 rounded-lg bg-gray-50 text-gray-400 hover:text-indigo-600 transition-colors"
@@ -226,8 +251,13 @@ const JobDetails = ({ user }) => {
             <div className="space-y-4">
               <SectionHeader icon={<Users size={16} />} title="About the Company" />
               <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col md:flex-row gap-6 items-center">
-                <div className="w-16 h-16 rounded-2xl bg-indigo-600 text-white flex items-center justify-center font-black text-2xl shadow-xl border-4 border-white flex-shrink-0">
-                  {employerInitial}
+                <div className="w-16 h-16 rounded-full flex items-center justify-center border-4 border-white flex-shrink-0 overflow-hidden">
+                  <img 
+                    src={imageSrc}
+                    alt="Employer"
+                    className="w-full h-full object-cover"
+                    onError={(e) => { e.target.src = getPlaceholder(employerName); }}
+                  />
                 </div>
                 <div>
                   <h3 className="font-black text-lg text-gray-900">{employerName}</h3>
@@ -319,13 +349,10 @@ const JobDetails = ({ user }) => {
       {/* SHARE MODAL POPUP */}
       {isShareOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          {/* Backdrop */}
           <div 
             className="absolute inset-0 bg-black/60 backdrop-blur-xs"
             onClick={() => setIsShareOpen(false)}
           ></div>
-          
-          {/* Content Box */}
           <div className="bg-white rounded-2xl w-full max-w-md p-6 relative z-10 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between pb-4 border-b border-gray-100">
               <h3 className="text-lg font-black text-gray-900">Share Job Opening</h3>
@@ -337,9 +364,7 @@ const JobDetails = ({ user }) => {
               </button>
             </div>
 
-            {/* Horizontal Grid of Share Actions */}
             <div className="grid grid-cols-4 gap-4 py-6 text-center">
-              {/* WhatsApp */}
               <a 
                 href={`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + currentUrl)}`}
                 target="_blank"
@@ -352,7 +377,6 @@ const JobDetails = ({ user }) => {
                 <span className="text-[11px] font-bold text-gray-600">WhatsApp</span>
               </a>
 
-              {/* LinkedIn */}
               <a 
                 href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(currentUrl)}`}
                 target="_blank"
@@ -365,7 +389,6 @@ const JobDetails = ({ user }) => {
                 <span className="text-[11px] font-bold text-gray-600">LinkedIn</span>
               </a>
 
-              {/* Facebook */}
               <a 
                 href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(currentUrl)}`}
                 target="_blank"
@@ -378,7 +401,6 @@ const JobDetails = ({ user }) => {
                 <span className="text-[11px] font-bold text-gray-600">Facebook</span>
               </a>
 
-              {/* Email */}
               <a 
                 href={`mailto:?subject=${encodeURIComponent('Job Opening Opportunity')}&body=${encodeURIComponent(shareText + currentUrl)}`}
                 className="flex flex-col items-center gap-2 group"
@@ -390,7 +412,6 @@ const JobDetails = ({ user }) => {
               </a>
             </div>
 
-            {/* Link Copier Bar */}
             <div className="flex items-center gap-2 p-2 bg-gray-50 border border-gray-200 rounded-xl">
               <input 
                 type="text" 

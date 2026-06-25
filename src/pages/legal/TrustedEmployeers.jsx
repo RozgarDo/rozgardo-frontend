@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 
-// Import your logos (keep your paths)
+// Import your logos (keeping your paths untouched)
 import flurysImg from '../../assets/flurys.png';
 import barbequeNationImg from '../../assets/barbeque_nation.png';
 import sixDowntownImg from '../../assets/6downtown.png';
@@ -18,23 +18,6 @@ const TrustedEmployers = () => {
     { src: theBeerCafeImg, alt: 'The Beer Cafe', height: 'h-14 md:h-16' },
   ];
 
-  const [duration, setDuration] = useState('28s');
-
-  useEffect(() => {
-    const updateDuration = () => {
-      const width = window.innerWidth;
-      if (width < 640) {
-        setDuration('15s'); // faster on mobile
-      } else {
-        setDuration('28s'); // slightly faster on desktop
-      }
-    };
-
-    updateDuration();
-    window.addEventListener('resize', updateDuration);
-    return () => window.removeEventListener('resize', updateDuration);
-  }, []);
-
   return (
     <div className="mt-8 bg-white rounded-2xl shadow-sm border border-slate-100 p-8 relative">
       {/* Badge – untouched */}
@@ -48,18 +31,39 @@ const TrustedEmployers = () => {
         </div>
       </div>
 
-      {/* Responsive marquee – now faster */}
-      <div className="overflow-hidden w-full">
-        <div
-          className="flex flex-nowrap gap-4 sm:gap-8 animate-scroll-left will-change-transform"
-          style={{ animationDuration: duration }}
-          onMouseEnter={(e) => (e.currentTarget.style.animationPlayState = 'paused')}
-          onMouseLeave={(e) => (e.currentTarget.style.animationPlayState = 'running')}
-        >
-          {[...logos, ...logos].map((logo, index) => (
+      {/* Jitter-Free Custom CSS Keyframes */}
+      <style>{`
+        @keyframes marquee {
+          0% { transform: translate3d(0, 0, 0); }
+          100% { transform: translate3d(-100%, 0, 0); }
+        }
+        .animate-marquee-track {
+          display: flex;
+          flex-shrink: 0;
+          align-items: center;
+          justify-content: space-around;
+          min-width: 100%;
+          animation: marquee 25s linear infinite;
+        }
+        @media (max-width: 640px) {
+          .animate-marquee-track {
+            animation: marquee 14s linear infinite;
+          }
+        }
+        .marquee-container:hover .animate-marquee-track {
+          animation-play-state: paused;
+        }
+      `}</style>
+
+      {/* Marquee Wrapper (Faded edges mask removed) */}
+      <div className="overflow-hidden w-full flex marquee-container">
+        
+        {/* TRACK 1 */}
+        <div className="animate-marquee-track gap-4 sm:gap-8 pr-4 sm:pr-8">
+          {logos.map((logo, index) => (
             <div
-              key={index}
-              className="flex-shrink-0 flex justify-center items-center h-24 min-w-[120px] sm:min-w-[180px] bg-slate-50/40 rounded-xl border border-transparent hover:border-slate-200 transition-all group"
+              key={`track1-${index}`}
+              className="flex-shrink-0 flex justify-center items-center h-24 min-w-[140px] sm:min-w-[180px] bg-slate-50/40 rounded-xl border border-transparent hover:border-slate-200 transition-all group"
             >
               <img
                 src={logo.src}
@@ -69,6 +73,23 @@ const TrustedEmployers = () => {
             </div>
           ))}
         </div>
+
+        {/* TRACK 2 (Exact Duplicate) */}
+        <div className="animate-marquee-track gap-4 sm:gap-8 pr-4 sm:pr-8" aria-hidden="true">
+          {logos.map((logo, index) => (
+            <div
+              key={`track2-${index}`}
+              className="flex-shrink-0 flex justify-center items-center h-24 min-w-[140px] sm:min-w-[180px] bg-slate-50/40 rounded-xl border border-transparent hover:border-slate-200 transition-all group"
+            >
+              <img
+                src={logo.src}
+                alt={logo.alt}
+                className={`${logo.height} w-auto object-contain transition-transform duration-300 group-hover:scale-105`}
+              />
+            </div>
+          ))}
+        </div>
+
       </div>
     </div>
   );
