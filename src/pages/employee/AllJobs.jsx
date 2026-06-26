@@ -4,6 +4,16 @@ import { MapPin, IndianRupee, Briefcase, Search, X, ArrowLeft, Calendar, Hash, C
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
+// Helper to shuffle an array (Fisher–Yates)
+const shuffleArray = (array) => {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+};
+
 const AllJobs = ({ user }) => {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -75,7 +85,9 @@ const AllJobs = ({ user }) => {
       const res = await fetch(`${API_BASE_URL}/api/jobs?status=approved`);
       if (res.ok) {
         const data = await res.json();
-        setJobs(data);
+        // Shuffle the jobs so they appear in random order
+        const shuffled = shuffleArray(data);
+        setJobs(shuffled);
       } else {
         throw new Error('Failed to fetch jobs');
       }
@@ -266,8 +278,29 @@ const AllJobs = ({ user }) => {
                   </div>
                 </div>
 
-                {/* ----- SINGLE ROW: Job ID + Deadline (category removed) ----- */}
-                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.4rem 0.6rem', marginBottom: '0.75rem' }}>
+                {/* ----- NEW ROW: Category + Job ID ----- */}
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: '0.5rem',
+                  gap: '0.5rem'
+                }}>
+                  <span style={{
+                    background: '#F8FAFC',
+                    color: '#475569',
+                    fontSize: '0.7rem',
+                    fontWeight: 600,
+                    padding: '0.25rem 0.6rem',
+                    borderRadius: '0.375rem',
+                    border: '1px solid #E2E8F0',
+                    maxWidth: '70%',
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis'
+                  }}>
+                    {job.category}
+                  </span>
                   {job.jobs_serial_number && (
                     <span style={{
                       background: '#F3F4F6',
@@ -279,13 +312,28 @@ const AllJobs = ({ user }) => {
                       border: '1px solid #E5E7EB',
                       fontFamily: 'monospace',
                       letterSpacing: '0.5px',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '0.25rem'
+                      whiteSpace: 'nowrap'
                     }}>
-                      <Hash size={12} /> {job.jobs_serial_number}
+                      {job.jobs_serial_number}
                     </span>
                   )}
+                </div>
+
+                {/* ----- NEW ROW: Location + Deadline + Salary ----- */}
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  padding: '0.5rem 0',
+                  borderTop: '1px solid #F1F5F9',
+                  borderBottom: '1px solid #F1F5F9',
+                  marginBottom: '0.75rem',
+                  flexWrap: 'wrap',
+                  gap: '0.25rem 0.5rem'
+                }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: '#475569', fontSize: '0.8rem', fontWeight: 600 }}>
+                    <MapPin size={15} color="#94A3B8" /> {job.location}
+                  </span>
                   {deadline ? (
                     <span style={{
                       background: expired ? '#FEE2E2' : (isDeadlineSoon ? '#FEF3C7' : '#F3F4F6'),
@@ -308,33 +356,6 @@ const AllJobs = ({ user }) => {
                       </span>
                     )
                   )}
-                </div>
-
-                {/* ----- LOCATION | CATEGORY | SALARY (three columns) ----- */}
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  padding: '0.5rem 0',
-                  borderTop: '1px solid #F1F5F9',
-                  borderBottom: '1px solid #F1F5F9',
-                  marginBottom: '0.75rem'
-                }}>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: '#475569', fontSize: '0.8rem', fontWeight: 600 }}>
-                    <MapPin size={15} color="#94A3B8" /> {job.location}
-                  </span>
-                  <span style={{
-                    background: '#F8FAFC',
-                    color: '#475569',
-                    fontSize: '0.7rem',
-                    fontWeight: 700,
-                    padding: '0.25rem 0.6rem',
-                    borderRadius: '0.375rem',
-                    textTransform: 'uppercase',
-                    border: '1px solid #E2E8F0'
-                  }}>
-                    {job.category}
-                  </span>
                   <span style={{
                     display: 'flex', alignItems: 'center', gap: '0.15rem',
                     fontWeight: 800, color: '#059669', fontSize: '0.95rem',

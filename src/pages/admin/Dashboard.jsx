@@ -358,8 +358,8 @@ const AdminDashboard = ({ user }) => {
             <tbody>
               {applicants.map(app => (
                 <tr key={app.id} className="border-t">
-                  <td className="p-2">{app.users?.name || 'Unknown'}</td>
-                  <td className="p-2 text-xs">{app.users?.phone}<br/>{app.users?.email}</td>
+                  <td className="p-2">{app.users?.full_name || 'Unknown'}</td>
+                  <td className="p-2 text-xs">{app.users?.phone_number}<br/>{app.users?.email}</td>
                   <td className="p-2 text-xs">{app.users?.skills || '-'}</td>
                   <td className="p-2"><span className={`badge badge-${app.status}`}>{app.status}</span></td>
                   <td className="p-2 text-xs">{app.interview_date ? new Date(app.interview_date).toLocaleString() : '-'}</td>
