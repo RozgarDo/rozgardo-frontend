@@ -319,7 +319,7 @@ const AllJobs = ({ user }) => {
                   )}
                 </div>
 
-                {/* ----- NEW ROW: Location + Deadline + Salary ----- */}
+                {/* ----- FIXED ROW: Location + Deadline + Salary (always single line) ----- */}
                 <div style={{
                   display: 'flex',
                   justifyContent: 'space-between',
@@ -328,38 +328,72 @@ const AllJobs = ({ user }) => {
                   borderTop: '1px solid #F1F5F9',
                   borderBottom: '1px solid #F1F5F9',
                   marginBottom: '0.75rem',
-                  flexWrap: 'wrap',
-                  gap: '0.25rem 0.5rem'
+                  flexWrap: 'nowrap',    // prevent wrapping
+                  gap: '0.25rem 0.5rem',
+                  overflow: 'hidden'     // hide any overflow gracefully
                 }}>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: '#475569', fontSize: '0.8rem', fontWeight: 600 }}>
+                  <span style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.35rem',
+                    color: '#475569',
+                    fontSize: '0.8rem',
+                    fontWeight: 600,
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    minWidth: 0,
+                    flex: '1 1 auto'
+                  }}>
                     <MapPin size={15} color="#94A3B8" /> {job.location}
                   </span>
                   {deadline ? (
                     <span style={{
                       background: expired ? '#FEE2E2' : (isDeadlineSoon ? '#FEF3C7' : '#F3F4F6'),
                       color: expired ? '#DC2626' : (isDeadlineSoon ? '#D97706' : '#6B7280'),
-                      fontSize: '0.7rem', fontWeight: 600,
-                      padding: '0.3rem 0.65rem', borderRadius: '0.375rem',
-                      display: 'inline-flex', alignItems: 'center', gap: '0.25rem'
+                      fontSize: '0.7rem',
+                      fontWeight: 600,
+                      padding: '0.3rem 0.65rem',
+                      borderRadius: '0.375rem',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.25rem',
+                      whiteSpace: 'nowrap',
+                      flexShrink: 0
                     }}>
                       <Calendar size={12} /> {expired ? 'Closed' : `Apply by ${deadline}`}
                     </span>
                   ) : (
                     expired && (
                       <span style={{
-                        background: '#FEE2E2', color: '#DC2626',
-                        fontSize: '0.7rem', fontWeight: 600,
-                        padding: '0.3rem 0.65rem', borderRadius: '0.375rem',
-                        display: 'inline-flex', alignItems: 'center', gap: '0.25rem'
+                        background: '#FEE2E2',
+                        color: '#DC2626',
+                        fontSize: '0.7rem',
+                        fontWeight: 600,
+                        padding: '0.3rem 0.65rem',
+                        borderRadius: '0.375rem',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '0.25rem',
+                        whiteSpace: 'nowrap',
+                        flexShrink: 0
                       }}>
                         <AlertCircle size={12} /> Closed
                       </span>
                     )
                   )}
                   <span style={{
-                    display: 'flex', alignItems: 'center', gap: '0.15rem',
-                    fontWeight: 800, color: '#059669', fontSize: '0.95rem',
-                    background: '#ECFDF5', padding: '0.25rem 0.6rem', borderRadius: '0.375rem'
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.15rem',
+                    fontWeight: 800,
+                    color: '#059669',
+                    fontSize: '0.95rem',
+                    background: '#ECFDF5',
+                    padding: '0.25rem 0.6rem',
+                    borderRadius: '0.375rem',
+                    whiteSpace: 'nowrap',
+                    flexShrink: 0
                   }}>
                     <IndianRupee size={15} /> {job.salary}
                   </span>

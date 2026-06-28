@@ -191,10 +191,10 @@ const EmployerProfile = ({ user, setUser }) => {
     background: 'white', borderRadius: '1rem', border: '1px solid #E5E7EB',
     boxShadow: '0 1px 3px rgba(0,0,0,0.04)', padding: '1.5rem', position: 'relative',
   };
-  const editBtnStyle = {
-    position: 'absolute', top: '1.25rem', right: '1.25rem',
+  const editIconStyle = {
     background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '0.5rem',
     padding: '0.4rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+    transition: 'background 0.15s', flexShrink: 0,
   };
   const labelStyle = { fontSize: '0.7rem', fontWeight: 600, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '0.25rem' };
   const inputStyle = {
@@ -245,26 +245,14 @@ const EmployerProfile = ({ user, setUser }) => {
   }
 
   return (
-    <div style={{ width: '100%', maxWidth: '800px', margin: '0 auto', padding: '2rem 1.5rem', minHeight: 'calc(100vh - 64px)' }}>
+    <div className="employer-profile" style={{ width: '100%', maxWidth: '800px', margin: '0 auto', padding: '2rem 1.5rem', minHeight: 'calc(100vh - 64px)' }}>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#0F172A', marginBottom: '0.25rem' }}>Employer Profile</h1>
           <p style={{ color: '#64748B', fontSize: '0.95rem' }}>Manage your company information and hiring preferences.</p>
         </div>
-        {!editingSection ? (
-          <button onClick={() => setEditingSection('company')} style={primaryBtnStyle}>
-            <Pencil size={15} /> Edit Profile
-          </button>
-        ) : (
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <button onClick={cancelEdit} style={ghostBtnStyle}>Cancel</button>
-            <button onClick={handleSave} disabled={loading} style={primaryBtnStyle}>
-              {loading ? <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <Check size={16} />}
-              Save Changes
-            </button>
-          </div>
-        )}
+        {/* Removed Edit Profile button and top Save/Cancel */}
       </div>
 
       {/* Message */}
@@ -294,14 +282,19 @@ const EmployerProfile = ({ user, setUser }) => {
 
       {/* COMPANY LOGO & BASIC INFO */}
       <div style={{ ...cardStyle, marginBottom: '1.5rem' }}>
-        {!isEditing('company') && (
-          <button style={editBtnStyle} onClick={() => setEditingSection('company')}
-            onMouseEnter={e => e.currentTarget.style.background = '#EEF2FF'}
-            onMouseLeave={e => e.currentTarget.style.background = '#F8FAFC'}
-          ><Pencil size={15} color="#64748B" /></button>
-        )}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+          <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0F172A', margin: 0 }}>
+            Company Info
+          </h3>
+          {!isEditing('company') && (
+            <button style={editIconStyle} onClick={() => setEditingSection('company')}
+              onMouseEnter={e => e.currentTarget.style.background = '#EEF2FF'}
+              onMouseLeave={e => e.currentTarget.style.background = '#F8FAFC'}
+            ><Pencil size={16} color="#64748B" /></button>
+          )}
+        </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', marginBottom: '1.5rem', paddingBottom: '1.5rem', borderBottom: '1px solid #F1F5F9' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', marginBottom: '1.5rem', paddingBottom: '1.5rem', borderBottom: '1px solid #F1F5F9', flexWrap: 'wrap' }}>
           <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: formData.photo_url ? 'transparent' : 'linear-gradient(135deg, #4F46E5, #6366F1)', overflow: 'hidden', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid #E5E7EB' }}>
             {formData.photo_url ? (
               <img src={formData.photo_url} alt="Company Logo" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -314,7 +307,7 @@ const EmployerProfile = ({ user, setUser }) => {
             <div style={{ fontSize: '0.8rem', color: '#64748B', fontWeight: 500 }}>Employer</div>
           </div>
           {isEditing('company') && (
-            <div style={{ marginLeft: 'auto', display: 'flex', gap: '0.5rem' }}>
+            <div style={{ marginLeft: 'auto', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
               <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" style={{ display: 'none' }} />
               <button onClick={() => fileInputRef.current?.click()} style={{ ...ghostBtnStyle, padding: '0.4rem 0.75rem', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                 <Camera size={14} /> Change Logo
@@ -329,14 +322,14 @@ const EmployerProfile = ({ user, setUser }) => {
         </div>
 
         {isEditing('company') ? (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          <div className="profile-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
             <div><div style={labelStyle}>Company Name</div><input name="company_name" value={formData.company_name} onChange={handleChange} style={inputStyle} /></div>
             <div><div style={labelStyle}>Email</div><input name="email" value={formData.email} onChange={handleChange} style={inputStyle} /></div>
             <div><div style={labelStyle}>Phone</div><input name="phone" value={formData.phone} onChange={handleChange} style={inputStyle} /></div>
             <div><div style={labelStyle}>Location</div><input name="location" value={formData.location} onChange={handleChange} style={inputStyle} /></div>
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem 2rem' }}>
+          <div className="profile-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem 2rem' }}>
             <InfoField icon={<Mail size={15} color="#94A3B8" />} label="Email" value={formData.email || 'Not set'} missing={!formData.email} />
             <InfoField icon={<Phone size={15} color="#94A3B8" />} label="Phone" value={formData.phone || 'Not set'} missing={!formData.phone} />
             <InfoField icon={<MapPin size={15} color="#94A3B8" />} label="Location" value={formData.location || 'Not set'} missing={!formData.location} />
@@ -346,17 +339,19 @@ const EmployerProfile = ({ user, setUser }) => {
 
       {/* HR CONTACT DETAILS */}
       <div style={{ ...cardStyle, marginBottom: '1.5rem' }}>
-        {!isEditing('hr') && (
-          <button style={editBtnStyle} onClick={() => setEditingSection('hr')}
-            onMouseEnter={e => e.currentTarget.style.background = '#EEF2FF'}
-            onMouseLeave={e => e.currentTarget.style.background = '#F8FAFC'}
-          ><Pencil size={15} color="#64748B" /></button>
-        )}
-        <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#0F172A', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <User size={18} color="#4F46E5" /> HR Contact Person
-        </h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#0F172A', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <User size={18} color="#4F46E5" /> HR Contact Person
+          </h3>
+          {!isEditing('hr') && (
+            <button style={editIconStyle} onClick={() => setEditingSection('hr')}
+              onMouseEnter={e => e.currentTarget.style.background = '#EEF2FF'}
+              onMouseLeave={e => e.currentTarget.style.background = '#F8FAFC'}
+            ><Pencil size={16} color="#64748B" /></button>
+          )}
+        </div>
         {isEditing('hr') ? (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          <div className="profile-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
             <div><div style={labelStyle}>First Name</div><input name="hr_first_name" value={formData.hr_first_name} onChange={handleChange} style={inputStyle} /></div>
             <div><div style={labelStyle}>Last Name</div><input name="hr_last_name" value={formData.hr_last_name} onChange={handleChange} style={inputStyle} /></div>
           </div>
@@ -367,15 +362,17 @@ const EmployerProfile = ({ user, setUser }) => {
 
       {/* HR LINKEDIN PROFILE - Fixed to show clickable link */}
       <div style={{ ...cardStyle, marginBottom: '1.5rem' }}>
-        {!isEditing('linkedin') && (
-          <button style={editBtnStyle} onClick={() => setEditingSection('linkedin')}
-            onMouseEnter={e => e.currentTarget.style.background = '#EEF2FF'}
-            onMouseLeave={e => e.currentTarget.style.background = '#F8FAFC'}
-          ><Pencil size={15} color="#64748B" /></button>
-        )}
-        <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#0F172A', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <LinkIcon size={18} color="#4F46E5" /> HR LinkedIn Profile
-        </h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#0F172A', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <LinkIcon size={18} color="#4F46E5" /> HR LinkedIn Profile
+          </h3>
+          {!isEditing('linkedin') && (
+            <button style={editIconStyle} onClick={() => setEditingSection('linkedin')}
+              onMouseEnter={e => e.currentTarget.style.background = '#EEF2FF'}
+              onMouseLeave={e => e.currentTarget.style.background = '#F8FAFC'}
+            ><Pencil size={16} color="#64748B" /></button>
+          )}
+        </div>
         {isEditing('linkedin') ? (
           <input name="hr_linkedin" value={formData.hr_linkedin} onChange={handleChange} placeholder="https://linkedin.com/in/username" style={inputStyle} />
         ) : (
@@ -394,15 +391,17 @@ const EmployerProfile = ({ user, setUser }) => {
 
       {/* COMPANY DESCRIPTION */}
       <div style={{ ...cardStyle, marginBottom: '1.5rem' }}>
-        {!isEditing('description') && (
-          <button style={editBtnStyle} onClick={() => setEditingSection('description')}
-            onMouseEnter={e => e.currentTarget.style.background = '#EEF2FF'}
-            onMouseLeave={e => e.currentTarget.style.background = '#F8FAFC'}
-          ><Pencil size={15} color="#64748B" /></button>
-        )}
-        <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#0F172A', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <Briefcase size={18} color="#4F46E5" /> Company Description
-        </h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#0F172A', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Briefcase size={18} color="#4F46E5" /> Company Description
+          </h3>
+          {!isEditing('description') && (
+            <button style={editIconStyle} onClick={() => setEditingSection('description')}
+              onMouseEnter={e => e.currentTarget.style.background = '#EEF2FF'}
+              onMouseLeave={e => e.currentTarget.style.background = '#F8FAFC'}
+            ><Pencil size={16} color="#64748B" /></button>
+          )}
+        </div>
         {isEditing('description') ? (
           <textarea name="company_description" value={formData.company_description} onChange={handleChange} rows={4} placeholder="Tell candidates about your company, mission, values, etc." style={{ ...inputStyle, resize: 'vertical' }} />
         ) : (
@@ -414,17 +413,19 @@ const EmployerProfile = ({ user, setUser }) => {
 
       {/* ADDITIONAL INFORMATION */}
       <div style={{ ...cardStyle, marginBottom: '1.5rem' }}>
-        {!isEditing('additional') && (
-          <button style={editBtnStyle} onClick={() => setEditingSection('additional')}
-            onMouseEnter={e => e.currentTarget.style.background = '#EEF2FF'}
-            onMouseLeave={e => e.currentTarget.style.background = '#F8FAFC'}
-          ><Pencil size={15} color="#64748B" /></button>
-        )}
-        <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#0F172A', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <Globe size={18} color="#4F46E5" /> Additional Information
-        </h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#0F172A', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Globe size={18} color="#4F46E5" /> Additional Information
+          </h3>
+          {!isEditing('additional') && (
+            <button style={editIconStyle} onClick={() => setEditingSection('additional')}
+              onMouseEnter={e => e.currentTarget.style.background = '#EEF2FF'}
+              onMouseLeave={e => e.currentTarget.style.background = '#F8FAFC'}
+            ><Pencil size={16} color="#64748B" /></button>
+          )}
+        </div>
         {isEditing('additional') ? (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          <div className="profile-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
             <div><div style={labelStyle}>Website</div><input name="website" value={formData.website} onChange={handleChange} placeholder="https://example.com" style={inputStyle} /></div>
             <div><div style={labelStyle}>Industry</div><select name="industry" value={formData.industry} onChange={handleChange} style={inputStyle}>
               <option value="">Select industry</option>
@@ -433,7 +434,7 @@ const EmployerProfile = ({ user, setUser }) => {
             <div><div style={labelStyle}>Employee Count</div><input name="employee_count" value={formData.employee_count} onChange={handleChange} placeholder="e.g., 50-100" style={inputStyle} /></div>
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem 2rem' }}>
+          <div className="profile-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem 2rem' }}>
             <InfoField icon={<LinkIcon size={15} color="#94A3B8" />} label="Website" value={formData.website || 'Not set'} missing={!formData.website} />
             <InfoField icon={<Briefcase size={15} color="#94A3B8" />} label="Industry" value={formData.industry || 'Not set'} missing={!formData.industry} />
             <InfoField icon={<Users size={15} color="#94A3B8" />} label="Employee Count" value={formData.employee_count || 'Not set'} missing={!formData.employee_count} />
@@ -441,6 +442,7 @@ const EmployerProfile = ({ user, setUser }) => {
         )}
       </div>
 
+      {/* Bottom Save/Cancel (only when editing) */}
       {editingSection && (
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', padding: '1.5rem 0' }}>
           <button onClick={cancelEdit} style={ghostBtnStyle}>Cancel</button>
@@ -453,6 +455,11 @@ const EmployerProfile = ({ user, setUser }) => {
 
       <style>{`
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @media (max-width: 640px) {
+          .employer-profile .profile-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
       `}</style>
     </div>
   );
