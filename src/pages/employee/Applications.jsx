@@ -204,7 +204,8 @@ const Applications = ({ user }) => {
                         <Briefcase size={14} /> {app.jobs?.employer_name}
                         {app.jobs?.jobs_serial_number && (
                           <span style={{ fontFamily: 'monospace', fontSize: '0.6rem', background: '#F3F4F6', padding: '0.125rem 0.5rem', borderRadius: '0.375rem', color: '#4B5563', fontWeight: 700, marginLeft: '0.25rem' }}>
-                            <Hash size={10} style={{ display: 'inline', verticalAlign: 'middle' }} /> {app.jobs.jobs_serial_number}
+                            {/* <Hash size={10} style={{ display: 'inline', verticalAlign: 'middle' }} />  */}
+                            {app.jobs.jobs_serial_number}
                           </span>
                         )}
                       </p>
@@ -277,7 +278,8 @@ const Applications = ({ user }) => {
                     <span>{selectedApp.jobs?.category || 'Active Job'}</span>
                     {selectedApp.jobs?.jobs_serial_number && (
                       <span style={{ fontFamily: 'monospace', background: '#F3F4F6', color: '#374151', padding: '0.125rem 0.5rem', borderRadius: '0.375rem', fontSize: '0.6rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '0.2rem' }}>
-                        <Hash size={10} /> {selectedApp.jobs.jobs_serial_number}
+                        {/* <Hash size={10} />  */}
+                        {selectedApp.jobs.jobs_serial_number}
                       </span>
                     )}
                   </div>

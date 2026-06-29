@@ -179,7 +179,7 @@ const EmployeeProfile = ({ user, setUser }) => {
   const completionPct = useMemo(() => {
     const fields = [
       formData.first_name, formData.last_name, formData.email, formData.phone,
-      formData.location, formData.bio, formData.photo_url,
+      formData.location, formData.photo_url,
       formData.skills.length > 0, formData.experience.length > 0,
       formData.expected_salary, formData.highest_qualification,
       formData.job_types.length > 0, formData.preferred_languages.length > 0
@@ -248,16 +248,16 @@ const EmployeeProfile = ({ user, setUser }) => {
 
   const isEditing = (section) => editingSection === section;
 
-  // Styles (unchanged from previous)
+  // Styles
   const cardStyle = {
     background: 'white', borderRadius: '1rem', border: '1px solid #E5E7EB',
     boxShadow: '0 1px 3px rgba(0,0,0,0.04)', padding: '1.5rem', position: 'relative',
   };
-  const editBtnStyle = {
-    position: 'absolute', top: '1.25rem', right: '1.25rem',
+  // Pencil button now used inline inside header, not absolute
+  const editIconStyle = {
     background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '0.5rem',
     padding: '0.4rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-    transition: 'background 0.15s',
+    transition: 'background 0.15s', flexShrink: 0,
   };
   const labelStyle = { fontSize: '0.7rem', fontWeight: 600, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '0.25rem' };
   const inputStyle = {
@@ -282,26 +282,14 @@ const EmployeeProfile = ({ user, setUser }) => {
   };
 
   return (
-    <div style={{ width: '100%', maxWidth: '800px', margin: '0 auto', padding: '2rem 1.5rem', minHeight: 'calc(100vh - 64px)' }}>
+    <div className="employee-profile" style={{ width: '100%', maxWidth: '800px', margin: '0 auto', padding: '2rem 1.5rem', minHeight: 'calc(100vh - 64px)' }}>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
           <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#0F172A', marginBottom: '0.25rem' }}>Employee Profile</h1>
           <p style={{ color: '#64748B', fontSize: '0.95rem' }}>Manage your personal information, skills, qualifications and job preferences.</p>
         </div>
-        {!editingSection ? (
-          <button onClick={() => setEditingSection('personal')} style={primaryBtnStyle}>
-            <Pencil size={15} /> Edit Profile
-          </button>
-        ) : (
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <button onClick={cancelEdit} style={ghostBtnStyle}>Cancel</button>
-            <button onClick={handleSave} disabled={loading} style={primaryBtnStyle}>
-              {loading ? <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <Check size={16} />}
-              Save Changes
-            </button>
-          </div>
-        )}
+        {/* Removed Edit Profile and top Save/Cancel buttons */}
       </div>
 
       {/* Message */}
@@ -333,13 +321,20 @@ const EmployeeProfile = ({ user, setUser }) => {
 
       {/* ==================== PERSONAL INFORMATION ==================== */}
       <div style={{ ...cardStyle, marginBottom: '1.5rem' }}>
-        {!isEditing('personal') && (
-          <button style={editBtnStyle} onClick={() => setEditingSection('personal')}
-            onMouseEnter={e => e.currentTarget.style.background = '#EEF2FF'}
-            onMouseLeave={e => e.currentTarget.style.background = '#F8FAFC'}
-          ><Pencil size={15} color="#64748B" /></button>
-        )}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', marginBottom: '1.5rem', paddingBottom: '1.5rem', borderBottom: '1px solid #F1F5F9' }}>
+        {/* Header with pencil icon inline */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+          <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#0F172A', margin: 0 }}>
+            Personal Information
+          </h3>
+          {!isEditing('personal') && (
+            <button style={editIconStyle} onClick={() => setEditingSection('personal')}
+              onMouseEnter={e => e.currentTarget.style.background = '#EEF2FF'}
+              onMouseLeave={e => e.currentTarget.style.background = '#F8FAFC'}
+            ><Pencil size={16} color="#64748B" /></button>
+          )}
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', marginBottom: '1.5rem', paddingBottom: '1.5rem', borderBottom: '1px solid #F1F5F9', flexWrap: 'wrap' }}>
           <div style={{ width: '72px', height: '72px', borderRadius: '50%', background: formData.photo_url ? 'transparent' : 'linear-gradient(135deg, #4F46E5, #6366F1)', overflow: 'hidden', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid #E5E7EB', position: 'relative' }}>
             {formData.photo_url ? (
               <img src={formData.photo_url} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -352,7 +347,7 @@ const EmployeeProfile = ({ user, setUser }) => {
             <div style={{ fontSize: '0.8rem', color: '#64748B', fontWeight: 500 }}>Job Seeker</div>
           </div>
           {isEditing('personal') && (
-            <div style={{ marginLeft: 'auto', display: 'flex', gap: '0.5rem' }}>
+            <div style={{ marginLeft: 'auto', display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
               <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" style={{ display: 'none' }} />
               <button onClick={() => fileInputRef.current?.click()} style={{ ...ghostBtnStyle, padding: '0.4rem 0.75rem', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                 <Camera size={14} /> Change
@@ -366,7 +361,7 @@ const EmployeeProfile = ({ user, setUser }) => {
           )}
         </div>
         {isEditing('personal') ? (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          <div className="profile-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
             <div><div style={labelStyle}>First Name</div><input name="first_name" value={formData.first_name} onChange={handleChange} style={inputStyle} /></div>
             <div><div style={labelStyle}>Last Name</div><input name="last_name" value={formData.last_name} onChange={handleChange} style={inputStyle} /></div>
             <div><div style={labelStyle}>Email</div><input name="email" value={formData.email} onChange={handleChange} style={inputStyle} /></div>
@@ -376,7 +371,7 @@ const EmployeeProfile = ({ user, setUser }) => {
             <div style={{ gridColumn: '1 / -1' }}><div style={labelStyle}>Bio</div><textarea name="bio" value={formData.bio} onChange={handleChange} rows={3} placeholder="Tell us about yourself..." style={{ ...inputStyle, resize: 'none', minHeight: '80px' }} /></div>
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem 2rem' }}>
+          <div className="profile-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem 2rem' }}>
             <InfoField icon={<Mail size={15} color="#94A3B8" />} label="Email" value={formData.email || 'Not set'} missing={!formData.email} />
             <InfoField icon={<Phone size={15} color="#94A3B8" />} label="Phone" value={formData.phone || 'Not set'} missing={!formData.phone} />
             <InfoField icon={<MapPin size={15} color="#94A3B8" />} label="Location" value={formData.location ? `${formData.location}, ${formData.country}` : 'Not set'} missing={!formData.location} />
@@ -387,15 +382,17 @@ const EmployeeProfile = ({ user, setUser }) => {
 
       {/* ==================== HIGHEST QUALIFICATION ==================== */}
       <div style={{ ...cardStyle, marginBottom: '1.5rem' }}>
-        {!isEditing('qualification') && (
-          <button style={editBtnStyle} onClick={() => setEditingSection('qualification')}
-            onMouseEnter={e => e.currentTarget.style.background = '#EEF2FF'}
-            onMouseLeave={e => e.currentTarget.style.background = '#F8FAFC'}
-          ><Pencil size={15} color="#64748B" /></button>
-        )}
-        <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#0F172A', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <GraduationCap size={18} color="#4F46E5" /> Highest Qualification
-        </h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#0F172A', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <GraduationCap size={18} color="#4F46E5" /> Highest Qualification
+          </h3>
+          {!isEditing('qualification') && (
+            <button style={editIconStyle} onClick={() => setEditingSection('qualification')}
+              onMouseEnter={e => e.currentTarget.style.background = '#EEF2FF'}
+              onMouseLeave={e => e.currentTarget.style.background = '#F8FAFC'}
+            ><Pencil size={16} color="#64748B" /></button>
+          )}
+        </div>
         {isEditing('qualification') ? (
           <select name="highest_qualification" value={formData.highest_qualification} onChange={handleChange} style={{ ...inputStyle, width: '100%' }}>
             <option value="">Select qualification</option>
@@ -408,15 +405,17 @@ const EmployeeProfile = ({ user, setUser }) => {
 
       {/* ==================== JOB TYPES LOOKING FOR ==================== */}
       <div style={{ ...cardStyle, marginBottom: '1.5rem' }}>
-        {!isEditing('jobTypes') && (
-          <button style={editBtnStyle} onClick={() => setEditingSection('jobTypes')}
-            onMouseEnter={e => e.currentTarget.style.background = '#EEF2FF'}
-            onMouseLeave={e => e.currentTarget.style.background = '#F8FAFC'}
-          ><Pencil size={15} color="#64748B" /></button>
-        )}
-        <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#0F172A', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <Briefcase size={18} color="#4F46E5" /> Job Types Looking For
-        </h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#0F172A', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Briefcase size={18} color="#4F46E5" /> Job Types Looking For
+          </h3>
+          {!isEditing('jobTypes') && (
+            <button style={editIconStyle} onClick={() => setEditingSection('jobTypes')}
+              onMouseEnter={e => e.currentTarget.style.background = '#EEF2FF'}
+              onMouseLeave={e => e.currentTarget.style.background = '#F8FAFC'}
+            ><Pencil size={16} color="#64748B" /></button>
+          )}
+        </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
           {formData.job_types.map(job => (
             <span key={job} style={tagStyle}>
@@ -455,15 +454,17 @@ const EmployeeProfile = ({ user, setUser }) => {
 
       {/* ==================== PREFERRED LANGUAGES ==================== */}
       <div style={{ ...cardStyle, marginBottom: '1.5rem' }}>
-        {!isEditing('languages') && (
-          <button style={editBtnStyle} onClick={() => setEditingSection('languages')}
-            onMouseEnter={e => e.currentTarget.style.background = '#EEF2FF'}
-            onMouseLeave={e => e.currentTarget.style.background = '#F8FAFC'}
-          ><Pencil size={15} color="#64748B" /></button>
-        )}
-        <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#0F172A', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-          <Globe size={18} color="#4F46E5" /> Preferred Languages
-        </h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#0F172A', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Globe size={18} color="#4F46E5" /> Preferred Languages
+          </h3>
+          {!isEditing('languages') && (
+            <button style={editIconStyle} onClick={() => setEditingSection('languages')}
+              onMouseEnter={e => e.currentTarget.style.background = '#EEF2FF'}
+              onMouseLeave={e => e.currentTarget.style.background = '#F8FAFC'}
+            ><Pencil size={16} color="#64748B" /></button>
+          )}
+        </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1rem' }}>
           {formData.preferred_languages.map(lang => (
             <span key={lang} style={tagStyle}>
@@ -502,8 +503,17 @@ const EmployeeProfile = ({ user, setUser }) => {
 
       {/* ==================== SKILLS ==================== */}
       <div style={{ ...cardStyle, marginBottom: '1.5rem' }}>
-        {!isEditing('skills') && <button style={editBtnStyle} onClick={() => setEditingSection('skills')}><Pencil size={15} color="#64748B" /></button>}
-        <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#0F172A', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Star size={18} color="#4F46E5" /> Skills</h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#0F172A', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Star size={18} color="#4F46E5" /> Skills
+          </h3>
+          {!isEditing('skills') && (
+            <button style={editIconStyle} onClick={() => setEditingSection('skills')}
+              onMouseEnter={e => e.currentTarget.style.background = '#EEF2FF'}
+              onMouseLeave={e => e.currentTarget.style.background = '#F8FAFC'}
+            ><Pencil size={16} color="#64748B" /></button>
+          )}
+        </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: isEditing('skills') ? '1rem' : 0 }}>
           {formData.skills.map(skill => <span key={skill} style={tagStyle}>{skill}{isEditing('skills') && <button onClick={() => removeSkill(skill)}><X size={13} /></button>}</span>)}
           {formData.skills.length === 0 && <span style={{ fontSize: '0.85rem', color: '#94A3B8', fontStyle: 'italic' }}>No skills added yet.</span>}
@@ -518,13 +528,22 @@ const EmployeeProfile = ({ user, setUser }) => {
 
       {/* ==================== EXPERIENCE ==================== */}
       <div style={{ ...cardStyle, marginBottom: '1.5rem' }}>
-        {!isEditing('experience') && <button style={editBtnStyle} onClick={() => setEditingSection('experience')}><Pencil size={15} color="#64748B" /></button>}
-        <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#0F172A', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><Briefcase size={18} color="#4F46E5" /> Experience</h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#0F172A', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Briefcase size={18} color="#4F46E5" /> Experience
+          </h3>
+          {!isEditing('experience') && (
+            <button style={editIconStyle} onClick={() => setEditingSection('experience')}
+              onMouseEnter={e => e.currentTarget.style.background = '#EEF2FF'}
+              onMouseLeave={e => e.currentTarget.style.background = '#F8FAFC'}
+            ><Pencil size={16} color="#64748B" /></button>
+          )}
+        </div>
         {formData.experience.map((exp, idx) => (
           <div key={idx} style={{ padding: '1rem', background: '#F8FAFC', borderRadius: '0.75rem', marginBottom: '0.75rem', position: 'relative' }}>
             {isEditing('experience') ? (
               <>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                <div className="profile-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                   <input value={exp.title} onChange={e => updateExperience(idx, 'title', e.target.value)} placeholder="Job title" style={inputStyle} />
                   <input value={exp.company} onChange={e => updateExperience(idx, 'company', e.target.value)} placeholder="Company" style={inputStyle} />
                   <input value={exp.duration} onChange={e => updateExperience(idx, 'duration', e.target.value)} placeholder="Duration" style={inputStyle} />
@@ -542,16 +561,25 @@ const EmployeeProfile = ({ user, setUser }) => {
 
       {/* ==================== JOB PREFERENCES ==================== */}
       <div style={{ ...cardStyle, marginBottom: '1.5rem' }}>
-        {!isEditing('preferences') && <button style={editBtnStyle} onClick={() => setEditingSection('preferences')}><Pencil size={15} color="#64748B" /></button>}
-        <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#0F172A', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}><FileText size={18} color="#4F46E5" /> Job Preferences</h3>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#0F172A', margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <FileText size={18} color="#4F46E5" /> Job Preferences
+          </h3>
+          {!isEditing('preferences') && (
+            <button style={editIconStyle} onClick={() => setEditingSection('preferences')}
+              onMouseEnter={e => e.currentTarget.style.background = '#EEF2FF'}
+              onMouseLeave={e => e.currentTarget.style.background = '#F8FAFC'}
+            ><Pencil size={16} color="#64748B" /></button>
+          )}
+        </div>
         {isEditing('preferences') ? (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+          <div className="profile-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
             <select name="job_type" value={formData.job_type} onChange={handleChange} style={inputStyle}><option>Full-time</option><option>Part-time</option><option>Contract</option></select>
             <input name="preferred_location" value={formData.preferred_location} onChange={handleChange} placeholder="Preferred location" style={inputStyle} />
             <input name="expected_salary" value={formData.expected_salary} onChange={handleChange} placeholder="Expected salary (monthly)" style={inputStyle} />
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem 2rem' }}>
+          <div className="profile-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem 2rem' }}>
             <InfoField label="Job Type" value={formData.job_type} />
             <InfoField label="Preferred Location" value={formData.preferred_location || 'Not set'} missing={!formData.preferred_location} />
             <InfoField label="Expected Salary" value={formData.expected_salary ? `₹ ${formData.expected_salary}/mo` : 'Not set'} missing={!formData.expected_salary} />
@@ -559,6 +587,7 @@ const EmployeeProfile = ({ user, setUser }) => {
         )}
       </div>
 
+      {/* Bottom Save/Cancel (only when editing) */}
       {editingSection && (
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', padding: '1.5rem 0' }}>
           <button onClick={cancelEdit} style={ghostBtnStyle}>Cancel</button>
@@ -568,7 +597,17 @@ const EmployeeProfile = ({ user, setUser }) => {
           </button>
         </div>
       )}
-      <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+      <style>{`
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        @media (max-width: 640px) {
+          .employee-profile .profile-grid {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      `}</style>
     </div>
   );
 };
