@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Button from '../../components/Button';
-import { Zap, CheckCircle2, ShieldCheck, MapPin, IndianRupee, ChevronRight, UserPlus, FileText, CheckCircle, Calendar, Hash, AlertCircle } from 'lucide-react';
+import { Zap, CheckCircle2, ShieldCheck, MapPin, IndianRupee, ChevronRight, UserPlus, FileText, CheckCircle, Hash } from 'lucide-react';
 import TrustedEmployers from '../legal/TrustedEmployeers';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
@@ -80,7 +80,6 @@ const Home = ({ user }) => {
       const res = await fetch(`${API_BASE_URL}/api/jobs?status=approved`);
       if (res.ok) {
         const data = await res.json();
-        // Shuffle jobs so they appear in random order
         const shuffled = shuffleArray(data);
         setJobs(shuffled);
       } else {
@@ -228,8 +227,6 @@ const Home = ({ user }) => {
               {displayedJobs.length > 0 ? (
                 displayedJobs.map((job) => {
                   const initial = job.employer_name ? job.employer_name.charAt(0).toUpperCase() : 'C';
-                  const deadline = job.apply_deadline ? new Date(job.apply_deadline).toLocaleDateString() : null;
-                  const isDeadlineSoon = deadline && new Date(job.apply_deadline) < new Date(Date.now() + 7 * 86400000);
                   const expired = isDeadlinePassed(job.apply_deadline);
                   const isApplied = appliedJobIds.has(job.id);
                   const isApplying = applyingMap[job.id] || false;
@@ -271,28 +268,13 @@ const Home = ({ user }) => {
                         )}
                       </div>
 
-                      {/* ----- FIXED ROW: Location + Deadline + Salary (always single line) ----- */}
-                      <div className="flex justify-between items-center py-2.5 border-t border-slate-100 gap-1 overflow-hidden flex-nowrap">
-                        <span className="flex items-center gap-1.5 text-slate-600 font-semibold text-sm whitespace-nowrap overflow-hidden text-ellipsis min-w-0 flex-1">
-                          <MapPin size={15} className="text-slate-400 flex-shrink-0" /> 
-                          <span className="truncate">{job.location}</span>
+                      {/* SIMPLIFIED ROW: Location + Salary (no deadline) */}
+                      <div className="flex justify-between items-center py-2.5 border-t border-slate-100">
+                        <span className="flex items-center gap-1.5 text-slate-600 font-semibold text-sm">
+                          <MapPin size={15} className="text-slate-400" /> {job.location}
                         </span>
-                        {deadline ? (
-                          <span className={`text-[0.7rem] font-semibold px-2.5 py-0.5 rounded flex items-center gap-1 whitespace-nowrap flex-shrink-0 ${
-                            expired ? 'bg-red-50 text-red-600' :
-                            isDeadlineSoon ? 'bg-amber-50 text-amber-600' : 'bg-slate-100 text-slate-600'
-                          }`}>
-                            <Calendar size={12} className="flex-shrink-0" /> {expired ? 'Closed' : `Apply by ${deadline}`}
-                          </span>
-                        ) : (
-                          expired && (
-                            <span className="bg-red-50 text-red-600 text-[0.7rem] font-semibold px-2.5 py-0.5 rounded flex items-center gap-1 whitespace-nowrap flex-shrink-0">
-                              <AlertCircle size={12} className="flex-shrink-0" /> Closed
-                            </span>
-                          )
-                        )}
-                        <span className="flex items-center gap-0.5 font-extrabold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded whitespace-nowrap flex-shrink-0">
-                          <IndianRupee size={15} className="flex-shrink-0" /> {job.salary}
+                        <span className="flex items-center gap-0.5 font-extrabold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded">
+                          <IndianRupee size={15} /> {job.salary}
                         </span>
                       </div>
 
