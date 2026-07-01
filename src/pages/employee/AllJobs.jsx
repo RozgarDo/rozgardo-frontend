@@ -249,95 +249,101 @@ const AllJobs = ({ user }) => {
                 onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.1)'; e.currentTarget.style.borderColor = '#4F46E5'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.05)'; e.currentTarget.style.borderColor = '#E5E7EB'; }}
               >
-                {/* ----- TOP SECTION: Logo + Title + Employer ----- */}
-                <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', marginBottom: '0.75rem' }}>
-                  <div style={{
-                    width: '44px', height: '44px', borderRadius: '50%',
-                    overflow: 'hidden', flexShrink: 0,
-                    border: '1px solid rgba(79,70,229,0.1)',
-                    background: employerPhoto ? 'transparent' : 'linear-gradient(135deg, #EEF2FF, #E0E7FF)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center'
-                  }}>
-                    {employerPhoto ? (
-                      <img src={employerPhoto} alt={job.employer_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    ) : (
-                      <span style={{ color: '#4F46E5', fontWeight: 800, fontSize: '1.1rem' }}>{initial}</span>
-                    )}
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <h3 style={{
-                      fontSize: '1.05rem', fontWeight: 700, color: '#0F172A', lineHeight: 1.35,
-                      display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
-                      marginBottom: '0.2rem'
+                {/* ----- MIDDLE SECTION: takes all available space, pushes bottom group down ----- */}
+                <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+                  {/* Logo + Title + Employer (fixed at top) */}
+                  <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                    <div style={{
+                      width: '44px', height: '44px', borderRadius: '50%',
+                      overflow: 'hidden', flexShrink: 0,
+                      border: '1px solid rgba(79,70,229,0.1)',
+                      background: employerPhoto ? 'transparent' : 'linear-gradient(135deg, #EEF2FF, #E0E7FF)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center'
                     }}>
-                      {job.title}
-                    </h3>
-                    <p style={{ color: '#64748B', fontSize: '0.8rem', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {job.employer_name}
-                    </p>
+                      {employerPhoto ? (
+                        <img src={employerPhoto} alt={job.employer_name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : (
+                        <span style={{ color: '#4F46E5', fontWeight: 800, fontSize: '1.1rem' }}>{initial}</span>
+                      )}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <h3 style={{
+                        fontSize: '1.05rem', fontWeight: 700, color: '#0F172A', lineHeight: 1.35,
+                        display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                        marginBottom: '0.2rem'
+                      }}>
+                        {job.title}
+                      </h3>
+                      <p style={{ color: '#64748B', fontSize: '0.8rem', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {job.employer_name}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* ----- BOTTOM GROUP: category + location, pushed to bottom with margin-top:auto ----- */}
+                  <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column' }}>
+                    {/* Category + Job ID */}
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginBottom: '0.5rem',
+                      gap: '0.5rem'
+                    }}>
+                      <span style={{
+                        background: '#F8FAFC',
+                        color: '#475569',
+                        fontSize: '0.7rem',
+                        fontWeight: 600,
+                        padding: '0.25rem 0.6rem',
+                        borderRadius: '0.375rem',
+                        border: '1px solid #E2E8F0',
+                        maxWidth: '70%',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis'
+                      }}>
+                        {job.category}
+                      </span>
+                      {job.jobs_serial_number && (
+                        <span style={{
+                          background: '#F3F4F6',
+                          color: '#4B5563',
+                          fontSize: '0.65rem',
+                          fontWeight: 700,
+                          padding: '0.2rem 0.6rem',
+                          borderRadius: '0.375rem',
+                          border: '1px solid #E5E7EB',
+                          fontFamily: 'monospace',
+                          letterSpacing: '0.5px',
+                          whiteSpace: 'nowrap'
+                        }}>
+                          {job.jobs_serial_number}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Location + Salary */}
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      padding: '0.5rem 0',
+                      borderTop: '1px solid #F1F5F9',
+                      borderBottom: '1px solid #F1F5F9',
+                      marginBottom: '0.75rem',
+                    }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: '#475569', fontSize: '0.8rem', fontWeight: 600 }}>
+                        <MapPin size={15} color="#94A3B8" /> {job.location}
+                      </span>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '0.15rem', fontWeight: 800, color: '#059669', fontSize: '0.95rem', background: '#ECFDF5', padding: '0.25rem 0.6rem', borderRadius: '0.375rem' }}>
+                        <IndianRupee size={15} /> {job.salary}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
-                {/* ----- NEW ROW: Category + Job ID ----- */}
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  marginBottom: '0.5rem',
-                  gap: '0.5rem'
-                }}>
-                  <span style={{
-                    background: '#F8FAFC',
-                    color: '#475569',
-                    fontSize: '0.7rem',
-                    fontWeight: 600,
-                    padding: '0.25rem 0.6rem',
-                    borderRadius: '0.375rem',
-                    border: '1px solid #E2E8F0',
-                    maxWidth: '70%',
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis'
-                  }}>
-                    {job.category}
-                  </span>
-                  {job.jobs_serial_number && (
-                    <span style={{
-                      background: '#F3F4F6',
-                      color: '#4B5563',
-                      fontSize: '0.65rem',
-                      fontWeight: 700,
-                      padding: '0.2rem 0.6rem',
-                      borderRadius: '0.375rem',
-                      border: '1px solid #E5E7EB',
-                      fontFamily: 'monospace',
-                      letterSpacing: '0.5px',
-                      whiteSpace: 'nowrap'
-                    }}>
-                      {job.jobs_serial_number}
-                    </span>
-                  )}
-                </div>
-
-                {/* ----- SIMPLIFIED ROW: Location + Salary (no deadline) ----- */}
-                <div style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  padding: '0.5rem 0',
-                  borderTop: '1px solid #F1F5F9',
-                  borderBottom: '1px solid #F1F5F9',
-                  marginBottom: '0.75rem',
-                }}>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: '#475569', fontSize: '0.8rem', fontWeight: 600 }}>
-                    <MapPin size={15} color="#94A3B8" /> {job.location}
-                  </span>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.15rem', fontWeight: 800, color: '#059669', fontSize: '0.95rem', background: '#ECFDF5', padding: '0.25rem 0.6rem', borderRadius: '0.375rem' }}>
-                    <IndianRupee size={15} /> {job.salary}
-                  </span>
-                </div>
-
-                {/* ----- ACTION BUTTONS ----- */}
+                {/* ----- ACTION BUTTONS (fixed at bottom) ----- */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
                   <Link to={`/jobs/${job.id}`} style={{ textDecoration: 'none' }}>
                     <button style={{
