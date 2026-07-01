@@ -163,15 +163,16 @@ const Home = ({ user }) => {
           The unified platform for <strong className="text-slate-800">Drivers | Helpers | Delivery | Cooks | Cleaners</strong>. Start earning instantly.
         </p>
 
-        <div className="relative z-10 flex gap-4 flex-wrap justify-center mt-2">
+        {/* BUTTON CONTAINER - FIXED FOR MOBILE */}
+        <div className="relative z-10 flex gap-2 md:gap-4 justify-center mt-2">
           <button
-            className="bg-indigo-600 text-white px-8 py-3 rounded-full font-bold text-base shadow-lg shadow-indigo-200 hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center gap-2"
+            className="bg-indigo-600 text-white px-4 md:px-8 py-3 rounded-full font-bold text-sm md:text-base shadow-lg shadow-indigo-200 hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center gap-2"
             onClick={() => document.getElementById('latest-jobs').scrollIntoView({ behavior: 'smooth' })}
           >
             Find Jobs <ChevronRight size={18} />
           </button>
           <button
-            className="bg-white text-slate-700 px-8 py-3 rounded-full font-bold text-base border border-slate-200 hover:bg-slate-50 transition-all"
+            className="bg-white text-slate-700 px-4 md:px-8 py-3 rounded-full font-bold text-sm md:text-base border border-slate-200 hover:bg-slate-50 transition-all"
             onClick={() => navigate('/applications')}
           >
             My Applications
