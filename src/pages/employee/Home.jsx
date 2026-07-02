@@ -163,15 +163,16 @@ const Home = ({ user }) => {
           The unified platform for <strong className="text-slate-800">Drivers | Helpers | Delivery | Cooks | Cleaners</strong>. Start earning instantly.
         </p>
 
-        <div className="relative z-10 flex gap-4 flex-wrap justify-center mt-2">
+        {/* BUTTON CONTAINER - FIXED FOR MOBILE */}
+        <div className="relative z-10 flex gap-2 md:gap-4 justify-center mt-2">
           <button
-            className="bg-indigo-600 text-white px-8 py-3 rounded-full font-bold text-base shadow-lg shadow-indigo-200 hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center gap-2"
+            className="bg-indigo-600 text-white px-4 md:px-8 py-3 rounded-full font-bold text-sm md:text-base shadow-lg shadow-indigo-200 hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center gap-2"
             onClick={() => document.getElementById('latest-jobs').scrollIntoView({ behavior: 'smooth' })}
           >
             Find Jobs <ChevronRight size={18} />
           </button>
           <button
-            className="bg-white text-slate-700 px-8 py-3 rounded-full font-bold text-base border border-slate-200 hover:bg-slate-50 transition-all"
+            className="bg-white text-slate-700 px-4 md:px-8 py-3 rounded-full font-bold text-sm md:text-base border border-slate-200 hover:bg-slate-50 transition-all"
             onClick={() => navigate('/applications')}
           >
             My Applications
@@ -237,48 +238,54 @@ const Home = ({ user }) => {
                       key={job.id}
                       className="bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:-translate-y-1 hover:shadow-lg hover:border-indigo-500 transition-all duration-200 flex flex-col justify-between h-full"
                     >
-                      {/* Header: logo + title + employer */}
-                      <div className="flex items-start gap-3 mb-3">
-                        <div className="w-11 h-11 rounded-full overflow-hidden flex-shrink-0 border border-indigo-100/50">
-                          {employerPhoto ? (
-                            <img src={employerPhoto} alt={job.employer_name} className="w-full h-full object-cover" />
-                          ) : (
-                            <div className="w-full h-full bg-gradient-to-br from-indigo-50 to-indigo-100 text-indigo-600 flex items-center justify-center font-extrabold text-lg">
-                              {initial}
-                            </div>
-                          )}
+                      {/* ---------- MIDDLE SECTION: takes all available space ---------- */}
+                      <div className="flex flex-col flex-1">
+                        {/* Header: logo + title + employer */}
+                        <div className="flex items-start gap-3 mb-3">
+                          <div className="w-11 h-11 rounded-full overflow-hidden flex-shrink-0 border border-indigo-100/50">
+                            {employerPhoto ? (
+                              <img src={employerPhoto} alt={job.employer_name} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full bg-gradient-to-br from-indigo-50 to-indigo-100 text-indigo-600 flex items-center justify-center font-extrabold text-lg">
+                                {initial}
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="text-lg font-bold text-slate-900 leading-tight break-words whitespace-normal">
+                              {job.title}
+                            </h3>
+                            <p className="text-slate-500 text-sm font-medium truncate">{job.employer_name}</p>
+                          </div>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="text-lg font-bold text-slate-900 leading-tight break-words whitespace-normal">
-                            {job.title}
-                          </h3>
-                          <p className="text-slate-500 text-sm font-medium truncate">{job.employer_name}</p>
+
+                        {/* ---------- BOTTOM GROUP: category + location, pushed to bottom ---------- */}
+                        <div className="mt-auto flex flex-col">
+                          {/* Row: Category + Job ID */}
+                          <div className="flex justify-between items-center mb-2.5 gap-2">
+                            <span className="bg-slate-50 text-slate-600 text-[0.7rem] font-semibold px-2.5 py-0.5 rounded border border-slate-200 max-w-[70%] truncate">
+                              {job.category}
+                            </span>
+                            {job.jobs_serial_number && (
+                              <span className="bg-slate-100 text-slate-600 text-[0.6rem] font-bold px-2 py-0.5 rounded border border-slate-200 whitespace-nowrap font-mono tracking-wide">
+                                {job.jobs_serial_number}
+                              </span>
+                            )}
+                          </div>
+
+                          {/* SIMPLIFIED ROW: Location + Salary (no deadline) */}
+                          <div className="flex justify-between items-center py-2.5 border-t border-slate-100">
+                            <span className="flex items-center gap-1.5 text-slate-600 font-semibold text-sm">
+                              <MapPin size={15} className="text-slate-400" /> {job.location}
+                            </span>
+                            <span className="flex items-center gap-0.5 font-extrabold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded">
+                              <IndianRupee size={15} /> {job.salary}
+                            </span>
+                          </div>
                         </div>
                       </div>
 
-                      {/* Row: Category + Job ID */}
-                      <div className="flex justify-between items-center mb-2.5 gap-2">
-                        <span className="bg-slate-50 text-slate-600 text-[0.7rem] font-semibold px-2.5 py-0.5 rounded border border-slate-200 max-w-[70%] truncate">
-                          {job.category}
-                        </span>
-                        {job.jobs_serial_number && (
-                          <span className="bg-slate-100 text-slate-600 text-[0.6rem] font-bold px-2 py-0.5 rounded border border-slate-200 whitespace-nowrap font-mono tracking-wide">
-                            {job.jobs_serial_number}
-                          </span>
-                        )}
-                      </div>
-
-                      {/* SIMPLIFIED ROW: Location + Salary (no deadline) */}
-                      <div className="flex justify-between items-center py-2.5 border-t border-slate-100">
-                        <span className="flex items-center gap-1.5 text-slate-600 font-semibold text-sm">
-                          <MapPin size={15} className="text-slate-400" /> {job.location}
-                        </span>
-                        <span className="flex items-center gap-0.5 font-extrabold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded">
-                          <IndianRupee size={15} /> {job.salary}
-                        </span>
-                      </div>
-
-                      {/* ACTION BUTTONS */}
+                      {/* ACTION BUTTONS (always at bottom) */}
                       <div className="grid grid-cols-2 gap-2 pt-3 border-t border-slate-100 mt-auto" onClick={(e) => e.stopPropagation()}>
                         <Link to={`/jobs/${job.id}`} className="w-full">
                           <button className="w-full py-2 bg-white text-slate-700 border border-slate-200 rounded-lg text-sm font-bold hover:bg-slate-50 transition-colors">
